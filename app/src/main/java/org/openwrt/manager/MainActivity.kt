@@ -120,7 +120,12 @@ fun MainScreen() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     onAddRouter = { navController.navigate(Screen.AddRouter.route) },
-                    onNavigateToDevices = { navController.navigate(Screen.OnlineDevices.route) }
+                    onNavigateToDevices = { navController.navigate(Screen.OnlineDevices.route) },
+                    onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) },
+                    onNavigateToWifi = { navController.navigate(Screen.Wifi.route) },
+                    onNavigateToNetwork = { navController.navigate(Screen.Network.route) },
+                    onNavigateToSystem = { navController.navigate(Screen.System.route) },
+                    onNavigateToAdvanced = { navController.navigate(Screen.Advanced.route) }
                 )
             }
             composable(Screen.Devices.route) {
