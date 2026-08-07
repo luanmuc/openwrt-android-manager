@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "org.openwrt.manager"
+    namespace = "com.luanmuc.openwrtmanager"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "org.openwrt.manager"
+        applicationId = "com.luanmuc.openwrtmanager"
         minSdk = 30
         targetSdk = 34
         versionCode = 1
