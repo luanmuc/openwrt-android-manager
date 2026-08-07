@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.openwrt.manager.data.model.Router
 import org.openwrt.manager.data.model.RouterStatus
+import org.openwrt.manager.data.repository.LuciException
 import org.openwrt.manager.data.repository.LuciRepository
 import org.openwrt.manager.data.repository.RouterRepository
 import org.openwrt.manager.util.EncryptionUtil
@@ -17,7 +19,6 @@ import org.openwrt.manager.util.EncryptionUtil
  * 首页 ViewModel
  */
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
-
     private val routerRepository = RouterRepository.getInstance(application)
     private val luciRepository = LuciRepository()
 
@@ -29,77 +30,94 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val routerStatus: RouterStatus? = null,
         val isLoading: Boolean = false,
         val error: String? = null,
-        val hasRouter: Boolean = false
+        val hasRouter: Boolean = false,
+        val isRefreshing: Boolean = false
     )
 
     init {
-        loadActiveRouter()
+        observeRouters()
     }
 
-    private fun loadActiveRouter() {
+    /**
+     * 观察路由器数据变化
+     */
+    private fun observeRouters() {
         viewModelScope.launch {
-            routerRepository.activeRouterId.collect { routerId ->
-                if (routerId != null) {
-                    val router = routerRepository.getRouterById(routerId)
-                    _uiState.value = _uiState.value.copy(
-                        activeRouter = router,
-                        hasRouter = router != null
-                    )
-                    if (router != null) {
-                        loadRouterStatus(router)
-                    }
+            combine(
+                routerRepository.routers,
+                routerRepository.activeRouterId
+            ) { routers, activeId ->
+                val activeRouter = if (activeId != null) {
+                    routers.find { it.id == activeId } ?: routers.firstOrNull()
                 } else {
-                    // 检查是否有路由器列表
-                    routerRepository.routers.collect { routers ->
-                        if (routers.isNotEmpty()) {
-                            _uiState.value = _uiState.value.copy(
-                                activeRouter = routers.first(),
-                                hasRouter = true
-                            )
-                            loadRouterStatus(routers.first())
-                        } else {
-                            _uiState.value = _uiState.value.copy(
-                                hasRouter = false
-                            )
-                        }
-                    }
+                    routers.firstOrNull()
+                }
+                Pair(routers, activeRouter)
+            }.collect { (routers, activeRouter) ->
+                _uiState.value = _uiState.value.copy(
+                    activeRouter = activeRouter,
+                    hasRouter = routers.isNotEmpty()
+                )
+                if (activeRouter != null && _uiState.value.routerStatus == null) {
+                    loadRouterStatus(activeRouter)
                 }
             }
         }
     }
 
+    /**
+     * 加载路由器状态
+     */
     private fun loadRouterStatus(router: Router) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                isRefreshing = _uiState.value.routerStatus != null,
+                error = null
+            )
             try {
                 val password = EncryptionUtil.decrypt(router.encryptedPassword)
                 luciRepository.login(router.address, router.username, password)
                 val status = luciRepository.getRouterStatus()
                 _uiState.value = _uiState.value.copy(
                     routerStatus = status,
-                    isLoading = false
+                    isLoading = false,
+                    isRefreshing = false
+                )
+            } catch (e: LuciException) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isRefreshing = false,
+                    error = e.message
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     error = e.message ?: "连接失败"
                 )
             }
         }
     }
 
+    /**
+     * 刷新
+     */
     fun refresh() {
         _uiState.value.activeRouter?.let {
             loadRouterStatus(it)
         }
     }
 
+    /**
+     * 重启路由器
+     */
     fun reboot() {
         viewModelScope.launch {
             try {
                 luciRepository.reboot()
             } catch (e: Exception) {
-                // 忽略，重启会断开连接
+                // 重启会断开连接，忽略错误
             }
         }
     }

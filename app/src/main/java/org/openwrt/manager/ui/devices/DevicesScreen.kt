@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Router
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -29,15 +30,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openwrt.manager.R
 import org.openwrt.manager.data.model.Router
@@ -51,7 +56,8 @@ fun DevicesScreen(
     onAddRouter: () -> Unit,
     viewModel: DevicesViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDeleteDialog by remember { mutableStateOf<Router?>(null) }
 
     Scaffold(
         topBar = {
@@ -65,7 +71,7 @@ fun DevicesScreen(
             }
         }
     ) { padding ->
-        if (uiState.routers.isEmpty()) {
+        if (uiState.routers.isEmpty() && !uiState.isLoading) {
             EmptyDevicesView(
                 onAddRouter = onAddRouter,
                 modifier = Modifier.padding(padding)
@@ -86,11 +92,47 @@ fun DevicesScreen(
                         router = router,
                         isActive = router.id == uiState.activeRouterId,
                         onSelect = { viewModel.setActiveRouter(router.id) },
-                        onDelete = { viewModel.deleteRouter(router.id) }
+                        onDelete = { showDeleteDialog = router }
                     )
                 }
             }
         }
+    }
+
+    // 删除确认对话框
+    showDeleteDialog?.let { router ->
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            icon = {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = { Text("删除设备") },
+            text = {
+                Text("确定要删除「${router.name.ifEmpty { router.address }}」吗？\n删除后需要重新添加。")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRouter(router.id)
+                        showDeleteDialog = null
+                    }
+                ) {
+                    Text(
+                        "删除",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("取消")
+                }
+            }
+        )
     }
 }
 

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.openwrt.manager.data.model.Router
+import org.openwrt.manager.data.repository.LuciException
 import org.openwrt.manager.data.repository.LuciRepository
 import org.openwrt.manager.data.repository.RouterRepository
 import org.openwrt.manager.util.EncryptionUtil
@@ -16,7 +17,6 @@ import org.openwrt.manager.util.EncryptionUtil
  * 添加路由器 ViewModel
  */
 class AddRouterViewModel(application: Application) : AndroidViewModel(application) {
-
     private val routerRepository = RouterRepository.getInstance(application)
     private val luciRepository = LuciRepository()
 
@@ -30,23 +30,28 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
         val password: String = "",
         val isConnecting: Boolean = false,
         val isSuccess: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        val errorType: ErrorType? = null
     )
 
+    enum class ErrorType {
+        NETWORK, AUTH, NOT_FOUND, TIMEOUT, UNKNOWN
+    }
+
     fun onNameChange(name: String) {
-        _uiState.value = _uiState.value.copy(name = name)
+        _uiState.value = _uiState.value.copy(name = name, error = null)
     }
 
     fun onAddressChange(address: String) {
-        _uiState.value = _uiState.value.copy(address = address)
+        _uiState.value = _uiState.value.copy(address = address, error = null)
     }
 
     fun onUsernameChange(username: String) {
-        _uiState.value = _uiState.value.copy(username = username)
+        _uiState.value = _uiState.value.copy(username = username, error = null)
     }
 
     fun onPasswordChange(password: String) {
-        _uiState.value = _uiState.value.copy(password = password)
+        _uiState.value = _uiState.value.copy(password = password, error = null)
     }
 
     /**
@@ -63,15 +68,20 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
             _uiState.value = state.copy(error = "请输入用户名")
             return
         }
-        // 密码可以为空，支持无密码登录
+
+        // 自动补全地址格式
+        val normalizedAddress = normalizeAddress(state.address)
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isConnecting = true, error = null)
-
+            _uiState.value = state.copy(
+                isConnecting = true,
+                error = null,
+                address = normalizedAddress
+            )
             try {
                 // 尝试连接认证
-                val token = luciRepository.login(
-                    address = state.address,
+                luciRepository.login(
+                    address = normalizedAddress,
                     username = state.username,
                     password = state.password
                 )
@@ -81,9 +91,12 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
                 if (deviceName.isBlank()) {
                     try {
                         val sysInfo = luciRepository.getSystemInfo()
-                        deviceName = sysInfo["hostname"]?.toString() ?: state.address
+                        val boardInfo = luciRepository.getBoardInfo()
+                        deviceName = boardInfo["hostname"]?.toString()
+                            ?: sysInfo["hostname"]?.toString()
+                            ?: normalizedAddress
                     } catch (e: Exception) {
-                        deviceName = state.address
+                        deviceName = normalizedAddress
                     }
                 }
 
@@ -92,7 +105,7 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
                 val router = Router(
                     id = EncryptionUtil.generateId(),
                     name = deviceName,
-                    address = state.address,
+                    address = normalizedAddress,
                     username = state.username,
                     encryptedPassword = encryptedPassword,
                     isConnected = true,
@@ -106,15 +119,46 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
                     isConnecting = false,
                     isSuccess = true
                 )
-
                 onSuccess()
-
+            } catch (e: LuciException) {
+                _uiState.value = _uiState.value.copy(
+                    isConnecting = false,
+                    error = e.message,
+                    errorType = when (e.type) {
+                        org.openwrt.manager.data.repository.ErrorType.NETWORK_ERROR -> ErrorType.NETWORK
+                        org.openwrt.manager.data.repository.ErrorType.TIMEOUT -> ErrorType.TIMEOUT
+                        org.openwrt.manager.data.repository.ErrorType.AUTH_FAILED -> ErrorType.AUTH
+                        org.openwrt.manager.data.repository.ErrorType.NOT_FOUND -> ErrorType.NOT_FOUND
+                        else -> ErrorType.UNKNOWN
+                    }
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isConnecting = false,
-                    error = e.message ?: "连接失败，请检查地址和凭据"
+                    error = e.message ?: "连接失败，请检查地址和凭据",
+                    errorType = ErrorType.UNKNOWN
                 )
             }
         }
+    }
+
+    /**
+     * 规范化地址格式
+     */
+    private fun normalizeAddress(address: String): String {
+        var addr = address.trim()
+        if (addr.isEmpty()) return addr
+
+        // 自动添加 http:// 前缀
+        if (!addr.startsWith("http://") && !addr.startsWith("https://")) {
+            addr = "http://$addr"
+        }
+
+        // 确保以 / 结尾
+        if (!addr.endsWith("/")) {
+            addr = "$addr/"
+        }
+
+        return addr
     }
 }

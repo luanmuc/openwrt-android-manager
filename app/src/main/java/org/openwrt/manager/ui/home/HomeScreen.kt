@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Error
@@ -23,7 +24,6 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -35,18 +35,19 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openwrt.manager.R
 
@@ -60,14 +61,14 @@ fun HomeScreen(
     onNavigateToDevices: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.home_title)) },
                 actions = {
-                    if (uiState.hasRouter) {
+                    if (uiState.hasRouter && !uiState.isLoading) {
                         IconButton(onClick = { viewModel.refresh() }) {
                             Icon(Icons.Default.Refresh, contentDescription = "刷新")
                         }
@@ -148,7 +149,7 @@ fun HomeContent(
     ) {
         RouterStatusCard(
             uiState = uiState,
-            viewModel = viewModel
+            onRefresh = { viewModel.refresh() }
         )
 
         if (uiState.routerStatus != null) {
@@ -170,7 +171,7 @@ fun HomeContent(
 @Composable
 fun RouterStatusCard(
     uiState: HomeViewModel.HomeUiState,
-    viewModel: HomeViewModel
+    onRefresh: () -> Unit
 ) {
     val status = uiState.routerStatus
     val router = uiState.activeRouter
@@ -237,7 +238,6 @@ fun RouterStatusCard(
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
@@ -245,24 +245,52 @@ fun RouterStatusCard(
                     StatItem(
                         icon = Icons.Default.Schedule,
                         label = stringResource(R.string.home_uptime),
-                        value = viewModel.formatUptime(status.uptime)
+                        value = formatUptime(status.uptime)
                     )
                     StatItem(
                         icon = Icons.Default.Memory,
                         label = stringResource(R.string.home_memory),
-                        value = viewModel.formatBytes(status.memoryFree) + " / " +
-                                viewModel.formatBytes(status.memoryTotal)
+                        value = formatBytes(status.memoryFree) + " / " +
+                                formatBytes(status.memoryTotal)
                     )
                 }
             }
 
+            // 错误状态 + 重试按钮
             uiState.error?.let { error ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = onRefresh,
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("重试", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
         }
     }
@@ -287,12 +315,10 @@ fun SystemInfoCard(
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
-
             InfoRow(label = "主机名", value = status.hostname)
             InfoRow(label = "设备型号", value = status.model)
             InfoRow(label = "固件版本", value = status.firmware)
             InfoRow(label = "内核版本", value = status.kernel)
-
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.home_load) + ": " +
@@ -323,7 +349,6 @@ fun QuickActionsCard(
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
@@ -423,5 +448,31 @@ fun QuickActionButton(
             text = label,
             style = MaterialTheme.typography.bodySmall
         )
+    }
+}
+
+/**
+ * 格式化运行时间
+ */
+private fun formatUptime(seconds: Long): String {
+    val days = seconds / 86400
+    val hours = (seconds % 86400) / 3600
+    val minutes = (seconds % 3600) / 60
+    return when {
+        days > 0 -> "${days}天${hours}小时"
+        hours > 0 -> "${hours}小时${minutes}分钟"
+        else -> "${minutes}分钟"
+    }
+}
+
+/**
+ * 格式化字节数
+ */
+private fun formatBytes(bytes: Long): String {
+    return when {
+        bytes >= 1073741824 -> String.format("%.2f GB", bytes / 1073741824.0)
+        bytes >= 1048576 -> String.format("%.2f MB", bytes / 1048576.0)
+        bytes >= 1024 -> String.format("%.2f KB", bytes / 1024.0)
+        else -> "$bytes B"
     }
 }
