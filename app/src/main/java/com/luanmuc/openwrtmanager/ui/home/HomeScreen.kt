@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Extension
@@ -30,12 +31,14 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -78,11 +81,30 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDeviceDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
             MiTopAppBar(
                 title = "OpenWrt 管家",
+                navigationIcon = {
+                    if (uiState.hasRouter) {
+                        IconButton(onClick = { showDeviceDialog = true }) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Router,
+                                    contentDescription = "设备",
+                                    tint = MiColors.Primary
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MiColors.TextSecondary
+                                )
+                            }
+                        }
+                    }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(
@@ -113,7 +135,160 @@ fun HomeScreen(
                 modifier = Modifier.padding(padding)
             )
         }
+        
+        // 设备选择对话框
+        if (showDeviceDialog) {
+            DeviceSelectorDialog(
+                activeRouter = uiState.activeRouter,
+                onDismiss = { showDeviceDialog = false },
+                onAddRouter = {
+                    showDeviceDialog = false
+                    onAddRouter()
+                },
+                onViewDevices = {
+                    showDeviceDialog = false
+                    onNavigateToDevices()
+                }
+            )
+        }
     }
+}
+
+/**
+ * 设备选择对话框
+ */
+@Composable
+fun DeviceSelectorDialog(
+    activeRouter: com.luanmuc.openwrtmanager.data.model.Router?,
+    onDismiss: () -> Unit,
+    onAddRouter: () -> Unit,
+    onViewDevices: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "路由器",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                // 当前路由器
+                activeRouter?.let { router ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MiColors.Primary.copy(alpha = 0.1f))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MiColors.GradientBlue),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Router,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = Color.White
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = router.name,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiColors.TextPrimary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = router.address,
+                                fontSize = 12.sp,
+                                color = MiColors.TextTertiary
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(MiColors.Success)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // 查看在线设备
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onViewDevices)
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Devices,
+                        contentDescription = null,
+                        tint = MiColors.Primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "在线设备",
+                        fontSize = 15.sp,
+                        color = MiColors.TextPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = MiColors.TextTertiary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                
+                // 添加路由器
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onAddRouter)
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        tint = MiColors.Warning,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "添加路由器",
+                        fontSize = 15.sp,
+                        color = MiColors.TextPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        tint = MiColors.TextTertiary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭")
+            }
+        }
+    )
 }
 
 /**
@@ -460,12 +635,12 @@ fun NetworkSpeedCard(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 上下行速度
+            // 实时速度
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // 下载
+                // 下载速度
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -476,7 +651,7 @@ fun NetworkSpeedCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "下载",
+                            text = "下载速度",
                             fontSize = 12.sp,
                             color = MiColors.TextSecondary
                         )
@@ -484,10 +659,17 @@ fun NetworkSpeedCard(
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = viewModel.formatBytes(wan?.rxBytes ?: 0),
-                            fontSize = 18.sp,
+                            text = formatSpeed(uiState.downloadSpeed),
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiColors.Primary
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "/s",
+                            fontSize = 12.sp,
+                            color = MiColors.TextTertiary,
+                            modifier = Modifier.padding(bottom = 3.dp)
                         )
                     }
                 }
@@ -496,11 +678,11 @@ fun NetworkSpeedCard(
                 Box(
                     modifier = Modifier
                         .width(1.dp)
-                        .height(40.dp)
+                        .height(50.dp)
                         .background(MiColors.Divider)
                 )
                 
-                // 上传
+                // 上传速度
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -511,7 +693,7 @@ fun NetworkSpeedCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "上传",
+                            text = "上传速度",
                             fontSize = 12.sp,
                             color = MiColors.TextSecondary
                         )
@@ -519,12 +701,59 @@ fun NetworkSpeedCard(
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = viewModel.formatBytes(wan?.txBytes ?: 0),
-                            fontSize = 18.sp,
+                            text = formatSpeed(uiState.uploadSpeed),
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiColors.Success
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "/s",
+                            fontSize = 12.sp,
+                            color = MiColors.TextTertiary,
+                            modifier = Modifier.padding(bottom = 3.dp)
                         )
                     }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 总流量
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // 总下载
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "总下载",
+                        fontSize = 11.sp,
+                        color = MiColors.TextTertiary
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = viewModel.formatBytes(wan?.rxBytes ?: 0),
+                        fontSize = 13.sp,
+                        color = MiColors.TextSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                
+                // 总上传
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "总上传",
+                        fontSize = 11.sp,
+                        color = MiColors.TextTertiary
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = viewModel.formatBytes(wan?.txBytes ?: 0),
+                        fontSize = 13.sp,
+                        color = MiColors.TextSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
             
@@ -853,6 +1082,14 @@ private fun formatBytes(bytes: Long): String {
         bytes >= 1048576 -> String.format("%.2f MB", bytes / 1048576.0)
         bytes >= 1024 -> String.format("%.2f KB", bytes / 1024.0)
         else -> "$bytes B"
+    }
+}
+
+private fun formatSpeed(bytesPerSecond: Long): String {
+    return when {
+        bytesPerSecond >= 1048576 -> String.format("%.2f MB", bytesPerSecond / 1048576.0)
+        bytesPerSecond >= 1024 -> String.format("%.2f KB", bytesPerSecond / 1024.0)
+        else -> "$bytesPerSecond B"
     }
 }
 

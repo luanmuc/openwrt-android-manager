@@ -39,7 +39,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val isRefreshing: Boolean = false,
         val cpuHistory: List<CpuDataPoint> = emptyList(),
         val trafficHistory: List<TrafficDataPoint> = emptyList(),
-        val autoRefresh: Boolean = true
+        val autoRefresh: Boolean = true,
+        val downloadSpeed: Long = 0,
+        val uploadSpeed: Long = 0
     )
 
     init {
@@ -122,10 +124,26 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     val newTrafficPoint = TrafficDataPoint(time = now, rx = wanRx, tx = wanTx)
                     val trafficHistory = (_uiState.value.trafficHistory + newTrafficPoint).takeLast(20)
 
+                    // 计算实时速度
+                    val lastPoint = _uiState.value.trafficHistory.lastOrNull()
+                    val downloadSpeed = if (lastPoint != null && now > lastPoint.time) {
+                        val timeDiff = (now - lastPoint.time) / 1000.0
+                        if (timeDiff > 0) {
+                            ((wanRx - lastPoint.rx) / timeDiff).toLong()
+                        } else 0
+                    } else 0
+
+                    val uploadSpeed = if (lastPoint != null && now > lastPoint.time) {
+                        val timeDiff = (now - lastPoint.time) / 1000.0
+                        if (timeDiff > 0) {
+                            ((wanTx - lastPoint.tx) / timeDiff).toLong()
+                        } else 0
+                    } else 0
+
                     _uiState.value = _uiState.value.copy(
                         routerStatus = status.copy(
                             onlineDevices = devices.size,
-                            wanConnected = wan?.isConnected == true,
+                            wanConnected = wan?.isConnected == true || wan?.isUp == true,
                             wanIp = wan?.ipaddr ?: "",
                             wanUptime = wan?.uptime ?: 0
                         ),
@@ -133,6 +151,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         onlineDevices = devices,
                         cpuHistory = cpuHistory,
                         trafficHistory = trafficHistory,
+                        downloadSpeed = downloadSpeed,
+                        uploadSpeed = uploadSpeed,
                         error = null
                     )
                 } catch (e: Exception) {
