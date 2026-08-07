@@ -2,8 +2,7 @@ package org.openwrt.manager.data.repository
 
 import org.openwrt.manager.data.api.LuciApiService
 import org.openwrt.manager.data.api.RetrofitClient
-import org.openwrt.manager.data.model.LuciRpcRequest
-import org.openwrt.manager.data.model.RouterStatus
+import org.openwrt.manager.data.model.*
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -19,13 +18,10 @@ class LuciRepository {
     private var currentUsername: String = ""
     private var currentPassword: String = ""
 
+    // ========== 认证相关 ==========
+
     /**
      * 登录认证
-     * 使用 ubus session.login 方法
-     * @param address 路由器地址
-     * @param username 用户名
-     * @param password 密码（支持空密码）
-     * @return 认证token (ubus_rpc_session)
      */
     suspend fun login(address: String, username: String, password: String): String {
         currentAddress = normalizeAddress(address)
@@ -33,7 +29,6 @@ class LuciRepository {
         currentPassword = password
 
         val api = RetrofitClient.getApi(currentAddress)
-
         try {
             val request = LuciRpcRequest.loginRequest(username, password)
             val response = api.call(LuciApiService.UBUS_PATH, request)
@@ -45,8 +40,6 @@ class LuciRepository {
                 )
             }
 
-            // ubus RPC 响应格式: result = [statusCode, data]
-            // statusCode 0 表示成功
             val result = response.result
             if (result == null || result.size < 2) {
                 throw LuciException(message = "无效的响应格式")
@@ -70,11 +63,9 @@ class LuciRepository {
 
             val data = result[1] as? Map<*, *>
             authToken = data?.get("ubus_rpc_session")?.toString() ?: ""
-
             if (authToken.isEmpty()) {
                 throw LuciException(message = "未获取到会话令牌", type = ErrorType.AUTH_FAILED)
             }
-
             return authToken
         } catch (e: Exception) {
             throw wrapException(e)
@@ -90,15 +81,12 @@ class LuciRepository {
         params: Map<String, Any> = emptyMap()
     ): Map<String, Any> {
         val api = RetrofitClient.getApi(currentAddress)
-
         try {
             val request = LuciRpcRequest.callRequest(authToken, obj, method, params)
             val response = api.call(LuciApiService.UBUS_PATH, request)
 
             if (response.error != null) {
-                // 检查是否是session过期
                 if (response.error.code == -32002 || response.error.message?.contains("session", true) == true) {
-                    // 尝试重新登录
                     reLogin()
                     return callUbus(obj, method, params)
                 }
@@ -115,7 +103,6 @@ class LuciRepository {
 
             val statusCode = (result[0] as? Number)?.toInt() ?: -1
             if (statusCode != 0) {
-                // session 过期，尝试重新登录
                 if (statusCode == -32002 || statusCode == -6) {
                     reLogin()
                     return callUbus(obj, method, params)
@@ -134,7 +121,7 @@ class LuciRepository {
     }
 
     /**
-     * 重新登录（session过期时）
+     * 重新登录
      */
     private suspend fun reLogin() {
         if (currentUsername.isNotEmpty()) {
@@ -142,6 +129,8 @@ class LuciRepository {
             login(currentAddress, currentUsername, currentPassword)
         }
     }
+
+    // ========== 系统信息 ==========
 
     /**
      * 获取系统信息
@@ -175,15 +164,12 @@ class LuciRepository {
         val hostname = sysInfo["hostname"]?.toString()
             ?: boardInfo["hostname"]?.toString()
             ?: "OpenWrt"
-
         val model = boardInfo["model"]?.toString()
             ?: sysInfo["model"]?.toString()
             ?: "Unknown"
-
         val release = boardInfo["release"]?.toString()
             ?: sysInfo["release"]?.toString()
             ?: "Unknown"
-
         val kernel = sysInfo["kernel"]?.toString() ?: "Unknown"
         val uptime = (sysInfo["uptime"] as? Number)?.toLong() ?: 0L
 
@@ -197,6 +183,12 @@ class LuciRepository {
         val memoryFree = (memory?.get("free") as? Number)?.toLong() ?: 0L
         val memoryCached = (memory?.get("cached") as? Number)?.toLong() ?: 0L
         val memoryBuffered = (memory?.get("buffered") as? Number)?.toLong() ?: 0L
+        val memoryUsed = memoryTotal - memoryFree - memoryCached - memoryBuffered
+
+        val root = sysInfo["root"] as? Map<*, *>
+        val storageTotal = (root?.get("total") as? Number)?.toLong() ?: 0L
+        val storageFree = (root?.get("free") as? Number)?.toLong() ?: 0L
+        val storageUsed = (root?.get("used") as? Number)?.toLong() ?: (storageTotal - storageFree)
 
         val cpuUsage = calculateCpuUsage(sysInfo)
 
@@ -209,8 +201,11 @@ class LuciRepository {
             loadAverage = loadAverage,
             memoryTotal = memoryTotal,
             memoryFree = memoryFree,
+            memoryUsed = memoryUsed,
             memoryCached = memoryCached,
-            memoryBuffered = memoryBuffered,
+            storageTotal = storageTotal,
+            storageFree = storageFree,
+            storageUsed = storageUsed,
             cpuUsage = cpuUsage
         )
     }
@@ -223,10 +218,447 @@ class LuciRepository {
             callUbus("system", "reboot")
             true
         } catch (e: Exception) {
-            // 重启时连接会断开，视为成功
             true
         }
     }
+
+    /**
+     * 关机
+     */
+    suspend fun shutdown(): Boolean {
+        return try {
+            callUbus("system", "poweroff")
+            true
+        } catch (e: Exception) {
+            true
+        }
+    }
+
+    // ========== 网络接口 ==========
+
+    /**
+     * 获取网络接口列表
+     */
+    suspend fun getNetworkInterfaces(): List<NetworkInterface> {
+        return try {
+            val result = callUbus("network.interface", "dump")
+            val interfaces = result["interface"] as? List<*>
+            interfaces?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                parseNetworkInterface(map)
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun parseNetworkInterface(map: Map<*, *>): NetworkInterface {
+        val name = map["interface"]?.toString() ?: map["name"]?.toString() ?: ""
+        val l3Device = map["l3_device"]?.toString() ?: ""
+        val proto = map["proto"]?.toString() ?: ""
+        val isUp = map["up"] as? Boolean ?: false
+        val isConnected = map["connected"] as? Boolean ?: false
+        val uptime = (map["uptime"] as? Number)?.toLong() ?: 0L
+
+        val ipv4Addresses = map["ipv4-address"] as? List<*>
+        val firstIpv4 = ipv4Addresses?.firstOrNull() as? Map<*, *>
+        val ipaddr = firstIpv4?.get("address")?.toString() ?: ""
+        val netmask = firstIpv4?.get("mask")?.toString() ?: ""
+
+        val routes = map["route"] as? List<*>
+        val gateway = routes?.firstOrNull {
+            val r = it as? Map<*, *>
+            r?.get("target") == "0.0.0.0"
+        }?.let {
+            (it as? Map<*, *>)?.get("nexthop")?.toString()
+        } ?: ""
+
+        val dnsServers = map["dns-server"] as? List<*>
+        val dns = dnsServers?.mapNotNull { it?.toString() } ?: emptyList()
+
+        val stats = map["stats"] as? Map<*, *>
+        val rxBytes = (stats?.get("rx_bytes") as? Number)?.toLong() ?: 0L
+        val txBytes = (stats?.get("tx_bytes") as? Number)?.toLong() ?: 0L
+        val rxPackets = (stats?.get("rx_packets") as? Number)?.toLong() ?: 0L
+        val txPackets = (stats?.get("tx_packets") as? Number)?.toLong() ?: 0L
+
+        return NetworkInterface(
+            name = name,
+            device = l3Device,
+            proto = proto,
+            ipaddr = ipaddr,
+            netmask = netmask,
+            gateway = gateway,
+            dns = dns,
+            uptime = uptime,
+            rxBytes = rxBytes,
+            txBytes = txBytes,
+            rxPackets = rxPackets,
+            txPackets = txPackets,
+            isUp = isUp,
+            isConnected = isConnected
+        )
+    }
+
+    /**
+     * 获取WAN口状态
+     */
+    suspend fun getWanStatus(): NetworkInterface? {
+        return getNetworkInterfaces().firstOrNull { it.name == "wan" }
+    }
+
+    /**
+     * 重启网络
+     */
+    suspend fun restartNetwork(): Boolean {
+        return try {
+            callUbus("network", "restart")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ========== WiFi 相关 ==========
+
+    /**
+     * 获取WiFi设备列表
+     */
+    suspend fun getWifiDevices(): List<WifiInterface> {
+        return try {
+            val result = callUbus("iwinfo", "devices")
+            val devices = result["devices"] as? List<*>
+            devices?.mapNotNull { name ->
+                val deviceName = name?.toString() ?: return@mapNotNull null
+                getWifiDeviceInfo(deviceName)
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 获取WiFi设备信息
+     */
+    private suspend fun getWifiDeviceInfo(device: String): WifiInterface {
+        return try {
+            val result = callUbus("iwinfo", "info", mapOf("device" to device))
+            val ssid = result["ssid"]?.toString() ?: ""
+            val channel = (result["channel"] as? Number)?.toInt() ?: 0
+            val htmode = result["htmode"]?.toString() ?: ""
+            val txpower = (result["txpower"] as? Number)?.toInt() ?: 0
+            val encryption = result["encryption"]?.toString() ?: ""
+            val isUp = result["up"] as? Boolean ?: false
+
+            val band = if (channel > 14) "5g" else "2.4g"
+
+            WifiInterface(
+                name = device,
+                device = device,
+                ssid = ssid,
+                encryption = encryption,
+                channel = channel,
+                htmode = htmode,
+                txpower = txpower,
+                isUp = isUp,
+                band = band
+            )
+        } catch (e: Exception) {
+            WifiInterface(name = device, device = device)
+        }
+    }
+
+    /**
+     * 获取WiFi关联设备数
+     */
+    suspend fun getWifiAssoclist(device: String): List<DeviceInfo> {
+        return try {
+            val result = callUbus("iwinfo", "assoclist", mapOf("device" to device))
+            val results = result["results"] as? List<*>
+            results?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                DeviceInfo(
+                    mac = map["mac"]?.toString() ?: "",
+                    signal = (map["signal"] as? Number)?.toInt() ?: 0,
+                    rxBytes = (map["rx_bytes"] as? Number)?.toLong() ?: 0,
+                    txBytes = (map["tx_bytes"] as? Number)?.toLong() ?: 0,
+                    interfaceName = device
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 重启WiFi
+     */
+    suspend fun restartWifi(): Boolean {
+        return try {
+            callUbus("network.wireless", "restart")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ========== DHCP 租约（在线设备） ==========
+
+    /**
+     * 获取DHCP租约（在线设备）
+     */
+    suspend fun getDhcpLeases(): List<DeviceInfo> {
+        return try {
+            val result = callUbus("luci-rpc", "getDHCPLeases")
+            val leases = result["leases"] as? List<*>
+            leases?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                DeviceInfo(
+                    ip = map["ipaddr"]?.toString() ?: map["ip"]?.toString() ?: "",
+                    mac = map["macaddr"]?.toString() ?: map["mac"]?.toString() ?: "",
+                    hostname = map["hostname"]?.toString() ?: "",
+                    vendor = map["vendor"]?.toString() ?: "",
+                    connectedTime = (map["expires"] as? Number)?.toLong() ?: 0
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 获取ARP表（在线设备）
+     */
+    suspend fun getArpTable(): List<DeviceInfo> {
+        return try {
+            val result = callUbus("network", "arp")
+            val entries = result["arp"] as? List<*>
+            entries?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                DeviceInfo(
+                    ip = map["ip"]?.toString() ?: "",
+                    mac = map["mac"]?.toString() ?: "",
+                    interfaceName = map["device"]?.toString() ?: ""
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ========== 系统日志 ==========
+
+    /**
+     * 获取系统日志
+     */
+    suspend fun getSystemLog(): List<LogEntry> {
+        return try {
+            val result = callUbus("log", "read")
+            val log = result["log"] as? List<*>
+            log?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                LogEntry(
+                    time = map["time"]?.toString() ?: "",
+                    level = map["level"]?.toString() ?: "",
+                    facility = map["facility"]?.toString() ?: "",
+                    message = map["message"]?.toString() ?: ""
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ========== 进程管理 ==========
+
+    /**
+     * 获取进程列表
+     */
+    suspend fun getProcessList(): List<ProcessInfo> {
+        return try {
+            val result = callUbus("system", "process")
+            val list = result["list"] as? List<*>
+            list?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                ProcessInfo(
+                    pid = (map["pid"] as? Number)?.toInt() ?: 0,
+                    name = map["name"]?.toString() ?: "",
+                    cpu = (map["cpu"] as? Number)?.toFloat() ?: 0f,
+                    memory = (map["mem"] as? Number)?.toFloat() ?: 0f,
+                    vsz = (map["vsz"] as? Number)?.toLong() ?: 0L,
+                    rss = (map["rss"] as? Number)?.toLong() ?: 0L,
+                    user = map["user"]?.toString() ?: "",
+                    command = map["command"]?.toString() ?: ""
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 结束进程
+     */
+    suspend fun killProcess(pid: Int): Boolean {
+        return try {
+            callUbus("system", "kill", mapOf("pid" to pid, "signal" to 9))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ========== UCI 配置操作 ==========
+
+    /**
+     * 获取UCI配置
+     */
+    suspend fun getUciConfig(config: String): Map<String, Any> {
+        return try {
+            callUbus("uci", "get", mapOf("config" to config))
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    /**
+     * 设置UCI配置
+     */
+    suspend fun setUciConfig(config: String, section: String, option: String, value: String): Boolean {
+        return try {
+            callUbus(
+                "uci", "set",
+                mapOf(
+                    "config" to config,
+                    "section" to section,
+                    "option" to option,
+                    "value" to value
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to config))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 应用UCI配置
+     */
+    suspend fun commitUci(config: String): Boolean {
+        return try {
+            callUbus("uci", "commit", mapOf("config" to config))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ========== 插件/包管理 ==========
+
+    /**
+     * 获取已安装包列表
+     */
+    suspend fun getInstalledPackages(): List<PackageInfo> {
+        return try {
+            val result = callUbus("luci-rpc", "getInstalledPackages")
+            val packages = result["packages"] as? List<*>
+            packages?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                PackageInfo(
+                    name = map["name"]?.toString() ?: "",
+                    version = map["version"]?.toString() ?: "",
+                    description = map["description"]?.toString() ?: "",
+                    size = (map["size"] as? Number)?.toLong() ?: 0L,
+                    installed = true
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 获取可用包列表
+     */
+    suspend fun getAvailablePackages(): List<PackageInfo> {
+        return try {
+            val result = callUbus("luci-rpc", "getAvailablePackages")
+            val packages = result["packages"] as? List<*>
+            packages?.mapNotNull { item ->
+                val map = item as? Map<*, *> ?: return@mapNotNull null
+                PackageInfo(
+                    name = map["name"]?.toString() ?: "",
+                    version = map["version"]?.toString() ?: "",
+                    description = map["description"]?.toString() ?: "",
+                    size = (map["size"] as? Number)?.toLong() ?: 0L,
+                    installed = false
+                )
+            } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 安装包
+     */
+    suspend fun installPackage(name: String): Boolean {
+        return try {
+            callUbus("luci-rpc", "installPackage", mapOf("package" to name))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 卸载包
+     */
+    suspend fun removePackage(name: String): Boolean {
+        return try {
+            callUbus("luci-rpc", "removePackage", mapOf("package" to name))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ========== 防火墙/端口转发 ==========
+
+    /**
+     * 获取端口转发规则
+     */
+    suspend fun getPortForwards(): List<PortForwardRule> {
+        return try {
+            val result = callUbus("uci", "get", mapOf("config" to "firewall"))
+            val values = result["values"] as? Map<*, *>
+            val rules = mutableListOf<PortForwardRule>()
+            values?.forEach { (key, value) ->
+                val section = value as? Map<*, *> ?: return@forEach
+                val type = section[".type"]?.toString()
+                if (type == "redirect") {
+                    rules.add(
+                        PortForwardRule(
+                            name = section["name"]?.toString() ?: key.toString(),
+                            proto = section["proto"]?.toString() ?: "tcp",
+                            src = section["src"]?.toString() ?: "wan",
+                            srcPort = section["src_dport"]?.toString() ?: "",
+                            dest = section["dest"]?.toString() ?: "lan",
+                            destIp = section["dest_ip"]?.toString() ?: "",
+                            destPort = section["dest_port"]?.toString() ?: "",
+                            enabled = section["enabled"]?.toString() != "0"
+                        )
+                    )
+                }
+            }
+            rules
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ========== 工具方法 ==========
 
     private fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
         val cpu = sysInfo["cpu"] as? Map<*, *>
@@ -244,9 +676,6 @@ class LuciRepository {
         return addr
     }
 
-    /**
-     * 包装异常，提供更友好的错误信息
-     */
     private fun wrapException(e: Exception): Exception {
         return when (e) {
             is LuciException -> e
@@ -313,11 +742,11 @@ class LuciException(
  * 错误类型枚举
  */
 enum class ErrorType {
-    NETWORK_ERROR,    // 网络错误
-    TIMEOUT,          // 超时
-    AUTH_FAILED,      // 认证失败
-    NOT_FOUND,        // 404
-    FORBIDDEN,        // 403
-    HTTP_ERROR,       // 其他HTTP错误
-    UNKNOWN           // 未知错误
+    NETWORK_ERROR,
+    TIMEOUT,
+    AUTH_FAILED,
+    NOT_FOUND,
+    FORBIDDEN,
+    HTTP_ERROR,
+    UNKNOWN
 }

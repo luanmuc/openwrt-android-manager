@@ -3,13 +3,14 @@ package org.openwrt.manager.ui.home
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import org.openwrt.manager.data.model.Router
-import org.openwrt.manager.data.model.RouterStatus
+import org.openwrt.manager.data.model.*
 import org.openwrt.manager.data.repository.LuciException
 import org.openwrt.manager.data.repository.LuciRepository
 import org.openwrt.manager.data.repository.RouterRepository
@@ -25,13 +26,20 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var refreshJob: Job? = null
+
     data class HomeUiState(
         val activeRouter: Router? = null,
         val routerStatus: RouterStatus? = null,
+        val wanStatus: NetworkInterface? = null,
+        val onlineDevices: List<DeviceInfo> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
         val hasRouter: Boolean = false,
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
+        val cpuHistory: List<CpuDataPoint> = emptyList(),
+        val trafficHistory: List<TrafficDataPoint> = emptyList(),
+        val autoRefresh: Boolean = true
     )
 
     init {
@@ -59,16 +67,77 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     hasRouter = routers.isNotEmpty()
                 )
                 if (activeRouter != null && _uiState.value.routerStatus == null) {
-                    loadRouterStatus(activeRouter)
+                    loadAllData(activeRouter)
+                    startAutoRefresh()
                 }
             }
         }
     }
 
     /**
-     * 加载路由器状态
+     * 开始自动刷新
      */
-    private fun loadRouterStatus(router: Router) {
+    private fun startAutoRefresh() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            while (_uiState.value.autoRefresh && _uiState.value.activeRouter != null) {
+                delay(5000)
+                if (_uiState.value.autoRefresh && !_uiState.value.isLoading) {
+                    refreshSilent()
+                }
+            }
+        }
+    }
+
+    /**
+     * 静默刷新
+     */
+    private fun refreshSilent() {
+        _uiState.value.activeRouter?.let { router ->
+            viewModelScope.launch {
+                try {
+                    val password = EncryptionUtil.decrypt(router.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(router.address, router.username, password)
+                    }
+
+                    val status = luciRepository.getRouterStatus()
+                    val wan = luciRepository.getWanStatus()
+                    val devices = luciRepository.getDhcpLeases()
+
+                    val now = System.currentTimeMillis()
+                    val newCpuPoint = CpuDataPoint(time = now, usage = status.cpuUsage)
+                    val cpuHistory = (_uiState.value.cpuHistory + newCpuPoint).takeLast(20)
+
+                    val wanRx = wan?.rxBytes ?: 0
+                    val wanTx = wan?.txBytes ?: 0
+                    val newTrafficPoint = TrafficDataPoint(time = now, rx = wanRx, tx = wanTx)
+                    val trafficHistory = (_uiState.value.trafficHistory + newTrafficPoint).takeLast(20)
+
+                    _uiState.value = _uiState.value.copy(
+                        routerStatus = status.copy(
+                            onlineDevices = devices.size,
+                            wanConnected = wan?.isConnected == true,
+                            wanIp = wan?.ipaddr ?: "",
+                            wanUptime = wan?.uptime ?: 0
+                        ),
+                        wanStatus = wan,
+                        onlineDevices = devices,
+                        cpuHistory = cpuHistory,
+                        trafficHistory = trafficHistory,
+                        error = null
+                    )
+                } catch (e: Exception) {
+                    // 静默刷新失败不显示错误
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载所有数据
+     */
+    private fun loadAllData(router: Router) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
@@ -78,11 +147,35 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val password = EncryptionUtil.decrypt(router.encryptedPassword)
                 luciRepository.login(router.address, router.username, password)
+
                 val status = luciRepository.getRouterStatus()
+                val wan = luciRepository.getWanStatus()
+                val devices = luciRepository.getDhcpLeases()
+
+                val now = System.currentTimeMillis()
+                val cpuHistory = listOf(CpuDataPoint(time = now, usage = status.cpuUsage))
+                val trafficHistory = listOf(
+                    TrafficDataPoint(
+                        time = now,
+                        rx = wan?.rxBytes ?: 0,
+                        tx = wan?.txBytes ?: 0
+                    )
+                )
+
                 _uiState.value = _uiState.value.copy(
-                    routerStatus = status,
+                    routerStatus = status.copy(
+                        onlineDevices = devices.size,
+                        wanConnected = wan?.isConnected == true,
+                        wanIp = wan?.ipaddr ?: "",
+                        wanUptime = wan?.uptime ?: 0
+                    ),
+                    wanStatus = wan,
+                    onlineDevices = devices,
                     isLoading = false,
-                    isRefreshing = false
+                    isRefreshing = false,
+                    cpuHistory = cpuHistory,
+                    trafficHistory = trafficHistory,
+                    error = null
                 )
             } catch (e: LuciException) {
                 _uiState.value = _uiState.value.copy(
@@ -101,11 +194,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * 刷新
+     * 手动刷新
      */
     fun refresh() {
         _uiState.value.activeRouter?.let {
-            loadRouterStatus(it)
+            loadAllData(it)
         }
     }
 
@@ -119,6 +212,32 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 // 重启会断开连接，忽略错误
             }
+        }
+    }
+
+    /**
+     * 关机
+     */
+    fun shutdown() {
+        viewModelScope.launch {
+            try {
+                luciRepository.shutdown()
+            } catch (e: Exception) {
+                // 关机会断开连接，忽略错误
+            }
+        }
+    }
+
+    /**
+     * 切换自动刷新
+     */
+    fun toggleAutoRefresh() {
+        val newAutoRefresh = !_uiState.value.autoRefresh
+        _uiState.value = _uiState.value.copy(autoRefresh = newAutoRefresh)
+        if (newAutoRefresh) {
+            startAutoRefresh()
+        } else {
+            refreshJob?.cancel()
         }
     }
 
@@ -146,5 +265,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             bytes >= 1024 -> String.format("%.2f KB", bytes / 1024.0)
             else -> "$bytes B"
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        refreshJob?.cancel()
     }
 }

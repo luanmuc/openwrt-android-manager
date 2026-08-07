@@ -1,5 +1,6 @@
 package org.openwrt.manager.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,6 +25,8 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -34,6 +38,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -43,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -153,17 +159,30 @@ fun HomeContent(
         )
 
         if (uiState.routerStatus != null) {
-            SystemInfoCard(
+            ResourceUsageCard(
                 uiState = uiState,
                 viewModel = viewModel
             )
         }
 
+        if (uiState.routerStatus != null) {
+            NetworkStatusCard(
+                uiState = uiState,
+                viewModel = viewModel
+            )
+        }
+
+        if (uiState.routerStatus != null) {
+            SystemInfoCard(
+                uiState = uiState
+            )
+        }
+
         QuickActionsCard(
             onReboot = { viewModel.reboot() },
-            onShutdown = { },
+            onShutdown = { viewModel.shutdown() },
             onWifi = { },
-            onClients = { }
+            onClients = onNavigateToDevices
         )
     }
 }
@@ -248,15 +267,13 @@ fun RouterStatusCard(
                         value = formatUptime(status.uptime)
                     )
                     StatItem(
-                        icon = Icons.Default.Memory,
-                        label = stringResource(R.string.home_memory),
-                        value = formatBytes(status.memoryFree) + " / " +
-                                formatBytes(status.memoryTotal)
+                        icon = Icons.Default.Devices,
+                        label = "在线设备",
+                        value = "${status.onlineDevices} 台"
                     )
                 }
             }
 
-            // 错误状态 + 重试按钮
             uiState.error?.let { error ->
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider()
@@ -297,9 +314,195 @@ fun RouterStatusCard(
 }
 
 @Composable
-fun SystemInfoCard(
+fun ResourceUsageCard(
     uiState: HomeViewModel.HomeUiState,
     viewModel: HomeViewModel
+) {
+    val status = uiState.routerStatus ?: return
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "资源使用",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // CPU 使用率
+            ResourceProgressItem(
+                icon = Icons.Default.Speed,
+                label = "CPU",
+                value = status.cpuUsage,
+                max = 100f,
+                unit = "%",
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 内存使用率
+            val memoryPercent = if (status.memoryTotal > 0) {
+                (status.memoryUsed.toFloat() / status.memoryTotal.toFloat()) * 100f
+            } else 0f
+            ResourceProgressItem(
+                icon = Icons.Default.Memory,
+                label = "内存",
+                value = memoryPercent,
+                max = 100f,
+                unit = "%",
+                detail = "${viewModel.formatBytes(status.memoryUsed)} / ${viewModel.formatBytes(status.memoryTotal)}",
+                color = MaterialTheme.colorScheme.tertiary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 闪存使用率
+            val storagePercent = if (status.storageTotal > 0) {
+                (status.storageUsed.toFloat() / status.storageTotal.toFloat()) * 100f
+            } else 0f
+            ResourceProgressItem(
+                icon = Icons.Default.SdStorage,
+                label = "闪存",
+                value = storagePercent,
+                max = 100f,
+                unit = "%",
+                detail = "${viewModel.formatBytes(status.storageUsed)} / ${viewModel.formatBytes(status.storageTotal)}",
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+    }
+}
+
+@Composable
+fun ResourceProgressItem(
+    icon: ImageVector,
+    label: String,
+    value: Float,
+    max: Float,
+    unit: String,
+    detail: String? = null,
+    color: androidx.compose.ui.graphics.Color
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "%.1f$unit".format(value),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = color
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        LinearProgressIndicator(
+            progress = { value / max },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = color
+        )
+        if (detail != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun NetworkStatusCard(
+    uiState: HomeViewModel.HomeUiState,
+    viewModel: HomeViewModel
+) {
+    val status = uiState.routerStatus ?: return
+    val wan = uiState.wanStatus
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "网络状态",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Router,
+                    contentDescription = null,
+                    tint = if (status.wanConnected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "WAN 口",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = if (status.wanConnected) "已连接" else "未连接",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = if (status.wanConnected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+                )
+            }
+
+            if (status.wanIp.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoRow(label = "IP 地址", value = status.wanIp)
+            }
+
+            if (wan != null && wan.rxBytes > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoRow(
+                    label = "下载",
+                    value = viewModel.formatBytes(wan.rxBytes)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                InfoRow(
+                    label = "上传",
+                    value = viewModel.formatBytes(wan.txBytes)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SystemInfoCard(
+    uiState: HomeViewModel.HomeUiState
 ) {
     val status = uiState.routerStatus ?: return
 
@@ -462,17 +665,5 @@ private fun formatUptime(seconds: Long): String {
         days > 0 -> "${days}天${hours}小时"
         hours > 0 -> "${hours}小时${minutes}分钟"
         else -> "${minutes}分钟"
-    }
-}
-
-/**
- * 格式化字节数
- */
-private fun formatBytes(bytes: Long): String {
-    return when {
-        bytes >= 1073741824 -> String.format("%.2f GB", bytes / 1073741824.0)
-        bytes >= 1048576 -> String.format("%.2f MB", bytes / 1048576.0)
-        bytes >= 1024 -> String.format("%.2f KB", bytes / 1024.0)
-        else -> "$bytes B"
     }
 }
