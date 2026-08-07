@@ -10,8 +10,8 @@ on:
 env:
   JAVA_VERSION: '17'
   JAVA_DISTRIBUTION: 'temurin'
-  ANDROID_COMPILE_SDK: '35'
-  ANDROID_BUILD_TOOLS: '35.0.0'
+  ANDROID_COMPILE_SDK: '34'
+  ANDROID_BUILD_TOOLS: '34.0.0'
   ANDROID_CMDLINE_TOOLS: '11076708'
   GRADLE_OPTS: '-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.daemon=true -Xmx4096m -XX:+UseParallelGC'
   ANDROID_HOME: /usr/local/lib/android/sdk
@@ -133,7 +133,20 @@ jobs:
           echo "=== 安装 Android Command-line Tools ==="
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd /tmp
-          wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS}_latest.zip" -O cmdline-tools.zip
+          
+          # 重试下载命令行工具（最多3次）
+          for i in 1 2 3; do
+            echo "尝试第 $i 次下载命令行工具..."
+            wget -q --timeout=120 "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS}_latest.zip" -O cmdline-tools.zip && break
+            echo "下载失败，5秒后重试..."
+            sleep 5
+          done
+          
+          if [ ! -f cmdline-tools.zip ]; then
+            echo "❌ 命令行工具下载失败"
+            exit 1
+          fi
+          
           unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
           mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
           rm cmdline-tools.zip
@@ -146,10 +159,16 @@ jobs:
 
           echo ""
           echo "=== 安装 SDK 组件 ==="
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "platforms;android-${ANDROID_COMPILE_SDK}" \
-            "build-tools;${ANDROID_BUILD_TOOLS}"
+          # 重试安装SDK组件（最多3次）
+          for i in 1 2 3; do
+            echo "尝试第 $i 次安装SDK组件..."
+            $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+              "platform-tools" \
+              "platforms;android-${ANDROID_COMPILE_SDK}" \
+              "build-tools;${ANDROID_BUILD_TOOLS}" && break
+            echo "安装失败，10秒后重试..."
+            sleep 10
+          done
           echo "SDK 组件安装完成"
 
           echo ""
