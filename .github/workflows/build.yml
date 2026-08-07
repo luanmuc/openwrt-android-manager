@@ -10,8 +10,8 @@ on:
 env:
   JAVA_VERSION: '17'
   JAVA_DISTRIBUTION: 'temurin'
-  ANDROID_COMPILE_SDK: '34'
-  ANDROID_BUILD_TOOLS: '34.0.0'
+  ANDROID_COMPILE_SDK: '35'
+  ANDROID_BUILD_TOOLS: '35.0.0'
   ANDROID_CMDLINE_TOOLS: '11076708'
   GRADLE_OPTS: '-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.daemon=true -Xmx4096m -XX:+UseParallelGC'
   ANDROID_HOME: /usr/local/lib/android/sdk
