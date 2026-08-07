@@ -51,25 +51,33 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun observeRouters() {
         viewModelScope.launch {
-            combine(
-                routerRepository.routers,
-                routerRepository.activeRouterId
-            ) { routers, activeId ->
-                val activeRouter = if (activeId != null) {
-                    routers.find { it.id == activeId } ?: routers.firstOrNull()
-                } else {
-                    routers.firstOrNull()
+            try {
+                combine(
+                    routerRepository.routers,
+                    routerRepository.activeRouterId
+                ) { routers, activeId ->
+                    val activeRouter = if (activeId != null) {
+                        routers.find { it.id == activeId } ?: routers.firstOrNull()
+                    } else {
+                        routers.firstOrNull()
+                    }
+                    Pair(routers, activeRouter)
+                }.collect { (routers, activeRouter) ->
+                    try {
+                        _uiState.value = _uiState.value.copy(
+                            activeRouter = activeRouter,
+                            hasRouter = routers.isNotEmpty()
+                        )
+                        if (activeRouter != null && _uiState.value.routerStatus == null) {
+                            loadAllData(activeRouter)
+                            startAutoRefresh()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
-                Pair(routers, activeRouter)
-            }.collect { (routers, activeRouter) ->
-                _uiState.value = _uiState.value.copy(
-                    activeRouter = activeRouter,
-                    hasRouter = routers.isNotEmpty()
-                )
-                if (activeRouter != null && _uiState.value.routerStatus == null) {
-                    loadAllData(activeRouter)
-                    startAutoRefresh()
-                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

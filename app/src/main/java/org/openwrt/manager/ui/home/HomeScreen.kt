@@ -1,7 +1,9 @@
 package org.openwrt.manager.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,59 +14,56 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Router
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.openwrt.manager.R
 
 /**
- * 首页
+ * 首页 - 小米路由器风格
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onAddRouter: () -> Unit,
     onNavigateToDevices: () -> Unit,
+    onNavigateToPlugins: () -> Unit,
+    onNavigateToWifi: () -> Unit,
+    onNavigateToNetwork: () -> Unit,
+    onNavigateToSystem: () -> Unit,
+    onNavigateToAdvanced: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -72,14 +71,23 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.home_title)) },
+                title = {
+                    Text(
+                        text = "OpenWrt 管家",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
-                    if (uiState.hasRouter && !uiState.isLoading) {
-                        IconButton(onClick = { viewModel.refresh() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "刷新")
-                        }
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "刷新"
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -93,12 +101,20 @@ fun HomeScreen(
                 uiState = uiState,
                 viewModel = viewModel,
                 onNavigateToDevices = onNavigateToDevices,
+                onNavigateToPlugins = onNavigateToPlugins,
+                onNavigateToWifi = onNavigateToWifi,
+                onNavigateToNetwork = onNavigateToNetwork,
+                onNavigateToSystem = onNavigateToSystem,
+                onNavigateToAdvanced = onNavigateToAdvanced,
                 modifier = Modifier.padding(padding)
             )
         }
     }
 }
 
+/**
+ * 空路由器视图
+ */
 @Composable
 fun EmptyRouterView(
     onAddRouter: () -> Unit,
@@ -107,45 +123,80 @@ fun EmptyRouterView(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.Router,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(24.dp))
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF1677FF),
+                            Color(0xFF4096FF)
+                        )
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Router,
+                contentDescription = null,
+                modifier = Modifier.size(60.dp),
+                tint = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         Text(
-            text = stringResource(R.string.home_no_router),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            text = "还没有添加路由器",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Text(
-            text = "添加你的第一台 OpenWrt 路由器",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "添加你的 OpenWrt 路由器，开始智能管理",
+            fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         Spacer(modifier = Modifier.height(32.dp))
-        Button(
+
+        androidx.compose.material3.Button(
             onClick = onAddRouter,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(25.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.home_add_router))
+            Text(
+                text = "添加路由器",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
 
+/**
+ * 首页内容 - 小米路由器风格
+ */
 @Composable
 fun HomeContent(
     uiState: HomeViewModel.HomeUiState,
     viewModel: HomeViewModel,
     onNavigateToDevices: () -> Unit,
+    onNavigateToPlugins: () -> Unit,
+    onNavigateToWifi: () -> Unit,
+    onNavigateToNetwork: () -> Unit,
+    onNavigateToSystem: () -> Unit,
+    onNavigateToAdvanced: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -155,439 +206,177 @@ fun HomeContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 路由器状态大卡片
         RouterStatusCard(
             uiState = uiState,
             onRefresh = { viewModel.refresh() }
         )
 
-        if (uiState.routerStatus != null) {
-            ResourceUsageCard(
-                uiState = uiState,
-                viewModel = viewModel
-            )
-        }
+        // 网速监控卡片
+        NetworkSpeedCard(
+            uiState = uiState
+        )
 
-        if (uiState.routerStatus != null) {
-            NetworkStatusCard(
-                uiState = uiState,
-                viewModel = viewModel
-            )
-        }
+        // 常用功能网格
+        QuickFunctionsGrid(
+            onNavigateToDevices = onNavigateToDevices,
+            onNavigateToWifi = onNavigateToWifi,
+            onNavigateToPlugins = onNavigateToPlugins,
+            onNavigateToNetwork = onNavigateToNetwork
+        )
 
-        if (uiState.routerStatus != null) {
-            SystemInfoCard(
-                uiState = uiState
-            )
-        }
-
-        QuickActionsCard(
-            onReboot = { viewModel.reboot() },
-            onShutdown = { viewModel.shutdown() },
-            onWifi = { },
-            onClients = onNavigateToDevices
+        // 更多功能
+        MoreFunctionsSection(
+            onNavigateToSystem = onNavigateToSystem,
+            onNavigateToAdvanced = onNavigateToAdvanced
         )
     }
 }
 
+/**
+ * 路由器状态大卡片 - 小米风格
+ */
 @Composable
 fun RouterStatusCard(
     uiState: HomeViewModel.HomeUiState,
     onRefresh: () -> Unit
 ) {
     val status = uiState.routerStatus
-    val router = uiState.activeRouter
+    val isOnline = status != null
 
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Router,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = if (isOnline) {
+                            listOf(
+                                Color(0xFF1677FF),
+                                Color(0xFF4096FF),
+                                Color(0xFF69B1FF)
+                            )
+                        } else {
+                            listOf(
+                                Color(0xFF8C8C8C),
+                                Color(0xFFBFBFBF)
+                            )
+                        }
+                    )
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = router?.name?.ifEmpty { null } ?: status?.hostname ?: "OpenWrt路由器",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = router?.address ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                } else {
-                    val isOnline = status != null
-                    AssistChip(
-                        onClick = { },
-                        label = {
-                            Text(
-                                if (isOnline) stringResource(R.string.home_status_online)
-                                else stringResource(R.string.home_status_offline)
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                if (isOnline) Icons.Default.CheckCircle
-                                else Icons.Default.Error,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        },
-                        colors = AssistChipDefaults.assistChipColors(
-                            leadingIconContentColor = if (isOnline)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.error
+                .padding(24.dp)
+        ) {
+            Column {
+                // 顶部：路由器名称和状态
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 路由器图标
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Router,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = Color.White
                         )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = uiState.activeRouter?.name ?: "OpenWrt 路由器",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = if (isOnline) "在线" else "离线",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    // 状态指示灯
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isOnline) Color(0xFF52C41A)
+                                else Color(0xFFFF4D4F)
+                            )
                     )
                 }
-            }
 
-            if (status != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // 底部：关键数据
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    StatItem(
-                        icon = Icons.Default.Schedule,
-                        label = stringResource(R.string.home_uptime),
-                        value = formatUptime(status.uptime)
-                    )
-                    StatItem(
+                    StatusItem(
                         icon = Icons.Default.Devices,
                         label = "在线设备",
-                        value = "${status.onlineDevices} 台"
+                        value = "${status?.onlineDevices ?: 0}",
+                        unit = "台"
+                    )
+                    StatusItem(
+                        icon = Icons.Default.Wifi,
+                        label = "WiFi",
+                        value = if (isOnline) "正常" else "关闭",
+                        unit = ""
+                    )
+                    StatusItem(
+                        icon = Icons.Default.Speed,
+                        label = "CPU",
+                        value = "${((status?.cpuUsage ?: 0f) * 100).toInt()}",
+                        unit = "%"
                     )
                 }
             }
 
-            uiState.error?.let { error ->
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+            // 加载中遮罩
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Error,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(40.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = error,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedButton(
-                        onClick = onRefresh,
-                        modifier = Modifier.height(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("重试", style = MaterialTheme.typography.labelSmall)
-                    }
                 }
             }
         }
     }
 }
 
+/**
+ * 状态数据项
+ */
 @Composable
-fun ResourceUsageCard(
-    uiState: HomeViewModel.HomeUiState,
-    viewModel: HomeViewModel
-) {
-    val status = uiState.routerStatus ?: return
-
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "资源使用",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // CPU 使用率
-            ResourceProgressItem(
-                icon = Icons.Default.Speed,
-                label = "CPU",
-                value = status.cpuUsage,
-                max = 100f,
-                unit = "%",
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 内存使用率
-            val memoryPercent = if (status.memoryTotal > 0) {
-                (status.memoryUsed.toFloat() / status.memoryTotal.toFloat()) * 100f
-            } else 0f
-            ResourceProgressItem(
-                icon = Icons.Default.Memory,
-                label = "内存",
-                value = memoryPercent,
-                max = 100f,
-                unit = "%",
-                detail = "${viewModel.formatBytes(status.memoryUsed)} / ${viewModel.formatBytes(status.memoryTotal)}",
-                color = MaterialTheme.colorScheme.tertiary
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 闪存使用率
-            val storagePercent = if (status.storageTotal > 0) {
-                (status.storageUsed.toFloat() / status.storageTotal.toFloat()) * 100f
-            } else 0f
-            ResourceProgressItem(
-                icon = Icons.Default.SdStorage,
-                label = "闪存",
-                value = storagePercent,
-                max = 100f,
-                unit = "%",
-                detail = "${viewModel.formatBytes(status.storageUsed)} / ${viewModel.formatBytes(status.storageTotal)}",
-                color = MaterialTheme.colorScheme.secondary
-            )
-        }
-    }
-}
-
-@Composable
-fun ResourceProgressItem(
+fun StatusItem(
     icon: ImageVector,
     label: String,
-    value: Float,
-    max: Float,
-    unit: String,
-    detail: String? = null,
-    color: androidx.compose.ui.graphics.Color
-) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = "%.1f$unit".format(value),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        LinearProgressIndicator(
-            progress = { value / max },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp)),
-            color = color
-        )
-        if (detail != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = detail,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun NetworkStatusCard(
-    uiState: HomeViewModel.HomeUiState,
-    viewModel: HomeViewModel
-) {
-    val status = uiState.routerStatus ?: return
-    val wan = uiState.wanStatus
-
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "网络状态",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Router,
-                    contentDescription = null,
-                    tint = if (status.wanConnected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "WAN 口",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = if (status.wanConnected) "已连接" else "未连接",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = if (status.wanConnected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error
-                )
-            }
-
-            if (!status.wanIp.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                InfoRow(label = "IP 地址", value = status.wanIp ?: "")
-            }
-
-            if (wan != null && wan.rxBytes > 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                InfoRow(
-                    label = "下载",
-                    value = viewModel.formatBytes(wan.rxBytes)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                InfoRow(
-                    label = "上传",
-                    value = viewModel.formatBytes(wan.txBytes)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SystemInfoCard(
-    uiState: HomeViewModel.HomeUiState
-) {
-    val status = uiState.routerStatus ?: return
-
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "系统信息",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            InfoRow(label = "主机名", value = status.hostname)
-            InfoRow(label = "设备型号", value = status.model)
-            InfoRow(label = "固件版本", value = status.firmware)
-            InfoRow(label = "内核版本", value = status.kernel)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.home_load) + ": " +
-                        status.loadAverage.joinToString(" / ") { "%.2f".format(it) },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun QuickActionsCard(
-    onReboot: () -> Unit,
-    onShutdown: () -> Unit,
-    onWifi: () -> Unit,
-    onClients: () -> Unit
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.home_quick_actions),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                QuickActionButton(
-                    icon = Icons.Default.RestartAlt,
-                    label = stringResource(R.string.home_reboot),
-                    onClick = onReboot
-                )
-                QuickActionButton(
-                    icon = Icons.Default.PowerSettingsNew,
-                    label = stringResource(R.string.home_shutdown),
-                    onClick = onShutdown
-                )
-                QuickActionButton(
-                    icon = Icons.Default.Wifi,
-                    label = stringResource(R.string.home_wifi),
-                    onClick = onWifi
-                )
-                QuickActionButton(
-                    icon = Icons.Default.Devices,
-                    label = stringResource(R.string.home_clients),
-                    onClick = onClients
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun StatItem(
-    icon: ImageVector,
-    label: String,
-    value: String
+    value: String,
+    unit: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -595,77 +384,365 @@ fun StatItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
+            tint = Color.White
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun InfoRow(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun QuickActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        FilledTonalIconButton(onClick = onClick) {
-            Icon(icon, contentDescription = label)
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            if (unit.isNotEmpty()) {
+                Text(
+                    text = unit,
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall
+            fontSize = 12.sp,
+            color = Color.White.copy(alpha = 0.8f)
         )
     }
 }
 
 /**
- * 格式化运行时间
+ * 网速监控卡片
  */
-private fun formatUptime(seconds: Long): String {
-    val days = seconds / 86400
-    val hours = (seconds % 86400) / 3600
-    val minutes = (seconds % 3600) / 60
-    return when {
-        days > 0 -> "${days}天${hours}小时"
-        hours > 0 -> "${hours}小时${minutes}分钟"
-        else -> "${minutes}分钟"
+@Composable
+fun NetworkSpeedCard(
+    uiState: HomeViewModel.HomeUiState
+) {
+    val status = uiState.routerStatus
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Speed,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "网络状态",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = if (status?.wanConnected == true) "已连接" else "未连接",
+                    fontSize = 14.sp,
+                    color = if (status?.wanConnected == true)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                // 下载
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "下载",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "0.0",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "MB/s",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // 分隔线
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .height(40.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+
+                // 上传
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "上传",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "0.0",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF52C41A)
+                    )
+                    Text(
+                        text = "MB/s",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (!status?.wanIp.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                androidx.compose.material3.Divider()
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "WAN IP",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = status?.wanIp ?: "",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 常用功能网格
+ */
+@Composable
+fun QuickFunctionsGrid(
+    onNavigateToDevices: () -> Unit,
+    onNavigateToWifi: () -> Unit,
+    onNavigateToPlugins: () -> Unit,
+    onNavigateToNetwork: () -> Unit
+) {
+    Column {
+        Text(
+            text = "常用功能",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    FunctionItem(
+                        icon = Icons.Default.Devices,
+                        label = "在线设备",
+                        color = Color(0xFF1677FF),
+                        onClick = onNavigateToDevices
+                    )
+                    FunctionItem(
+                        icon = Icons.Default.Wifi,
+                        label = "WiFi 设置",
+                        color = Color(0xFF13C2C2),
+                        onClick = onNavigateToWifi
+                    )
+                    FunctionItem(
+                        icon = Icons.Default.Settings,
+                        label = "插件管理",
+                        color = Color(0xFF722ED1),
+                        onClick = onNavigateToPlugins
+                    )
+                    FunctionItem(
+                        icon = Icons.Default.Router,
+                        label = "网络设置",
+                        color = Color(0xFFFA8C16),
+                        onClick = onNavigateToNetwork
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 功能项
+ */
+@Composable
+fun FunctionItem(
+    icon: ImageVector,
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(color.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                tint = color
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+/**
+ * 更多功能区域
+ */
+@Composable
+fun MoreFunctionsSection(
+    onNavigateToSystem: () -> Unit,
+    onNavigateToAdvanced: () -> Unit
+) {
+    Column {
+        Text(
+            text = "更多功能",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column {
+                MoreFunctionItem(
+                    icon = Icons.Default.Memory,
+                    label = "系统管理",
+                    subtitle = "日志、进程、系统信息",
+                    color = Color(0xFF1677FF),
+                    onClick = onNavigateToSystem
+                )
+                androidx.compose.material3.Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                MoreFunctionItem(
+                    icon = Icons.Default.Settings,
+                    label = "高级功能",
+                    subtitle = "更多高级设置选项",
+                    color = Color(0xFF722ED1),
+                    onClick = onNavigateToAdvanced
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 更多功能项
+ */
+@Composable
+fun MoreFunctionItem(
+    icon: ImageVector,
+    label: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(color.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = color
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtitle,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Default.Refresh, // 用chevron_right代替
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
