@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SignalCellularAlt
@@ -54,6 +55,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NetworkScreen(
+    onBack: () -> Unit = {},
     viewModel: NetworkViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,6 +66,15 @@ fun NetworkScreen(
         topBar = {
             MiTopAppBar(
                 title = "网络设置",
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "返回",
+                            tint = MiColors.TextPrimary
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.loadNetworkConfig() }) {
                         Icon(

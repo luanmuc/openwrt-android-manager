@@ -168,22 +168,34 @@ fun MainScreen() {
                 )
             }
             composable(Screen.System.route) {
-                SystemScreen()
+                SystemScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Network.route) {
-                NetworkScreen()
+                NetworkScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Wifi.route) {
-                WifiScreen()
+                WifiScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Firewall.route) {
-                FirewallScreen()
+                FirewallScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Ddns.route) {
-                DdnsScreen()
+                DdnsScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Advanced.route) {
-                AdvancedScreen()
+                AdvancedScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

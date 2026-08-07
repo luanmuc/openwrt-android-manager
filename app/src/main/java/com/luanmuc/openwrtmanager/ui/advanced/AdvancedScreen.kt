@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Memory
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +60,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdvancedScreen(
+    onBack: () -> Unit = {},
     viewModel: AdvancedViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -67,7 +70,16 @@ fun AdvancedScreen(
     Scaffold(
         topBar = {
             MiTopAppBar(
-                title = "高级功能"
+                title = "高级功能",
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "返回",
+                            tint = MiColors.TextPrimary
+                        )
+                    }
+                }
             )
         },
         containerColor = MiColors.Background

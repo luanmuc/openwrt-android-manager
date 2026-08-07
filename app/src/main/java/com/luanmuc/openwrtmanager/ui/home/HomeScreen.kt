@@ -369,13 +369,15 @@ fun HomeContent(
         // 路由器状态大卡片
         RouterStatusCard(
             uiState = uiState,
-            onRefresh = { viewModel.refresh() }
+            onRefresh = { viewModel.refresh() },
+            onClick = onNavigateToSystem
         )
         
         // 网速监控卡片
         NetworkSpeedCard(
             uiState = uiState,
-            viewModel = viewModel
+            viewModel = viewModel,
+            onClick = onNavigateToNetwork
         )
         
         // 常用功能网格
@@ -388,7 +390,8 @@ fun HomeContent(
         
         // 系统状态卡片
         SystemStatusCard(
-            uiState = uiState
+            uiState = uiState,
+            onClick = onNavigateToSystem
         )
         
         // 更多功能
@@ -407,7 +410,8 @@ fun HomeContent(
 @Composable
 fun RouterStatusCard(
     uiState: HomeViewModel.HomeUiState,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     val status = uiState.routerStatus
     val isOnline = status != null
@@ -416,6 +420,7 @@ fun RouterStatusCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
             .background(
                 brush = Brush.verticalGradient(
                     colors = if (isOnline) {
@@ -588,13 +593,16 @@ fun StatusItem(
 @Composable
 fun NetworkSpeedCard(
     uiState: HomeViewModel.HomeUiState,
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    onClick: () -> Unit = {}
 ) {
     val status = uiState.routerStatus
     val wan = uiState.wanStatus
     
     MiCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier
@@ -892,12 +900,15 @@ fun QuickFunctionItem(
  */
 @Composable
 fun SystemStatusCard(
-    uiState: HomeViewModel.HomeUiState
+    uiState: HomeViewModel.HomeUiState,
+    onClick: () -> Unit = {}
 ) {
     val status = uiState.routerStatus
     
     MiCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier

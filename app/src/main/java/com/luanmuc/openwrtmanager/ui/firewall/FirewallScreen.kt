@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
@@ -60,6 +61,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FirewallScreen(
+    onBack: () -> Unit = {},
     viewModel: FirewallViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,6 +71,15 @@ fun FirewallScreen(
         topBar = {
             MiTopAppBar(
                 title = "防火墙",
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "返回",
+                            tint = MiColors.TextPrimary
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.loadFirewallConfig() }) {
                         Icon(

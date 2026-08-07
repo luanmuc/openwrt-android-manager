@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Wifi
@@ -54,6 +55,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WifiScreen(
+    onBack: () -> Unit = {},
     viewModel: WifiViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,6 +70,15 @@ fun WifiScreen(
         topBar = {
             MiTopAppBar(
                 title = "WiFi 设置",
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "返回",
+                            tint = MiColors.TextPrimary
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.loadWifiConfig() }) {
                         Icon(
