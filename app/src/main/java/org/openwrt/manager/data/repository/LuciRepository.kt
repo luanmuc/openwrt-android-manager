@@ -203,6 +203,7 @@ class LuciRepository {
             memoryFree = memoryFree,
             memoryUsed = memoryUsed,
             memoryCached = memoryCached,
+            memoryBuffered = memoryBuffered,
             storageTotal = storageTotal,
             storageFree = storageFree,
             storageUsed = storageUsed,
@@ -340,7 +341,7 @@ class LuciRepository {
     /**
      * 获取WiFi设备信息
      */
-    private suspend fun getWifiDeviceInfo(device: String): WifiInterface {
+    suspend fun getWifiDeviceInfo(device: String): WifiInterface {
         return try {
             val result = callUbus("iwinfo", "info", mapOf("device" to device))
             val ssid = result["ssid"]?.toString() ?: ""
@@ -513,9 +514,20 @@ class LuciRepository {
     /**
      * 获取UCI配置
      */
-    suspend fun getUciConfig(config: String): Map<String, Any> {
+    suspend fun getUciConfig(config: String, section: String? = null): Map<String, String> {
         return try {
-            callUbus("uci", "get", mapOf("config" to config))
+            val params = mutableMapOf<String, Any>("config" to config)
+            if (section != null) {
+                params["section"] = section
+            }
+            val result = callUbus("uci", "get", params)
+            // 如果指定了section，返回该section的values
+            if (section != null) {
+                val values = result["values"] as? Map<*, *>
+                values?.mapKeys { it.key.toString() }?.mapValues { it.value?.toString() ?: "" } ?: emptyMap()
+            } else {
+                result.mapKeys { it.key.toString() }.mapValues { it.value?.toString() ?: "" }
+            }
         } catch (e: Exception) {
             emptyMap()
         }
@@ -655,6 +667,54 @@ class LuciRepository {
             rules
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    /**
+     * 添加端口转发规则
+     */
+    suspend fun addPortForward(rule: PortForwardRule): Boolean {
+        return try {
+            val sectionName = "redirect_${System.currentTimeMillis()}"
+            callUbus(
+                "uci", "add", mapOf(
+                    "config" to "firewall",
+                    "type" to "redirect",
+                    "name" to sectionName,
+                    "values" to mapOf(
+                        "name" to rule.name,
+                        "proto" to rule.proto,
+                        "src" to rule.src,
+                        "src_dport" to rule.srcPort,
+                        "dest" to rule.dest,
+                        "dest_ip" to rule.destIp,
+                        "dest_port" to rule.destPort,
+                        "enabled" to if (rule.enabled) "1" else "0"
+                    )
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "firewall"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 删除端口转发规则
+     */
+    suspend fun deletePortForward(ruleName: String): Boolean {
+        return try {
+            callUbus(
+                "uci", "delete", mapOf(
+                    "config" to "firewall",
+                    "section" to ruleName
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "firewall"))
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

@@ -92,6 +92,7 @@ fun HomeScreen(
             HomeContent(
                 uiState = uiState,
                 viewModel = viewModel,
+                onNavigateToDevices = onNavigateToDevices,
                 modifier = Modifier.padding(padding)
             )
         }
@@ -144,6 +145,7 @@ fun EmptyRouterView(
 fun HomeContent(
     uiState: HomeViewModel.HomeUiState,
     viewModel: HomeViewModel,
+    onNavigateToDevices: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -479,9 +481,9 @@ fun NetworkStatusCard(
                 )
             }
 
-            if (status.wanIp.isNotEmpty()) {
+            if (!status.wanIp.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                InfoRow(label = "IP 地址", value = status.wanIp)
+                InfoRow(label = "IP 地址", value = status.wanIp ?: "")
             }
 
             if (wan != null && wan.rxBytes > 0) {

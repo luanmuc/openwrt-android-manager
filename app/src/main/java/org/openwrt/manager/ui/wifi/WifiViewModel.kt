@@ -81,20 +81,20 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     // 加载2.4G配置
                     val iface2g = luciRepository.getWifiDeviceInfo("radio0")
                     val wifi2g = WifiConfig(
-                        enabled = iface2g.enabled,
+                        enabled = iface2g.isUp,
                         ssid = iface2g.ssid,
-                        channel = iface2g.channel,
-                        txpower = iface2g.txPower
+                        channel = iface2g.channel.toString(),
+                        txpower = iface2g.txpower.toString()
                     )
 
                     // 加载5G配置
                     val wifi5g = if (has5g) {
                         val iface5g = luciRepository.getWifiDeviceInfo("radio1")
                         WifiConfig(
-                            enabled = iface5g.enabled,
+                            enabled = iface5g.isUp,
                             ssid = iface5g.ssid,
-                            channel = iface5g.channel,
-                            txpower = iface5g.txPower
+                            channel = iface5g.channel.toString(),
+                            txpower = iface5g.txpower.toString()
                         )
                     } else {
                         WifiConfig()

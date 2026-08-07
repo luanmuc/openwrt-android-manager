@@ -111,7 +111,7 @@ class RouterRepository(private val context: Context) {
     /**
      * 获取路由器列表（一次性读取）
      */
-    private suspend fun getRoutersList(): List<Router> {
+    suspend fun getRoutersList(): List<Router> {
         return try {
             val preferences = context.dataStore.data.first()
             val json = preferences[routersKey] ?: "[]"
