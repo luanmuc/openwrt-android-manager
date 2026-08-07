@@ -126,17 +126,6 @@ jobs:
             ${{ runner.os }}-android-sdk-${{ env.ANDROID_COMPILE_SDK }}-${{ env.ANDROID_BUILD_TOOLS }}-
             ${{ runner.os }}-android-sdk-${{ env.ANDROID_COMPILE_SDK }}-
 
-      - name: 缓存构建输出
-        uses: actions/cache@v4
-        with:
-          path: |
-            app/build
-            build
-            .gradle
-          key: ${{ runner.os }}-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-
       # ==================== 第五步：安装 Android SDK ====================
       - name: 安装 Android SDK
         if: steps.android-sdk-cache.outputs.cache-hit != 'true'
@@ -238,6 +227,15 @@ jobs:
           echo "========================================"
 
       # ==================== 第八步：编译 APK ====================
+      - name: 清理旧的构建输出
+        run: |
+          echo "=== 清理旧的构建输出 ==="
+          ./gradlew clean
+          echo "清理完成"
+          echo ""
+          echo "=== 磁盘空间 ==="
+          df -h /
+
       - name: 编译 Debug APK
         id: build
         run: |
