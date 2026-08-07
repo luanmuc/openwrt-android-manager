@@ -55,13 +55,24 @@ class DdnsViewModel(application: Application) : AndroidViewModel(application) {
                 success = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(600)
+                    val configs = DebugMode.getFakeDdnsConfigs()
+                    _uiState.value = _uiState.value.copy(
+                        ddnsConfigs = configs,
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     // 加载DDNS配置
                     val configs = luciRepository.getDdnsConfigs()
                     _uiState.value = _uiState.value.copy(

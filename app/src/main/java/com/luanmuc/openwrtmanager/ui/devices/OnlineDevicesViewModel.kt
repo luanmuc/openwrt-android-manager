@@ -59,16 +59,26 @@ class OnlineDevicesViewModel(application: Application) : AndroidViewModel(applic
                 error = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val devices = DebugMode.getFakeOnlineDevices()
+                    _uiState.value = _uiState.value.copy(
+                        devices = sortDevices(devices, _uiState.value.sortBy),
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     val dhcpLeases = luciRepository.getDhcpLeases()
                     val arpTable = luciRepository.getArpTable()
-
                     // 合并DHCP租约和ARP表
                     val deviceMap = mutableMapOf<String, DeviceInfo>()
                     dhcpLeases.forEach { device ->
@@ -88,7 +98,6 @@ class OnlineDevicesViewModel(application: Application) : AndroidViewModel(applic
                             }
                         }
                     }
-
                     val devices = deviceMap.values.toList()
                     _uiState.value = _uiState.value.copy(
                         devices = sortDevices(devices, _uiState.value.sortBy),
