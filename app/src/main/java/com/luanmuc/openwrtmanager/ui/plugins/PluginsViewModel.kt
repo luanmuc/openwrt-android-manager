@@ -56,16 +56,28 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
                 error = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val installed = DebugMode.getFakeInstalledPackages()
+                    val available = DebugMode.getFakeAvailablePackages()
+                    _uiState.value = _uiState.value.copy(
+                        installedPackages = installed,
+                        availablePackages = available,
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     val installed = luciRepository.getInstalledPackages()
                     val available = luciRepository.getAvailablePackages()
-
                     _uiState.value = _uiState.value.copy(
                         installedPackages = installed,
                         availablePackages = available,
@@ -86,6 +98,23 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(actionLoading = name)
             try {
+                // 调试模式：模拟安装
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1500)
+                    val installed = _uiState.value.installedPackages.toMutableList()
+                    val available = _uiState.value.availablePackages.toMutableList()
+                    val pkg = available.find { it.name == name }
+                    if (pkg != null) {
+                        available.remove(pkg)
+                        installed.add(pkg.copy(installed = true))
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        installedPackages = installed,
+                        availablePackages = available
+                    )
+                    return@launch
+                }
+
                 val success = luciRepository.installPackage(name)
                 if (success) {
                     loadPackages()
@@ -104,6 +133,23 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(actionLoading = name)
             try {
+                // 调试模式：模拟卸载
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    val installed = _uiState.value.installedPackages.toMutableList()
+                    val available = _uiState.value.availablePackages.toMutableList()
+                    val pkg = installed.find { it.name == name }
+                    if (pkg != null) {
+                        installed.remove(pkg)
+                        available.add(pkg.copy(installed = false))
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        installedPackages = installed,
+                        availablePackages = available
+                    )
+                    return@launch
+                }
+
                 val success = luciRepository.removePackage(name)
                 if (success) {
                     loadPackages()

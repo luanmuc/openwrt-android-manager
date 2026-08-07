@@ -58,13 +58,24 @@ class FirewallViewModel(application: Application) : AndroidViewModel(application
                 success = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(600)
+                    val portForwards = DebugMode.getFakePortForwards()
+                    _uiState.value = _uiState.value.copy(
+                        portForwards = portForwards,
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     // 加载端口转发规则
                     val portForwards = luciRepository.getPortForwards()
                     _uiState.value = _uiState.value.copy(
@@ -85,10 +96,20 @@ class FirewallViewModel(application: Application) : AndroidViewModel(application
     fun deletePortForward(name: String) {
         viewModelScope.launch {
             try {
+                // 调试模式：模拟删除
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val portForwards = _uiState.value.portForwards.filter { it.name != name }
+                    _uiState.value = _uiState.value.copy(
+                        portForwards = portForwards,
+                        success = "规则删除成功"
+                    )
+                    return@launch
+                }
+
                 // 删除端口转发规则
                 luciRepository.deletePortForward(name)
                 luciRepository.commitUci("firewall")
-
                 // 重新加载
                 loadFirewallConfig()
                 _uiState.value = _uiState.value.copy(success = "规则删除成功")
@@ -101,10 +122,20 @@ class FirewallViewModel(application: Application) : AndroidViewModel(application
     fun addPortForward(rule: PortForwardRule) {
         viewModelScope.launch {
             try {
+                // 调试模式：模拟添加
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val portForwards = _uiState.value.portForwards + rule
+                    _uiState.value = _uiState.value.copy(
+                        portForwards = portForwards,
+                        success = "规则添加成功"
+                    )
+                    return@launch
+                }
+
                 // 添加端口转发规则
                 luciRepository.addPortForward(rule)
                 luciRepository.commitUci("firewall")
-
                 // 重新加载
                 loadFirewallConfig()
                 _uiState.value = _uiState.value.copy(success = "规则添加成功")

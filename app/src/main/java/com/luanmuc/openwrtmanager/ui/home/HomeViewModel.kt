@@ -107,24 +107,63 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value.activeRouter?.let { router ->
             viewModelScope.launch {
                 try {
+                    // 调试模式：使用假数据
+                    if (DebugMode.isDebugMode) {
+                        DebugMode.simulateDelay(300)
+                        val status = DebugMode.getFakeRouterStatus()
+                        val wan = DebugMode.getFakeWanStatus()
+                        val devices = DebugMode.getFakeOnlineDevices()
+                        val now = System.currentTimeMillis()
+                        val newCpuPoint = CpuDataPoint(time = now, usage = status.cpuUsage + (Math.random() * 10 - 5).toFloat())
+                        val cpuHistory = (_uiState.value.cpuHistory + newCpuPoint).takeLast(20)
+                        val wanRx = wan.rxBytes + (Math.random() * 100000).toLong()
+                        val wanTx = wan.txBytes + (Math.random() * 50000).toLong()
+                        val newTrafficPoint = TrafficDataPoint(time = now, rx = wanRx, tx = wanTx)
+                        val trafficHistory = (_uiState.value.trafficHistory + newTrafficPoint).takeLast(20)
+                        // 计算实时速度
+                        val lastPoint = _uiState.value.trafficHistory.lastOrNull()
+                        val downloadSpeed = if (lastPoint != null && now > lastPoint.time) {
+                            val timeDiff = (now - lastPoint.time) / 1000.0
+                            if (timeDiff > 0) {
+                                ((wanRx - lastPoint.rx) / timeDiff).toLong()
+                            } else 0
+                        } else 0
+                        val uploadSpeed = if (lastPoint != null && now > lastPoint.time) {
+                            val timeDiff = (now - lastPoint.time) / 1000.0
+                            if (timeDiff > 0) {
+                                ((wanTx - lastPoint.tx) / timeDiff).toLong()
+                            } else 0
+                        } else 0
+                        _uiState.value = _uiState.value.copy(
+                            routerStatus = status.copy(
+                                cpuUsage = newCpuPoint.usage,
+                                onlineDevices = devices.size
+                            ),
+                            wanStatus = wan.copy(rxBytes = wanRx, txBytes = wanTx),
+                            onlineDevices = devices,
+                            cpuHistory = cpuHistory,
+                            trafficHistory = trafficHistory,
+                            downloadSpeed = downloadSpeed,
+                            uploadSpeed = uploadSpeed,
+                            error = null
+                        )
+                        return@launch
+                    }
+
                     val password = EncryptionUtil.decrypt(router.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(router.address, router.username, password)
                     }
-
                     val status = luciRepository.getRouterStatus()
                     val wan = luciRepository.getWanStatus()
                     val devices = luciRepository.getDhcpLeases()
-
                     val now = System.currentTimeMillis()
                     val newCpuPoint = CpuDataPoint(time = now, usage = status.cpuUsage)
                     val cpuHistory = (_uiState.value.cpuHistory + newCpuPoint).takeLast(20)
-
                     val wanRx = wan?.rxBytes ?: 0
                     val wanTx = wan?.txBytes ?: 0
                     val newTrafficPoint = TrafficDataPoint(time = now, rx = wanRx, tx = wanTx)
                     val trafficHistory = (_uiState.value.trafficHistory + newTrafficPoint).takeLast(20)
-
                     // 计算实时速度
                     val lastPoint = _uiState.value.trafficHistory.lastOrNull()
                     val downloadSpeed = if (lastPoint != null && now > lastPoint.time) {
@@ -133,14 +172,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                             ((wanRx - lastPoint.rx) / timeDiff).toLong()
                         } else 0
                     } else 0
-
                     val uploadSpeed = if (lastPoint != null && now > lastPoint.time) {
                         val timeDiff = (now - lastPoint.time) / 1000.0
                         if (timeDiff > 0) {
                             ((wanTx - lastPoint.tx) / timeDiff).toLong()
                         } else 0
                     } else 0
-
                     _uiState.value = _uiState.value.copy(
                         routerStatus = status.copy(
                             onlineDevices = devices.size,
@@ -174,13 +211,39 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 error = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val status = DebugMode.getFakeRouterStatus()
+                    val wan = DebugMode.getFakeWanStatus()
+                    val devices = DebugMode.getFakeOnlineDevices()
+                    val now = System.currentTimeMillis()
+                    val cpuHistory = listOf(CpuDataPoint(time = now, usage = status.cpuUsage))
+                    val trafficHistory = listOf(
+                        TrafficDataPoint(
+                            time = now,
+                            rx = wan.rxBytes,
+                            tx = wan.txBytes
+                        )
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        routerStatus = status,
+                        wanStatus = wan,
+                        onlineDevices = devices,
+                        isLoading = false,
+                        isRefreshing = false,
+                        cpuHistory = cpuHistory,
+                        trafficHistory = trafficHistory,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val password = EncryptionUtil.decrypt(router.encryptedPassword)
                 luciRepository.login(router.address, router.username, password)
-
                 val status = luciRepository.getRouterStatus()
                 val wan = luciRepository.getWanStatus()
                 val devices = luciRepository.getDhcpLeases()
-
                 val now = System.currentTimeMillis()
                 val cpuHistory = listOf(CpuDataPoint(time = now, usage = status.cpuUsage))
                 val trafficHistory = listOf(
@@ -190,7 +253,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         tx = wan?.txBytes ?: 0
                     )
                 )
-
                 _uiState.value = _uiState.value.copy(
                     routerStatus = status.copy(
                         onlineDevices = devices.size,
@@ -237,6 +299,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun reboot() {
         viewModelScope.launch {
             try {
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    return@launch
+                }
                 luciRepository.reboot()
             } catch (e: Exception) {
                 // 重启会断开连接，忽略错误
@@ -250,6 +316,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun shutdown() {
         viewModelScope.launch {
             try {
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    return@launch
+                }
                 luciRepository.shutdown()
             } catch (e: Exception) {
                 // 关机会断开连接，忽略错误
@@ -301,3 +371,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         refreshJob?.cancel()
     }
 }
+
+data class CpuDataPoint(
+    val time: Long,
+    val usage: Float
+)
+
+data class TrafficDataPoint(
+    val time: Long,
+    val rx: Long,
+    val tx: Long
+)
