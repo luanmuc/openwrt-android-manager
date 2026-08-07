@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "org.openwrt.manager"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.openwrt.manager"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "2.1.0"
 
