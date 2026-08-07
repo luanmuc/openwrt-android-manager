@@ -283,7 +283,10 @@ fun UserInfoCard() {
 }
 
 @Composable
+@Composable
 fun SettingsList() {
+    val context = LocalContext.current
+    
     MiCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -301,7 +304,9 @@ fun SettingsList() {
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                onClick = {}
+                onClick = {
+                    Toast.makeText(context, "主题设置开发中，敬请期待", Toast.LENGTH_SHORT).show()
+                }
             )
             MiDivider(indent = 60.dp)
             MiListItem(
@@ -315,7 +320,9 @@ fun SettingsList() {
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                onClick = {}
+                onClick = {
+                    Toast.makeText(context, "安全设置开发中，敬请期待", Toast.LENGTH_SHORT).show()
+                }
             )
             MiDivider(indent = 60.dp)
             MiListItem(
@@ -329,7 +336,9 @@ fun SettingsList() {
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                onClick = {}
+                onClick = {
+                    Toast.makeText(context, "通知设置开发中，敬请期待", Toast.LENGTH_SHORT).show()
+                }
             )
             MiDivider(indent = 60.dp)
             MiListItem(
@@ -343,7 +352,9 @@ fun SettingsList() {
                         modifier = Modifier.size(22.dp)
                     )
                 },
-                onClick = {}
+                onClick = {
+                    Toast.makeText(context, "语言设置开发中，敬请期待", Toast.LENGTH_SHORT).show()
+                }
             )
         }
     }
