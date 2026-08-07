@@ -69,16 +69,55 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                 success = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val wifi2g = WifiConfig(
+                        enabled = true,
+                        ssid = "OpenWrt-2.4G",
+                        password = "12345678",
+                        channel = "auto",
+                        bandwidth = "20",
+                        txpower = "20",
+                        encryption = "psk2"
+                    )
+                    val wifi5g = WifiConfig(
+                        enabled = true,
+                        ssid = "OpenWrt-5G",
+                        password = "12345678",
+                        channel = "auto",
+                        bandwidth = "80",
+                        txpower = "23",
+                        encryption = "psk2"
+                    )
+                    val guestWifi = WifiConfig(
+                        enabled = false,
+                        ssid = "OpenWrt-Guest",
+                        password = "guest123",
+                        channel = "auto",
+                        bandwidth = "20",
+                        txpower = "10",
+                        encryption = "psk2"
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        wifi2g = wifi2g,
+                        wifi5g = wifi5g,
+                        guestWifi = guestWifi,
+                        has5g = true,
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     val wifiDevices = luciRepository.getWifiDevices()
                     val has5g = wifiDevices.size > 1
-
                     // 加载2.4G配置
                     val iface2g = luciRepository.getWifiDeviceInfo("radio0")
                     val wifi2g = WifiConfig(
@@ -87,7 +126,6 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                         channel = iface2g.channel.toString(),
                         txpower = iface2g.txpower.toString()
                     )
-
                     // 加载5G配置
                     val wifi5g = if (has5g) {
                         val iface5g = luciRepository.getWifiDeviceInfo("radio1")
@@ -100,7 +138,6 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         WifiConfig()
                     }
-
                     _uiState.value = _uiState.value.copy(
                         wifi2g = wifi2g,
                         wifi5g = wifi5g,
@@ -126,22 +163,29 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                 success = null
             )
             try {
+                // 调试模式：模拟保存
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        success = "WiFi配置保存成功"
+                    )
+                    return@launch
+                }
+
                 val config = when (band) {
                     "2g" -> _uiState.value.wifi2g
                     "5g" -> _uiState.value.wifi5g
                     else -> _uiState.value.guestWifi
                 }
-
                 val radio = when (band) {
                     "2g" -> "radio0"
                     "5g" -> "radio1"
                     else -> "radio0"
                 }
-
                 // 保存WiFi配置
                 luciRepository.setUciConfig("wireless", radio, "channel", config.channel)
                 luciRepository.setUciConfig("wireless", radio, "txpower", config.txpower)
-
                 // 保存接口配置
                 val iface = if (band == "guest") "guest" else "default_radio${band.last()}"
                 luciRepository.setUciConfig("wireless", "default_$radio", "ssid", config.ssid)
@@ -150,13 +194,10 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     luciRepository.setUciConfig("wireless", "default_$radio", "key", config.password)
                     luciRepository.setUciConfig("wireless", "default_$radio", "encryption", config.encryption)
                 }
-
                 // 提交配置
                 luciRepository.commitUci("wireless")
-
                 // 重启WiFi
                 luciRepository.restartWifi()
-
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "WiFi配置保存成功"
