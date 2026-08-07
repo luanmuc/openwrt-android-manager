@@ -3,67 +3,99 @@ package org.openwrt.manager.data.repository
 import org.openwrt.manager.data.api.LuciApiService
 import org.openwrt.manager.data.api.RetrofitClient
 import org.openwrt.manager.data.model.LuciRpcRequest
-import org.openwrt.manager.data.model.LuciRpcResponse
 import org.openwrt.manager.data.model.RouterStatus
 
 /**
  * LuCI API 仓库
- * 封装所有与 OpenWrt LuCI RPC 的交互
+ * 封装所有与 OpenWrt LuCI ubus RPC 的交互
+ * 支持 ImmortalWrt / OpenWrt 21.02+ 新版 LuCI
  */
 class LuciRepository {
-
     private var authToken: String = ""
     private var currentAddress: String = ""
 
     /**
      * 登录认证
+     * 使用 ubus session.login 方法
      * @param address 路由器地址
      * @param username 用户名
-     * @param password 密码
-     * @return 认证token
+     * @param password 密码（支持空密码）
+     * @return 认证token (ubus_rpc_session)
      */
     suspend fun login(address: String, username: String, password: String): String {
         currentAddress = normalizeAddress(address)
         val api = RetrofitClient.getApi(currentAddress)
 
-        val request = LuciRpcRequest(
-            id = 1,
-            method = "login",
-            params = listOf(username, password)
-        )
+        val request = LuciRpcRequest.loginRequest(username, password)
+        val response = api.call(LuciApiService.UBUS_PATH, request)
 
-        val response = api.call(LuciApiService.AUTH_PATH, request)
         if (response.error != null) {
             throw Exception("认证失败: ${response.error.message}")
         }
 
-        authToken = response.result?.toString() ?: ""
+        // ubus RPC 响应格式: result = [statusCode, data]
+        // statusCode 0 表示成功
+        val result = response.result
+        if (result == null || result.size < 2) {
+            throw Exception("认证失败：无效的响应格式")
+        }
+
+        val statusCode = (result[0] as? Number)?.toInt() ?: -1
+        if (statusCode != 0) {
+            throw Exception("认证失败：用户名或密码错误 (错误码: $statusCode)")
+        }
+
+        val data = result[1] as? Map<*, *>
+        authToken = data?.get("ubus_rpc_session")?.toString() ?: ""
+
         if (authToken.isEmpty()) {
-            throw Exception("认证失败：无效的响应")
+            throw Exception("认证失败：未获取到会话令牌")
         }
 
         return authToken
     }
 
     /**
-     * 获取系统信息
+     * 调用 ubus 方法
      */
-    suspend fun getSystemInfo(): Map<String, Any> {
+    private suspend fun callUbus(
+        obj: String,
+        method: String,
+        params: Map<String, Any> = emptyMap()
+    ): Map<String, Any> {
         val api = RetrofitClient.getApi(currentAddress)
 
-        val request = LuciRpcRequest(
-            id = 2,
-            method = "sysinfo",
-            params = listOf(authToken)
-        )
+        val request = LuciRpcRequest.callRequest(authToken, obj, method, params)
+        val response = api.call(LuciApiService.UBUS_PATH, request)
 
-        val response = api.call(LuciApiService.SYS_PATH, request)
         if (response.error != null) {
-            throw Exception("获取系统信息失败: ${response.error.message}")
+            throw Exception("调用失败: ${response.error.message}")
+        }
+
+        val result = response.result
+        if (result == null || result.size < 2) {
+            throw Exception("无效的响应格式")
+        }
+
+        val statusCode = (result[0] as? Number)?.toInt() ?: -1
+        if (statusCode != 0) {
+            throw Exception("调用失败 (错误码: $statusCode)")
         }
 
         @Suppress("UNCHECKED_CAST")
-        return response.result as? Map<String, Any> ?: emptyMap()
+        return result[1] as? Map<String, Any> ?: emptyMap()
+    }
+
+    /**
+     * 获取系统信息
+     */
+    suspend fun getSystemInfo(): Map<String, Any> {
+        return try {
+            callUbus("system", "info")
+        } catch (e: Exception) {
+            // 尝试备用方式获取信息
+            emptyMap()
+        }
     }
 
     /**
@@ -71,10 +103,24 @@ class LuciRepository {
      */
     suspend fun getRouterStatus(): RouterStatus {
         val sysInfo = getSystemInfo()
+        val boardInfo = try {
+            callUbus("system", "board")
+        } catch (e: Exception) {
+            emptyMap()
+        }
 
-        val hostname = sysInfo["hostname"]?.toString() ?: "Unknown"
-        val model = sysInfo["model"]?.toString() ?: "Unknown"
-        val firmware = sysInfo["release"]?.toString() ?: "Unknown"
+        val hostname = sysInfo["hostname"]?.toString()
+            ?: boardInfo["hostname"]?.toString()
+            ?: "OpenWrt"
+
+        val model = boardInfo["model"]?.toString()
+            ?: sysInfo["model"]?.toString()
+            ?: "Unknown"
+
+        val release = boardInfo["release"]?.toString()
+            ?: sysInfo["release"]?.toString()
+            ?: "Unknown"
+
         val kernel = sysInfo["kernel"]?.toString() ?: "Unknown"
         val uptime = (sysInfo["uptime"] as? Number)?.toLong() ?: 0L
 
@@ -89,13 +135,12 @@ class LuciRepository {
         val memoryCached = (memory?.get("cached") as? Number)?.toLong() ?: 0L
         val memoryBuffered = (memory?.get("buffered") as? Number)?.toLong() ?: 0L
 
-        // CPU 使用率计算（简化版）
         val cpuUsage = calculateCpuUsage(sysInfo)
 
         return RouterStatus(
             hostname = hostname,
             model = model,
-            firmware = firmware,
+            firmware = release,
             kernel = kernel,
             uptime = uptime,
             loadAverage = loadAverage,
@@ -108,31 +153,11 @@ class LuciRepository {
     }
 
     /**
-     * 执行系统命令（需要权限）
-     */
-    suspend fun exec(command: String): String {
-        val api = RetrofitClient.getApi(currentAddress)
-
-        val request = LuciRpcRequest(
-            id = 3,
-            method = "exec",
-            params = listOf(authToken, command)
-        )
-
-        val response = api.call(LuciApiService.SYS_PATH, request)
-        if (response.error != null) {
-            throw Exception("执行命令失败: ${response.error.message}")
-        }
-
-        return response.result?.toString() ?: ""
-    }
-
-    /**
      * 重启路由器
      */
     suspend fun reboot(): Boolean {
         return try {
-            exec("reboot")
+            callUbus("system", "reboot")
             true
         } catch (e: Exception) {
             // 重启时连接会断开，视为成功
@@ -141,7 +166,6 @@ class LuciRepository {
     }
 
     private fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
-        // 简化计算，实际需要两次采样对比
         val cpu = sysInfo["cpu"] as? Map<*, *>
         return (cpu?.get("usage") as? Number)?.toFloat() ?: 0f
     }
@@ -158,9 +182,7 @@ class LuciRepository {
     }
 
     fun getCurrentAddress(): String = currentAddress
-
     fun isLoggedIn(): Boolean = authToken.isNotEmpty()
-
     fun logout() {
         authToken = ""
         currentAddress = ""
