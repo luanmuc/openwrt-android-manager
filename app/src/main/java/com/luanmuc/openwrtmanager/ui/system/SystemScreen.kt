@@ -21,23 +21,15 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +46,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.data.model.LogEntry
 import com.luanmuc.openwrtmanager.data.model.ProcessInfo
+import com.luanmuc.openwrtmanager.ui.components.MiButton
+import com.luanmuc.openwrtmanager.ui.components.MiButtonType
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
+import com.luanmuc.openwrtmanager.ui.components.MiErrorState
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiLinearProgress
+import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 系统管理页面 - 小米路由器风格
@@ -65,17 +67,11 @@ fun SystemScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val tabs = listOf("系统日志", "进程管理")
-
+    
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "系统管理",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
+            MiTopAppBar(
+                title = "系统管理",
                 actions = {
                     IconButton(
                         onClick = {
@@ -89,17 +85,13 @@ fun SystemScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = Color(0xFF1677FF)
+                            tint = MiColors.TextSecondary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+                }
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -109,13 +101,13 @@ fun SystemScreen(
             // Tab栏
             TabRow(
                 selectedTabIndex = uiState.selectedTab,
-                containerColor = Color(0xFFF5F7FA),
+                containerColor = MiColors.Background,
                 divider = {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(1.dp)
-                            .background(Color(0xFFE5E6EB))
+                            .height(0.5.dp)
+                            .background(MiColors.Divider)
                     )
                 }
             ) {
@@ -127,15 +119,15 @@ fun SystemScreen(
                             Text(
                                 title,
                                 fontSize = 15.sp,
-                                fontWeight = if (uiState.selectedTab == index) FontWeight.SemiBold else FontWeight.Normal
+                                fontWeight = if (uiState.selectedTab == index) FontWeight.SemiBold else FontWeight.Medium
                             )
                         },
-                        selectedContentColor = Color(0xFF1677FF),
-                        unselectedContentColor = Color(0xFF86909C)
+                        selectedContentColor = MiColors.Primary,
+                        unselectedContentColor = MiColors.TextTertiary
                     )
                 }
             }
-
+            
             if (uiState.selectedTab == 0) {
                 LogsContent(
                     logs = uiState.logs,
@@ -164,33 +156,15 @@ fun LogsContent(
     onRetry: () -> Unit
 ) {
     if (isLoading) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator(color = Color(0xFF1677FF))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "加载中...",
-                color = Color(0xFF86909C),
-                fontSize = 14.sp
-            )
-        }
+        MiLoadingState()
     } else if (error != null && logs.isEmpty()) {
-        ErrorState(error = error, onRetry = onRetry)
+        MiErrorState(message = error, onRetry = onRetry)
     } else {
-        Card(
+        MiCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1D2129)
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            )
+            backgroundColor = Color(0xFF1D2129)
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -198,22 +172,17 @@ fun LogsContent(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 items(logs) { log ->
-                    LogItem(log = log)
+                    Text(
+                        text = "${log.time} ${log.message}",
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color(0xFFC9CDD4),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
                 }
             }
         }
     }
-}
-
-@Composable
-fun LogItem(log: LogEntry) {
-    Text(
-        text = "${log.time} ${log.message}",
-        fontSize = 12.sp,
-        fontFamily = FontFamily.Monospace,
-        color = Color(0xFFC9CDD4),
-        modifier = Modifier.padding(vertical = 2.dp)
-    )
 }
 
 @Composable
@@ -225,52 +194,23 @@ fun ProcessesContent(
     onKillProcess: (Int) -> Unit
 ) {
     var showKillDialog by remember { mutableStateOf<ProcessInfo?>(null) }
-
+    
     if (isLoading) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CircularProgressIndicator(color = Color(0xFF1677FF))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "加载中...",
-                color = Color(0xFF86909C),
-                fontSize = 14.sp
-            )
-        }
+        MiLoadingState()
     } else if (error != null && processes.isEmpty()) {
-        ErrorState(error = error, onRetry = onRetry)
+        MiErrorState(message = error, onRetry = onRetry)
     } else if (processes.isEmpty()) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        color = Color(0xFFF2F3F5),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+        MiEmptyState(
+            icon = {
                 Icon(
                     imageVector = Icons.Default.BugReport,
                     contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = Color(0xFF86909C)
+                    tint = MiColors.TextTertiary,
+                    modifier = Modifier.size(40.dp)
                 )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "暂无进程信息",
-                color = Color(0xFF86909C),
-                fontSize = 14.sp
-            )
-        }
+            },
+            text = "暂无进程信息"
+        )
     } else {
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
@@ -284,7 +224,7 @@ fun ProcessesContent(
             }
         }
     }
-
+    
     showKillDialog?.let { process ->
         AlertDialog(
             onDismissRequest = { showKillDialog = null },
@@ -292,7 +232,7 @@ fun ProcessesContent(
                 Icon(
                     Icons.Default.Stop,
                     contentDescription = null,
-                    tint = Color(0xFFF53F3F)
+                    tint = MiColors.Error
                 )
             },
             title = {
@@ -313,7 +253,7 @@ fun ProcessesContent(
                 ) {
                     Text(
                         "结束",
-                        color = Color(0xFFF53F3F),
+                        color = MiColors.Error,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -322,7 +262,7 @@ fun ProcessesContent(
                 TextButton(onClick = { showKillDialog = null }) {
                     Text(
                         "取消",
-                        color = Color(0xFF86909C)
+                        color = MiColors.TextTertiary
                     )
                 }
             },
@@ -336,15 +276,8 @@ fun ProcessCard(
     process: ProcessInfo,
     onKill: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -352,162 +285,73 @@ fun ProcessCard(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 进程图标
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = Color(0xFFE8F3FF),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.BugReport,
-                    contentDescription = null,
-                    tint = Color(0xFF1677FF),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
+            MiFeatureIcon(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.BugReport,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                gradient = MiColors.GradientBlue,
+                size = 40.dp,
+                iconSize = 20.dp
+            )
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = process.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
+                    color = MiColors.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "PID: ${process.pid} | 用户: ${process.user}",
                     fontSize = 12.sp,
-                    color = Color(0xFF86909C)
+                    color = MiColors.TextTertiary
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row {
-                    // CPU进度条
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(6.dp)
-                            .background(
-                                color = Color(0xFFF2F3F5),
-                                shape = RoundedCornerShape(3.dp)
-                            )
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(process.cpu.coerceIn(0f, 100f) / 100f)
-                                .height(6.dp)
-                                .background(
-                                    color = Color(0xFF1677FF),
-                                    shape = RoundedCornerShape(3.dp)
-                                )
-                        )
-                    }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MiLinearProgress(
+                        progress = process.cpu / 100f,
+                        color = MiColors.Primary,
+                        modifier = Modifier.weight(1f),
+                        height = 6.dp
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${process.cpu}%",
                         fontSize = 11.sp,
-                        color = Color(0xFF1677FF),
+                        color = MiColors.Primary,
                         fontWeight = FontWeight.Medium
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    // 内存进度条
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(6.dp)
-                            .background(
-                                color = Color(0xFFF2F3F5),
-                                shape = RoundedCornerShape(3.dp)
-                            )
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(process.memory.coerceIn(0f, 100f) / 100f)
-                                .height(6.dp)
-                                .background(
-                                    color = Color(0xFF722ED1),
-                                    shape = RoundedCornerShape(3.dp)
-                                )
-                        )
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MiLinearProgress(
+                        progress = process.memory / 100f,
+                        color = MiColors.Purple,
+                        modifier = Modifier.weight(1f),
+                        height = 6.dp
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${process.memory}%",
                         fontSize = 11.sp,
-                        color = Color(0xFF722ED1),
+                        color = MiColors.Purple,
                         fontWeight = FontWeight.Medium
                     )
                 }
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-
-            IconButton(onClick = onKill) {
-                Icon(
-                    Icons.Default.Stop,
-                    contentDescription = "结束进程",
-                    tint = Color(0xFFF53F3F),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ErrorState(
-    error: String,
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .background(
-                    color = Color(0xFFFFF1F0),
-                    shape = RoundedCornerShape(20.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.BugReport,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = Color(0xFFF53F3F)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = error,
-            fontSize = 14.sp,
-            color = Color(0xFFF53F3F)
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1677FF)
-            ),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
-        ) {
-            Text(
-                "重试",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+            MiButton(
+                text = "结束",
+                onClick = onKill,
+                type = MiButtonType.Secondary,
+                modifier = Modifier.width(60.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
             )
         }
     }

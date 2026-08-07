@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.advanced
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,169 +13,308 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FileCopy
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.NetworkCheck
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiDivider
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiListItem
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 高级功能页面 - 小米路由器风格
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdvancedScreen() {
-    val features = listOf(
-        AdvancedFeature(
-            title = "SSH 终端",
-            description = "命令行管理",
-            icon = Icons.Default.Terminal,
-            iconBg = Color(0xFFFFF0E6),
-            iconColor = Color(0xFFFF7D00)
-        ),
-        AdvancedFeature(
-            title = "文件管理",
-            description = "路由器文件",
-            icon = Icons.Default.FileCopy,
-            iconBg = Color(0xFFE8F3FF),
-            iconColor = Color(0xFF1677FF)
-        ),
-        AdvancedFeature(
-            title = "进程管理",
-            description = "运行进程",
-            icon = Icons.Default.Memory,
-            iconBg = Color(0xFFF5E8FF),
-            iconColor = Color(0xFF722ED1)
-        ),
-        AdvancedFeature(
-            title = "流量统计",
-            description = "实时流量",
-            icon = Icons.Default.NetworkCheck,
-            iconBg = Color(0xFFE8FFEA),
-            iconColor = Color(0xFF00B42A)
-        )
-    )
-
+fun AdvancedScreen(
+    viewModel: AdvancedViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showRebootDialog by remember { mutableStateOf(false) }
+    var showShutdownDialog by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "高级功能",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+            MiTopAppBar(
+                title = "高级功能"
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // 系统操作
+            SectionTitle(title = "系统操作")
+            MiCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             ) {
-                items(features) { feature ->
-                    AdvancedFeatureCard(feature = feature)
+                Column {
+                    MiListItem(
+                        title = "重启路由器",
+                        subtitle = "重新启动设备",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                tint = MiColors.Primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = { showRebootDialog = true }
+                    )
+                    MiDivider(indent = 60.dp)
+                    MiListItem(
+                        title = "关闭路由器",
+                        subtitle = "关闭设备电源",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.PowerSettingsNew,
+                                contentDescription = null,
+                                tint = MiColors.Error,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = { showShutdownDialog = true }
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 系统信息
+            SectionTitle(title = "系统信息")
+            MiCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column {
+                    MiListItem(
+                        title = "系统信息",
+                        subtitle = "固件版本、内核版本",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = MiColors.Success,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = {}
+                    )
+                    MiDivider(indent = 60.dp)
+                    MiListItem(
+                        title = "存储状态",
+                        subtitle = "磁盘使用情况",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Storage,
+                                contentDescription = null,
+                                tint = MiColors.Warning,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = {}
+                    )
+                    MiDivider(indent = 60.dp)
+                    MiListItem(
+                        title = "进程管理",
+                        subtitle = "查看运行中的进程",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Memory,
+                                contentDescription = null,
+                                tint = MiColors.Purple,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = {}
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 诊断工具
+            SectionTitle(title = "诊断工具")
+            MiCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column {
+                    MiListItem(
+                        title = "网络诊断",
+                        subtitle = "Ping、Traceroute",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Security,
+                                contentDescription = null,
+                                tint = MiColors.Cyan,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = {}
+                    )
+                    MiDivider(indent = 60.dp)
+                    MiListItem(
+                        title = "终端命令",
+                        subtitle = "执行Shell命令",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = null,
+                                tint = MiColors.Orange,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        onClick = {}
+                    )
                 }
             }
         }
     }
+    
+    // 重启确认对话框
+    if (showRebootDialog) {
+        AlertDialog(
+            onDismissRequest = { showRebootDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    tint = MiColors.Primary
+                )
+            },
+            title = {
+                Text(
+                    "重启路由器",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("确定要重启路由器吗？重启期间网络将中断。")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.reboot()
+                        showRebootDialog = false
+                    }
+                ) {
+                    Text(
+                        "重启",
+                        color = MiColors.Primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRebootDialog = false }) {
+                    Text(
+                        "取消",
+                        color = MiColors.TextTertiary
+                    )
+                }
+            },
+            containerColor = Color.White
+        )
+    }
+    
+    // 关机确认对话框
+    if (showShutdownDialog) {
+        AlertDialog(
+            onDismissRequest = { showShutdownDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.PowerSettingsNew,
+                    contentDescription = null,
+                    tint = MiColors.Error
+                )
+            },
+            title = {
+                Text(
+                    "关闭路由器",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("确定要关闭路由器吗？关闭后需要手动开机。")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.shutdown()
+                        showShutdownDialog = false
+                    }
+                ) {
+                    Text(
+                        "关闭",
+                        color = MiColors.Error,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showShutdownDialog = false }) {
+                    Text(
+                        "取消",
+                        color = MiColors.TextTertiary
+                    )
+                }
+            },
+            containerColor = Color.White
+        )
+    }
 }
 
-data class AdvancedFeature(
-    val title: String,
-    val description: String,
-    val icon: ImageVector,
-    val iconBg: Color,
-    val iconColor: Color
-)
-
 @Composable
-fun AdvancedFeatureCard(feature: AdvancedFeature) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = feature.iconBg,
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = feature.icon,
-                    contentDescription = null,
-                    tint = feature.iconColor,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = feature.title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1D2129)
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = feature.description,
-                fontSize = 12.sp,
-                color = Color(0xFF86909C)
-            )
-        }
-    }
+fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Medium,
+        color = MiColors.TextSecondary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
 }

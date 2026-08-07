@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -28,26 +29,28 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.luanmuc.openwrtmanager.R
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiListItem
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 我的页面 - 小米路由器风格
@@ -64,41 +67,27 @@ fun ProfileScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.profile_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+            MiTopAppBar(
+                title = stringResource(R.string.profile_title)
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
         ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            
             UserInfoCard()
-
+            
             Spacer(modifier = Modifier.height(20.dp))
-
+            
             // 功能工具
-            Text(
-                text = "功能工具",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF4E5969),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
+            SectionTitle(title = "功能工具")
             ToolsGrid(
                 onNavigateToSystem = onNavigateToSystem,
                 onNavigateToNetwork = onNavigateToNetwork,
@@ -107,27 +96,29 @@ fun ProfileScreen(
                 onNavigateToDdns = onNavigateToDdns,
                 onNavigateToAdvanced = onNavigateToAdvanced
             )
-
+            
             Spacer(modifier = Modifier.height(20.dp))
-
+            
             // 设置列表
-            Text(
-                text = stringResource(R.string.profile_settings),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF4E5969),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
+            SectionTitle(title = stringResource(R.string.profile_settings))
             SettingsList()
-
+            
             Spacer(modifier = Modifier.height(20.dp))
-
+            
             AboutCard()
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+
+@Composable
+fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        fontSize = 15.sp,
+        fontWeight = FontWeight.Medium,
+        color = MiColors.TextSecondary,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
@@ -139,78 +130,61 @@ fun ToolsGrid(
     onNavigateToDdns: () -> Unit,
     onNavigateToAdvanced: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+    MiCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ToolItem(
-                icon = Icons.Default.BugReport,
-                title = "系统管理",
-                subtitle = "日志/进程",
-                iconBg = Color(0xFFE8F3FF),
-                iconColor = Color(0xFF1677FF),
-                onClick = onNavigateToSystem,
-                modifier = Modifier.weight(1f)
-            )
-            ToolItem(
-                icon = Icons.Default.SignalCellularAlt,
-                title = "网络设置",
-                subtitle = "LAN/WAN/DHCP",
-                iconBg = Color(0xFFE8FFEA),
-                iconColor = Color(0xFF00B42A),
-                onClick = onNavigateToNetwork,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            ToolItem(
-                icon = Icons.Default.Wifi,
-                title = "WiFi设置",
-                subtitle = "2.4G/5G/访客",
-                iconBg = Color(0xFFFFF0E6),
-                iconColor = Color(0xFFFF7D00),
-                onClick = onNavigateToWifi,
-                modifier = Modifier.weight(1f)
-            )
-            ToolItem(
-                icon = Icons.Default.Security,
-                title = "防火墙",
-                subtitle = "端口转发/DMZ",
-                iconBg = Color(0xFFF5E8FF),
-                iconColor = Color(0xFF722ED1),
-                onClick = onNavigateToFirewall,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            ToolItem(
-                icon = Icons.Default.Dns,
-                title = "DDNS",
-                subtitle = "动态域名",
-                iconBg = Color(0xFFE6F7FF),
-                iconColor = Color(0xFF36CFC9),
-                onClick = onNavigateToDdns,
-                modifier = Modifier.weight(1f)
-            )
-            ToolItem(
-                icon = Icons.Default.Memory,
-                title = "高级功能",
-                subtitle = "SSH/文件管理",
-                iconBg = Color(0xFFFFF1F0),
-                iconColor = Color(0xFFF53F3F),
-                onClick = onNavigateToAdvanced,
-                modifier = Modifier.weight(1f)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.BugReport,
+                    title = "系统管理",
+                    gradient = MiColors.GradientBlue,
+                    onClick = onNavigateToSystem
+                )
+                ToolItem(
+                    icon = Icons.Default.SignalCellularAlt,
+                    title = "网络设置",
+                    gradient = MiColors.GradientGreen,
+                    onClick = onNavigateToNetwork
+                )
+                ToolItem(
+                    icon = Icons.Default.Wifi,
+                    title = "WiFi设置",
+                    gradient = MiColors.GradientOrange,
+                    onClick = onNavigateToWifi
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.Security,
+                    title = "防火墙",
+                    gradient = MiColors.GradientRed,
+                    onClick = onNavigateToFirewall
+                )
+                ToolItem(
+                    icon = Icons.Default.Dns,
+                    title = "DDNS",
+                    gradient = MiColors.GradientCyan,
+                    onClick = onNavigateToDdns
+                )
+                ToolItem(
+                    icon = Icons.Default.Memory,
+                    title = "高级功能",
+                    gradient = MiColors.GradientPurple,
+                    onClick = onNavigateToAdvanced
+                )
+            }
         }
     }
 }
@@ -219,75 +193,42 @@ fun ToolsGrid(
 fun ToolItem(
     icon: ImageVector,
     title: String,
-    subtitle: String,
-    iconBg: Color,
-    iconColor: Color,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    gradient: Brush,
+    onClick: () -> Unit
 ) {
-    Card(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp, horizontal = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = iconBg,
-                        shape = RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
+        MiFeatureIcon(
+            icon = {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(22.dp)
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1D2129)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = Color(0xFF86909C)
-            )
-        }
+            },
+            gradient = gradient,
+            size = 52.dp,
+            iconSize = 26.dp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = title,
+            fontSize = 13.sp,
+            color = MiColors.TextSecondary,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
 @Composable
 fun UserInfoCard() {
-    Card(
+    MiCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+            .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -295,187 +236,117 @@ fun UserInfoCard() {
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 用户头像
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1677FF),
-                                Color(0xFF4096FF)
-                            )
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
+            MiFeatureIcon(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                },
+                gradient = MiColors.GradientBlue,
+                size = 56.dp,
+                iconSize = 28.dp
+            )
             Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "OpenWrt 用户",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1D2129)
+                    color = MiColors.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "管理你的 OpenWrt 设备",
                     fontSize = 13.sp,
-                    color = Color(0xFF86909C)
+                    color = MiColors.TextTertiary
                 )
             }
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = MiColors.TextTertiary,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
 
 @Composable
 fun SettingsList() {
-    Card(
+    MiCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+            .padding(horizontal = 16.dp)
     ) {
         Column {
-            SettingItem(
-                icon = Icons.Default.Palette,
+            MiListItem(
                 title = "主题设置",
                 subtitle = "深色模式、动态颜色",
-                iconBg = Color(0xFFE8F3FF),
-                iconColor = Color(0xFF1677FF)
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = MiColors.Primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                onClick = {}
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(0.5.dp)
-                    .background(Color(0xFFF2F3F5))
-                    .padding(start = 56.dp)
-            )
-            SettingItem(
-                icon = Icons.Default.Security,
+            MiDivider(indent = 60.dp)
+            MiListItem(
                 title = "安全设置",
                 subtitle = "密码、生物识别",
-                iconBg = Color(0xFFE8FFEA),
-                iconColor = Color(0xFF00B42A)
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = MiColors.Success,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                onClick = {}
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(0.5.dp)
-                    .background(Color(0xFFF2F3F5))
-                    .padding(start = 56.dp)
-            )
-            SettingItem(
-                icon = Icons.Default.Notifications,
+            MiDivider(indent = 60.dp)
+            MiListItem(
                 title = "通知设置",
                 subtitle = "推送通知、告警",
-                iconBg = Color(0xFFFFF0E6),
-                iconColor = Color(0xFFFF7D00)
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = null,
+                        tint = MiColors.Warning,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                onClick = {}
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(0.5.dp)
-                    .background(Color(0xFFF2F3F5))
-                    .padding(start = 56.dp)
-            )
-            SettingItem(
-                icon = Icons.Default.Language,
+            MiDivider(indent = 60.dp)
+            MiListItem(
                 title = "语言设置",
                 subtitle = "简体中文",
-                iconBg = Color(0xFFF5E8FF),
-                iconColor = Color(0xFF722ED1)
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = null,
+                        tint = MiColors.Purple,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                onClick = {}
             )
         }
-    }
-}
-
-@Composable
-fun SettingItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    iconBg: Color,
-    iconColor: Color
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .background(
-                    color = iconBg,
-                    shape = RoundedCornerShape(8.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF1D2129)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = Color(0xFF86909C)
-            )
-        }
-
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = Color(0xFFC9CDD4),
-            modifier = Modifier.size(20.dp)
-        )
     }
 }
 
 @Composable
 fun AboutCard() {
-    Card(
+    MiCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+            .padding(horizontal = 16.dp)
     ) {
         Column(
             modifier = Modifier
@@ -483,52 +354,43 @@ fun AboutCard() {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1677FF),
-                                Color(0xFF4096FF)
-                            )
-                        ),
-                        shape = RoundedCornerShape(14.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
+            MiFeatureIcon(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                gradient = MiColors.GradientBlue,
+                size = 48.dp,
+                iconSize = 24.dp
+            )
             Spacer(modifier = Modifier.height(12.dp))
-
             Text(
-                text = stringResource(R.string.app_name),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1D2129)
+                text = "OpenWrt 管家",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MiColors.TextPrimary
             )
-
             Spacer(modifier = Modifier.height(4.dp))
-
             Text(
-                text = stringResource(R.string.profile_version) + " 2.1.0",
+                text = "版本 2.1.0",
                 fontSize = 13.sp,
-                color = Color(0xFF86909C)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "基于 LuCI ubus API 开发",
-                fontSize = 12.sp,
-                color = Color(0xFFC9CDD4)
+                color = MiColors.TextTertiary
             )
         }
     }
+}
+
+@Composable
+private fun MiDivider(indent: Dp = 0.dp) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = indent)
+            .height(0.5.dp)
+            .background(MiColors.Divider)
+    )
 }

@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.plugins
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,25 +20,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +45,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.R
 import com.luanmuc.openwrtmanager.data.model.PackageInfo
+import com.luanmuc.openwrtmanager.ui.components.MiButton
+import com.luanmuc.openwrtmanager.ui.components.MiButtonType
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiTextField
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 插件页 - 小米路由器风格
@@ -66,33 +65,23 @@ fun PluginsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(stringResource(R.string.plugins_installed), stringResource(R.string.plugins_available))
-
+    
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.plugins_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
+            MiTopAppBar(
+                title = stringResource(R.string.plugins_title),
                 actions = {
                     IconButton(onClick = { viewModel.loadPackages() }) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = Color(0xFF1677FF)
+                            tint = MiColors.TextSecondary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+                }
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -100,45 +89,32 @@ fun PluginsScreen(
                 .fillMaxSize()
         ) {
             // 搜索框
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = { viewModel.setSearchQuery(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                placeholder = {
-                    Text(
-                        "搜索插件...",
-                        color = Color(0xFF86909C)
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = null,
-                        tint = Color(0xFF86909C)
-                    )
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1677FF),
-                    unfocusedBorderColor = Color(0xFFE5E6EB),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+            Box(modifier = Modifier.padding(16.dp)) {
+                MiTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
+                    placeholder = "搜索插件...",
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MiColors.TextTertiary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 )
-            )
-
+            }
+            
             // Tab栏
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = Color(0xFFF5F7FA),
+                containerColor = MiColors.Background,
                 divider = {
-                    androidx.compose.foundation.layout.Box(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(1.dp)
-                            .background(Color(0xFFE5E6EB))
+                            .height(0.5.dp)
+                            .background(MiColors.Divider)
                     )
                 }
             ) {
@@ -150,26 +126,30 @@ fun PluginsScreen(
                             Text(
                                 title,
                                 fontSize = 15.sp,
-                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Normal
+                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium
                             )
                         },
-                        selectedContentColor = Color(0xFF1677FF),
-                        unselectedContentColor = Color(0xFF86909C)
+                        selectedContentColor = MiColors.Primary,
+                        unselectedContentColor = MiColors.TextTertiary
                     )
                 }
             }
-
+            
             if (uiState.isLoading) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator(color = Color(0xFF1677FF))
+                    CircularProgressIndicator(
+                        color = MiColors.Primary,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(36.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "加载中...",
-                        color = Color(0xFF86909C),
+                        color = MiColors.TextTertiary,
                         fontSize = 14.sp
                     )
                 }
@@ -185,36 +165,19 @@ fun PluginsScreen(
                                 it.description.contains(uiState.searchQuery, ignoreCase = true)
                     }
                 }
-
+                
                 if (packages.isEmpty()) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        androidx.compose.foundation.layout.Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(
-                                    color = Color(0xFFF2F3F5),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
+                    MiEmptyState(
+                        icon = {
                             Icon(
                                 imageVector = Icons.Default.Extension,
                                 contentDescription = null,
-                                modifier = Modifier.size(40.dp),
-                                tint = Color(0xFF86909C)
+                                tint = MiColors.TextTertiary,
+                                modifier = Modifier.size(40.dp)
                             )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = if (selectedTab == 0) "暂无已安装插件" else "暂无可用插件",
-                            color = Color(0xFF86909C),
-                            fontSize = 14.sp
-                        )
-                    }
+                        },
+                        text = if (selectedTab == 0) "暂无已安装插件" else "暂无可用插件"
+                    )
                 } else {
                     LazyColumn(
                         contentPadding = PaddingValues(16.dp),
@@ -244,15 +207,8 @@ fun PluginCard(
     onInstall: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -260,83 +216,64 @@ fun PluginCard(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 插件图标
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = if (isInstalled) Color(0xFFE8F3FF) else Color(0xFFF2F3F5),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Extension,
-                    contentDescription = null,
-                    tint = if (isInstalled) Color(0xFF1677FF) else Color(0xFF86909C),
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
+            MiFeatureIcon(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Extension,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                gradient = if (isInstalled) MiColors.GradientBlue else MiColors.GradientOrange,
+                size = 44.dp,
+                iconSize = 22.dp
+            )
             Spacer(modifier = Modifier.width(12.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = plugin.description.ifEmpty { plugin.name },
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
+                    color = MiColors.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = plugin.name + if (plugin.version.isNotEmpty()) " v${plugin.version}" else "",
                     fontSize = 12.sp,
-                    color = Color(0xFF86909C)
+                    color = MiColors.TextTertiary
                 )
                 if (plugin.size > 0) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatSize(plugin.size),
                         fontSize = 12.sp,
-                        color = Color(0xFF86909C)
+                        color = MiColors.TextTertiary
                     )
                 }
             }
-
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = Color(0xFF1677FF),
+                    color = MiColors.Primary,
                     strokeWidth = 2.dp
                 )
             } else if (isInstalled) {
-                FilledTonalButton(
+                MiButton(
+                    text = "卸载",
                     onClick = onRemove,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(0xFFF2F3F5),
-                        contentColor = Color(0xFF4E5969)
-                    )
-                ) {
-                    Text(
-                        "卸载",
-                        fontSize = 13.sp
-                    )
-                }
+                    type = MiButtonType.Secondary,
+                    modifier = Modifier.width(70.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                )
             } else {
-                Button(
+                MiButton(
+                    text = "安装",
                     onClick = onInstall,
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1677FF)
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        "安装",
-                        fontSize = 13.sp
-                    )
-                }
+                    type = MiButtonType.Primary,
+                    modifier = Modifier.width(70.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                )
             }
         }
     }

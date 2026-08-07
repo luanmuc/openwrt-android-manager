@@ -6,17 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,6 +29,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.luanmuc.openwrtmanager.ui.addrouter.AddRouterScreen
 import com.luanmuc.openwrtmanager.ui.advanced.AdvancedScreen
+import com.luanmuc.openwrtmanager.ui.components.MiBottomNavigation
+import com.luanmuc.openwrtmanager.ui.components.MiNavItem
 import com.luanmuc.openwrtmanager.ui.devices.DevicesScreen
 import com.luanmuc.openwrtmanager.ui.devices.OnlineDevicesScreen
 import com.luanmuc.openwrtmanager.ui.ddns.DdnsScreen
@@ -45,19 +46,20 @@ import com.luanmuc.openwrtmanager.ui.wifi.WifiScreen
 /**
  * 底部导航项
  */
-sealed class Screen(val route: String, val label: Int, val icon: ImageVector) {
-    data object Home : Screen("home", R.string.nav_home, Icons.Default.Home)
-    data object Devices : Screen("devices", R.string.nav_devices, Icons.Default.Devices)
-    data object Plugins : Screen("plugins", R.string.nav_plugins, Icons.Default.Extension)
-    data object Profile : Screen("profile", R.string.nav_profile, Icons.Default.Person)
-    data object AddRouter : Screen("add_router", R.string.add_router_title, Icons.Default.Add)
-    data object OnlineDevices : Screen("online_devices", 0, Icons.Default.Devices)
-    data object System : Screen("system", 0, Icons.Default.Devices)
-    data object Network : Screen("network", 0, Icons.Default.Devices)
-    data object Wifi : Screen("wifi", 0, Icons.Default.Devices)
-    data object Firewall : Screen("firewall", 0, Icons.Default.Devices)
-    data object Ddns : Screen("ddns", 0, Icons.Default.Devices)
-    data object Advanced : Screen("advanced", 0, Icons.Default.Devices)
+sealed class Screen(val route: String, val label: Int, val icon: ImageVector, val selectedIcon: ImageVector) {
+    data object Home : Screen("home", R.string.nav_home, Icons.Outlined.Home, Icons.Filled.Home)
+    data object Devices : Screen("devices", R.string.nav_devices, Icons.Outlined.Devices, Icons.Filled.Devices)
+    data object Plugins : Screen("plugins", R.string.nav_plugins, Icons.Outlined.Extension, Icons.Filled.Extension)
+    data object Profile : Screen("profile", R.string.nav_profile, Icons.Outlined.Person, Icons.Filled.Person)
+    
+    data object AddRouter : Screen("add_router", R.string.add_router_title, Icons.Filled.Home, Icons.Filled.Home)
+    data object OnlineDevices : Screen("online_devices", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object System : Screen("system", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Network : Screen("network", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Wifi : Screen("wifi", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Firewall : Screen("firewall", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
@@ -82,33 +84,39 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-
+    
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-                bottomNavItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = screen.icon,
-                                contentDescription = stringResource(screen.label)
-                            )
-                        },
-                        label = { Text(stringResource(screen.label)) },
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            
+            val showBottomBar = bottomNavItems.any { it.route == currentDestination?.route }
+            
+            if (showBottomBar) {
+                val selectedIndex = bottomNavItems.indexOfFirst { 
+                    currentDestination?.hierarchy?.any { dest -> dest.route == it.route } == true 
+                }.coerceAtLeast(0)
+                
+                MiBottomNavigation(
+                    selectedIndex = selectedIndex,
+                    onItemSelected = { index ->
+                        val screen = bottomNavItems[index]
+                        navController.navigate(screen.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    )
-                }
+                    },
+                    items = bottomNavItems.map { 
+                        MiNavItem(
+                            label = stringResource(it.label),
+                            icon = it.icon,
+                            selectedIcon = it.selectedIcon
+                        )
+                    }
+                )
             }
         }
     ) { innerPadding ->
@@ -156,7 +164,9 @@ fun MainScreen() {
                 )
             }
             composable(Screen.OnlineDevices.route) {
-                OnlineDevicesScreen()
+                OnlineDevicesScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.System.route) {
                 SystemScreen()

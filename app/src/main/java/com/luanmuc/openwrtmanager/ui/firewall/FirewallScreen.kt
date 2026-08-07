@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,33 +15,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,6 +42,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.luanmuc.openwrtmanager.data.model.PortForwardRule
+import com.luanmuc.openwrtmanager.ui.components.MiButton
+import com.luanmuc.openwrtmanager.ui.components.MiButtonType
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
+import com.luanmuc.openwrtmanager.ui.components.MiErrorState
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
+import com.luanmuc.openwrtmanager.ui.components.MiTag
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 防火墙页面 - 小米路由器风格
@@ -61,179 +63,100 @@ fun FirewallScreen(
     viewModel: FirewallViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("端口转发", "DMZ", "防火墙")
-
+    var showAddDialog by remember { mutableStateOf(false) }
+    
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "防火墙",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
+            MiTopAppBar(
+                title = "防火墙",
                 actions = {
                     IconButton(onClick = { viewModel.loadFirewallConfig() }) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = Color(0xFF1677FF)
+                            tint = MiColors.TextSecondary
                         )
                     }
-                    IconButton(onClick = { /* 添加规则 */ }) {
+                    IconButton(onClick = { showAddDialog = true }) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "添加",
-                            tint = Color(0xFF1677FF)
+                            tint = MiColors.TextSecondary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+                }
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            // Tab 切换
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    FilterChip(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        label = {
-                            Text(
-                                title,
-                                fontSize = 13.sp,
-                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = if (selectedTab == index) {
-                            androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF722ED1),
-                                selectedLabelColor = Color.White
-                            )
-                        } else {
-                            androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                                containerColor = Color.White,
-                                labelColor = Color(0xFF86909C)
-                            )
-                        },
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                }
-            }
-
             if (uiState.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF722ED1))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "加载中...",
-                        color = Color(0xFF86909C),
-                        fontSize = 14.sp
-                    )
-                }
+                MiLoadingState()
+            } else if (uiState.error != null && uiState.portForwards.isEmpty()) {
+                MiErrorState(
+                    message = uiState.error ?: "加载失败",
+                    onRetry = { viewModel.loadFirewallConfig() }
+                )
+            } else if (uiState.portForwards.isEmpty()) {
+                MiEmptyState(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = MiColors.TextTertiary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    },
+                    text = "暂无端口转发规则"
+                )
             } else {
-                when (selectedTab) {
-                    0 -> PortForwardList(viewModel = viewModel)
-                    1 -> DmzSettings(viewModel = viewModel)
-                    2 -> FirewallSettings(viewModel = viewModel)
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(uiState.portForwards, key = { it.name }) { rule ->
+                        PortForwardCard(
+                            rule = rule,
+                            onDelete = { viewModel.deletePortForward(it) }
+                        )
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun PortForwardList(viewModel: FirewallViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    if (uiState.portForwards.isEmpty()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        color = Color(0xFFF5E8FF),
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = Color(0xFF722ED1)
+    
+    if (showAddDialog) {
+        AddPortForwardDialog(
+            onDismiss = { showAddDialog = false },
+            onConfirm = { name, proto, srcPort, destIp, destPort ->
+                viewModel.addPortForward(
+                    PortForwardRule(
+                        name = name,
+                        proto = proto,
+                        srcPort = srcPort,
+                        destIp = destIp,
+                        destPort = destPort
+                    )
                 )
+                showAddDialog = false
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "暂无端口转发规则",
-                fontSize = 15.sp,
-                color = Color(0xFF86909C)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "点击右上角 + 添加规则",
-                fontSize = 13.sp,
-                color = Color(0xFFC9CDD4)
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(uiState.portForwards) { rule ->
-                PortForwardItem(
-                    rule = rule,
-                    onDelete = { viewModel.deletePortForward(rule) }
-                )
-            }
-        }
+        )
     }
 }
 
 @Composable
-fun PortForwardItem(
-    rule: com.luanmuc.openwrtmanager.data.model.PortForwardRule,
-    onDelete: () -> Unit
+fun PortForwardCard(
+    rule: PortForwardRule,
+    onDelete: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -241,292 +164,215 @@ fun PortForwardItem(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 规则图标
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = Color(0xFFF5E8FF),
-                        shape = RoundedCornerShape(10.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    tint = Color(0xFF722ED1),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
+            MiFeatureIcon(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                gradient = MiColors.GradientRed,
+                size = 40.dp,
+                iconSize = 20.dp
+            )
             Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = rule.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
+                    color = MiColors.TextPrimary
                 )
-                Text(
-                    text = "${rule.srcPort} → ${rule.destIp}:${rule.destPort} (${rule.proto})",
-                    fontSize = 13.sp,
-                    color = Color(0xFF86909C)
-                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MiTag(
+                        text = rule.proto.uppercase(),
+                        backgroundColor = MiColors.Primary.copy(alpha = 0.1f),
+                        textColor = MiColors.Primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${rule.srcPort} → ${rule.destIp}:${rule.destPort}",
+                        fontSize = 12.sp,
+                        color = MiColors.TextTertiary
+                    )
+                }
             }
-
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = { showDeleteDialog = true }) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
+                    Icons.Default.Delete,
                     contentDescription = "删除",
-                    tint = Color(0xFFF53F3F),
+                    tint = MiColors.Error,
                     modifier = Modifier.size(20.dp)
                 )
             }
         }
     }
-}
-
-@Composable
-fun DmzSettings(viewModel: FirewallViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 1.dp
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    text = "DMZ 设置",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
+    
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MiColors.Error
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "启用 DMZ",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1D2129)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "将主机暴露到公网",
-                            fontSize = 12.sp,
-                            color = Color(0xFF86909C)
-                        )
+            },
+            title = {
+                Text(
+                    "删除规则",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("确定要删除端口转发规则「${rule.name}」吗？")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(rule.name)
+                        showDeleteDialog = false
                     }
-                    Switch(
-                        checked = uiState.dmzEnabled,
-                        onCheckedChange = { /* 切换DMZ */ },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = Color(0xFF722ED1),
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0xFFC9CDD4)
-                        )
+                ) {
+                    Text(
+                        "删除",
+                        color = MiColors.Error,
+                        fontWeight = FontWeight.Medium
                     )
                 }
-
-                if (uiState.dmzEnabled) {
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    OutlinedTextField(
-                        value = uiState.dmzIp,
-                        onValueChange = { /* 更新DMZ IP */ },
-                        label = {
-                            Text(
-                                "DMZ 主机 IP",
-                                fontSize = 14.sp
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = {
-                            Text(
-                                "192.168.1.xxx",
-                                color = Color(0xFF86909C)
-                            )
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF722ED1),
-                            unfocusedBorderColor = Color(0xFFE5E6EB),
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        )
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(
+                        "取消",
+                        color = MiColors.TextTertiary
                     )
                 }
-            }
-        }
-
-        uiState.error?.let {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFFF1F0)
-                ),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = it,
-                    color = Color(0xFFF53F3F),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
-
-        uiState.success?.let {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFE8FFEA)
-                ),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = it,
-                    color = Color(0xFF00B42A),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(12.dp)
-                )
-            }
-        }
+            },
+            containerColor = Color.White
+        )
     }
 }
 
 @Composable
-fun FirewallSettings(viewModel: FirewallViewModel) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 1.dp
+fun AddPortForwardDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String, String, String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var proto by remember { mutableStateOf("tcp") }
+    var srcPort by remember { mutableStateOf("") }
+    var destIp by remember { mutableStateOf("") }
+    var destPort by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "添加端口转发",
+                fontWeight = FontWeight.Bold
             )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Text(
-                    text = "防火墙开关",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
-                )
-
-                Row(
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("规则名称", fontSize = 14.sp, color = MiColors.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "启用防火墙",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1D2129)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "保护网络安全",
-                            fontSize = 12.sp,
-                            color = Color(0xFF86909C)
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiColors.Divider
+                    )
+                )
+                Text("协议", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("tcp", "udp", "tcpudp").forEach { p ->
+                        androidx.compose.material3.FilterChip(
+                            selected = proto == p,
+                            onClick = { proto = p },
+                            label = { Text(p.uppercase(), fontSize = 12.sp) },
+                            colors = if (proto == p) {
+                                androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MiColors.Primary,
+                                    selectedLabelColor = Color.White
+                                )
+                            } else {
+                                androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    containerColor = Color(0xFFF2F3F5),
+                                    labelColor = MiColors.TextTertiary
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp)
                         )
                     }
-                    Switch(
-                        checked = uiState.firewallEnabled,
-                        onCheckedChange = { /* 切换防火墙 */ },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = Color(0xFF722ED1),
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0xFFC9CDD4)
-                        )
-                    )
                 }
+                Text("外部端口", fontSize = 14.sp, color = MiColors.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = srcPort,
+                    onValueChange = { srcPort = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiColors.Divider
+                    )
+                )
+                Text("内部IP", fontSize = 14.sp, color = MiColors.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = destIp,
+                    onValueChange = { destIp = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiColors.Divider
+                    )
+                )
+                Text("内部端口", fontSize = 14.sp, color = MiColors.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = destPort,
+                    onValueChange = { destPort = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiColors.Divider
+                    )
+                )
             }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 1.dp
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotEmpty() && srcPort.isNotEmpty() && destIp.isNotEmpty() && destPort.isNotEmpty()) {
+                        onConfirm(name, proto, srcPort, destIp, destPort)
+                    }
+                }
             ) {
                 Text(
-                    text = "开放端口",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2129)
-                )
-                Text(
-                    text = "暂无开放端口",
-                    fontSize = 14.sp,
-                    color = Color(0xFF86909C)
+                    "添加",
+                    color = MiColors.Primary,
+                    fontWeight = FontWeight.Medium
                 )
             }
-        }
-
-        uiState.error?.let {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFFFF1F0)
-                ),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
                 Text(
-                    text = it,
-                    color = Color(0xFFF53F3F),
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(12.dp)
+                    "取消",
+                    color = MiColors.TextTertiary
                 )
             }
-        }
-    }
+        },
+        containerColor = Color.White
+    )
 }

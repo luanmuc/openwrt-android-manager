@@ -18,24 +18,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +39,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
+import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
+import com.luanmuc.openwrtmanager.ui.components.MiPrimaryButton
+import com.luanmuc.openwrtmanager.ui.components.MiSwitch
+import com.luanmuc.openwrtmanager.ui.components.MiTextField
+import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
 /**
  * 网络设置页面 - 小米路由器风格
@@ -61,33 +59,23 @@ fun NetworkScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("LAN 设置", "WAN 设置", "DHCP 管理")
-
+    
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "网络设置",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
+            MiTopAppBar(
+                title = "网络设置",
                 actions = {
                     IconButton(onClick = { viewModel.loadNetworkConfig() }) {
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = Color(0xFF1677FF)
+                            tint = MiColors.TextSecondary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F7FA),
-                    titleContentColor = Color(0xFF1D2129)
-                )
+                }
             )
         },
-        containerColor = Color(0xFFF5F7FA)
+        containerColor = MiColors.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -109,40 +97,28 @@ fun NetworkScreen(
                             Text(
                                 title,
                                 fontSize = 13.sp,
-                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Normal
+                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium
                             )
                         },
                         modifier = Modifier.weight(1f),
                         colors = if (selectedTab == index) {
                             androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF1677FF),
+                                selectedContainerColor = MiColors.Primary,
                                 selectedLabelColor = Color.White
                             )
                         } else {
                             androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                 containerColor = Color.White,
-                                labelColor = Color(0xFF86909C)
+                                labelColor = MiColors.TextTertiary
                             )
                         },
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(10.dp)
                     )
                 }
             }
-
+            
             if (uiState.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFF1677FF))
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "加载中...",
-                        color = Color(0xFF86909C),
-                        fontSize = 14.sp
-                    )
-                }
+                MiLoadingState()
             } else {
                 Column(
                     modifier = Modifier
@@ -156,11 +132,12 @@ fun NetworkScreen(
                         1 -> WanSettings(viewModel = viewModel)
                         2 -> DhcpSettings(viewModel = viewModel)
                     }
-
+                    
                     Spacer(modifier = Modifier.height(8.dp))
-
+                    
                     // 保存按钮
-                    Button(
+                    MiPrimaryButton(
+                        text = "保存配置",
                         onClick = {
                             when (selectedTab) {
                                 0 -> viewModel.saveLanConfig()
@@ -168,73 +145,54 @@ fun NetworkScreen(
                                 2 -> viewModel.saveLanConfig()
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
                         enabled = !uiState.isSaving,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1677FF)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                        } else {
-                            Icon(
-                                Icons.Default.Save,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                        leadingIcon = {
+                            if (uiState.isSaving) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Save,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
-                        Text(
-                            "保存配置",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
+                    )
+                    
                     // 成功提示
                     uiState.success?.let {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFE8FFEA)
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
+                        MiCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = MiColors.Success.copy(alpha = 0.1f)
                         ) {
                             Text(
                                 text = it,
-                                color = Color(0xFF00B42A),
+                                color = MiColors.Success,
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(12.dp)
                             )
                         }
                     }
-
+                    
                     // 错误提示
                     uiState.error?.let {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFFFFF1F0)
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
+                        MiCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = MiColors.Error.copy(alpha = 0.1f)
                         ) {
                             Text(
                                 text = it,
-                                color = Color(0xFFF53F3F),
+                                color = MiColors.Error,
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(12.dp)
                             )
                         }
                     }
-
+                    
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
@@ -245,66 +203,50 @@ fun NetworkScreen(
 @Composable
 fun LanSettings(viewModel: NetworkViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "LAN 口设置",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1D2129)
-            )
-
-            OutlinedTextField(
+            // 标题
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MiFeatureIcon(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.SignalCellularAlt,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    gradient = MiColors.GradientBlue,
+                    size = 40.dp,
+                    iconSize = 20.dp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "LAN 口设置",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MiColors.TextPrimary
+                )
+            }
+            
+            MiTextField(
                 value = uiState.lanIp,
                 onValueChange = { viewModel.updateLanIp(it) },
-                label = {
-                    Text(
-                        "IP 地址",
-                        fontSize = 14.sp
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1677FF),
-                    unfocusedBorderColor = Color(0xFFE5E6EB),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                label = "IP 地址",
+                placeholder = "192.168.1.1"
             )
-
-            OutlinedTextField(
+            
+            MiTextField(
                 value = uiState.lanNetmask,
                 onValueChange = { viewModel.updateLanNetmask(it) },
-                label = {
-                    Text(
-                        "子网掩码",
-                        fontSize = 14.sp
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(10.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF1677FF),
-                    unfocusedBorderColor = Color(0xFFE5E6EB),
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
-                )
+                label = "子网掩码",
+                placeholder = "255.255.255.0"
             )
         }
     }
@@ -313,238 +255,106 @@ fun LanSettings(viewModel: NetworkViewModel) {
 @Composable
 fun WanSettings(viewModel: NetworkViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "WAN 口设置",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1D2129)
-            )
-
+            // 标题
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MiFeatureIcon(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.SignalCellularAlt,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    gradient = MiColors.GradientGreen,
+                    size = 40.dp,
+                    iconSize = 20.dp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "WAN 口设置",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MiColors.TextPrimary
+                )
+            }
+            
             // 协议选择
             Text(
                 text = "连接协议",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF4E5969)
+                color = MiColors.TextSecondary
             )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = uiState.wanProto == "dhcp",
-                    onClick = { viewModel.updateWanProto("dhcp") },
-                    label = {
-                        Text(
-                            "DHCP",
-                            fontSize = 13.sp
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = if (uiState.wanProto == "dhcp") {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF1677FF),
-                            selectedLabelColor = Color.White
-                        )
-                    } else {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            containerColor = Color(0xFFF2F3F5),
-                            labelColor = Color(0xFF86909C)
-                        )
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                )
-                FilterChip(
-                    selected = uiState.wanProto == "static",
-                    onClick = { viewModel.updateWanProto("static") },
-                    label = {
-                        Text(
-                            "静态IP",
-                            fontSize = 13.sp
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = if (uiState.wanProto == "static") {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF1677FF),
-                            selectedLabelColor = Color.White
-                        )
-                    } else {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            containerColor = Color(0xFFF2F3F5),
-                            labelColor = Color(0xFF86909C)
-                        )
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                )
-                FilterChip(
-                    selected = uiState.wanProto == "pppoe",
-                    onClick = { viewModel.updateWanProto("pppoe") },
-                    label = {
-                        Text(
-                            "PPPoE",
-                            fontSize = 13.sp
-                        )
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = if (uiState.wanProto == "pppoe") {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF1677FF),
-                            selectedLabelColor = Color.White
-                        )
-                    } else {
-                        androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                            containerColor = Color(0xFFF2F3F5),
-                            labelColor = Color(0xFF86909C)
-                        )
-                    },
-                    shape = RoundedCornerShape(8.dp)
-                )
+                listOf("dhcp" to "DHCP", "static" to "静态IP", "pppoe" to "PPPoE").forEach { (proto, label) ->
+                    FilterChip(
+                        selected = uiState.wanProto == proto,
+                        onClick = { viewModel.updateWanProto(proto) },
+                        label = {
+                            Text(label, fontSize = 13.sp)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = if (uiState.wanProto == proto) {
+                            androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MiColors.Primary,
+                                selectedLabelColor = Color.White
+                            )
+                        } else {
+                            androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                containerColor = Color(0xFFF2F3F5),
+                                labelColor = MiColors.TextTertiary
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
             }
-
-            // 静态IP设置
+            
             if (uiState.wanProto == "static") {
-                Spacer(modifier = Modifier.height(4.dp))
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.wanIp,
                     onValueChange = { viewModel.updateWanIp(it) },
-                    label = {
-                        Text(
-                            "IP 地址",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "IP 地址",
+                    placeholder = "192.168.1.100"
                 )
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.wanNetmask,
                     onValueChange = { viewModel.updateWanNetmask(it) },
-                    label = {
-                        Text(
-                            "子网掩码",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "子网掩码",
+                    placeholder = "255.255.255.0"
                 )
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.wanGateway,
                     onValueChange = { viewModel.updateWanGateway(it) },
-                    label = {
-                        Text(
-                            "网关",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
-                )
-
-                OutlinedTextField(
-                    value = uiState.wanDns,
-                    onValueChange = { viewModel.updateWanDns(it) },
-                    label = {
-                        Text(
-                            "DNS 服务器",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "网关",
+                    placeholder = "192.168.1.1"
                 )
             }
-
-            // PPPoE设置
+            
             if (uiState.wanProto == "pppoe") {
-                Spacer(modifier = Modifier.height(4.dp))
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.wanUsername,
                     onValueChange = { viewModel.updateWanUsername(it) },
-                    label = {
-                        Text(
-                            "宽带账号",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "宽带账号",
+                    placeholder = "请输入宽带账号"
                 )
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.wanPassword,
                     onValueChange = { viewModel.updateWanPassword(it) },
-                    label = {
-                        Text(
-                            "宽带密码",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "宽带密码",
+                    placeholder = "请输入宽带密码"
                 )
             }
         }
@@ -554,125 +364,70 @@ fun WanSettings(viewModel: NetworkViewModel) {
 @Composable
 fun DhcpSettings(viewModel: NetworkViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+    
+    MiCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "DHCP 服务器",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1D2129)
-            )
-
+            // 标题和开关
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                MiFeatureIcon(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.SignalCellularAlt,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    gradient = MiColors.GradientOrange,
+                    size = 40.dp,
+                    iconSize = 20.dp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "启用 DHCP 服务器",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF1D2129)
+                        text = "DHCP 服务器",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MiColors.TextPrimary
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "自动分配IP地址给连接的设备",
+                        text = "自动分配IP地址",
                         fontSize = 12.sp,
-                        color = Color(0xFF86909C)
+                        color = MiColors.TextTertiary
                     )
                 }
-                Switch(
+                MiSwitch(
                     checked = uiState.lanDhcpEnabled,
-                    onCheckedChange = { viewModel.updateLanDhcpEnabled(it) },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFF1677FF),
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFFC9CDD4)
-                    )
+                    onCheckedChange = { viewModel.updateLanDhcpEnabled(it) }
                 )
             }
-
+            
             if (uiState.lanDhcpEnabled) {
-                Spacer(modifier = Modifier.height(4.dp))
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.lanDhcpStart,
                     onValueChange = { viewModel.updateLanDhcpStart(it) },
-                    label = {
-                        Text(
-                            "地址池起始",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "起始地址",
+                    placeholder = "100"
                 )
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.lanDhcpLimit,
                     onValueChange = { viewModel.updateLanDhcpLimit(it) },
-                    label = {
-                        Text(
-                            "地址池数量",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "地址数量",
+                    placeholder = "150"
                 )
-
-                OutlinedTextField(
+                MiTextField(
                     value = uiState.lanDhcpLease,
                     onValueChange = { viewModel.updateLanDhcpLease(it) },
-                    label = {
-                        Text(
-                            "租期",
-                            fontSize = 14.sp
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    placeholder = {
-                        Text(
-                            "如 12h, 7d",
-                            color = Color(0xFF86909C)
-                        )
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF1677FF),
-                        unfocusedBorderColor = Color(0xFFE5E6EB),
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
+                    label = "租期(分钟)",
+                    placeholder = "12h"
                 )
             }
         }

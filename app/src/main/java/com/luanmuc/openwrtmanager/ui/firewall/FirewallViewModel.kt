@@ -81,11 +81,11 @@ class FirewallViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun deletePortForward(rule: PortForwardRule) {
+    fun deletePortForward(name: String) {
         viewModelScope.launch {
             try {
                 // 删除端口转发规则
-                luciRepository.deletePortForward(rule.name)
+                luciRepository.deletePortForward(name)
                 luciRepository.commitUci("firewall")
 
                 // 重新加载
