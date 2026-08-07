@@ -64,13 +64,24 @@ class SystemViewModel(application: Application) : AndroidViewModel(application) 
                 error = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(600)
+                    val logs = DebugMode.getFakeSystemLog()
+                    _uiState.value = _uiState.value.copy(
+                        logs = logs,
+                        isLoadingLogs = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     val logs = luciRepository.getSystemLog()
                     _uiState.value = _uiState.value.copy(
                         logs = logs,
@@ -94,13 +105,24 @@ class SystemViewModel(application: Application) : AndroidViewModel(application) 
                 error = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    val processes = DebugMode.getFakeProcessList()
+                    _uiState.value = _uiState.value.copy(
+                        processes = processes.sortedByDescending { it.cpu },
+                        isLoadingProcesses = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     val processes = luciRepository.getProcessList()
                     _uiState.value = _uiState.value.copy(
                         processes = processes.sortedByDescending { it.cpu },
@@ -120,6 +142,14 @@ class SystemViewModel(application: Application) : AndroidViewModel(application) 
     fun killProcess(pid: Int) {
         viewModelScope.launch {
             try {
+                // 调试模式：模拟杀死进程
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val processes = _uiState.value.processes.filter { it.pid != pid }
+                    _uiState.value = _uiState.value.copy(processes = processes)
+                    return@launch
+                }
+
                 luciRepository.killProcess(pid)
                 loadProcesses()
             } catch (e: Exception) {
