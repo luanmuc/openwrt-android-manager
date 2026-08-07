@@ -67,20 +67,41 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 success = null
             )
             try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    _uiState.value = _uiState.value.copy(
+                        lanIp = "192.168.1.1",
+                        lanNetmask = "255.255.255.0",
+                        lanDhcpEnabled = true,
+                        lanDhcpStart = "100",
+                        lanDhcpLimit = "150",
+                        lanDhcpLease = "12h",
+                        wanProto = "dhcp",
+                        wanIp = "192.168.0.100",
+                        wanNetmask = "255.255.255.0",
+                        wanGateway = "192.168.0.1",
+                        wanDns = "8.8.8.8",
+                        wanUsername = "",
+                        wanPassword = "",
+                        isLoading = false,
+                        error = null
+                    )
+                    return@launch
+                }
+
                 val activeRouter = getActiveRouter()
                 if (activeRouter != null) {
                     val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
-
                     // 加载LAN配置
                     val lanConfig = luciRepository.getUciConfig("network", "lan")
                     _uiState.value = _uiState.value.copy(
                         lanIp = lanConfig["ipaddr"] ?: "192.168.1.1",
                         lanNetmask = lanConfig["netmask"] ?: "255.255.255.0"
                     )
-
                     // 加载DHCP配置
                     val dhcpConfig = luciRepository.getUciConfig("dhcp", "lan")
                     _uiState.value = _uiState.value.copy(
@@ -89,7 +110,6 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                         lanDhcpLimit = dhcpConfig["limit"] ?: "150",
                         lanDhcpLease = dhcpConfig["leasetime"] ?: "12h"
                     )
-
                     // 加载WAN配置
                     val wanConfig = luciRepository.getUciConfig("network", "wan")
                     _uiState.value = _uiState.value.copy(
@@ -101,7 +121,6 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                         wanUsername = wanConfig["username"] ?: "",
                         wanPassword = wanConfig["password"] ?: ""
                     )
-
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = null
@@ -124,20 +143,27 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 success = null
             )
             try {
+                // 调试模式：模拟保存
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        success = "LAN配置保存成功"
+                    )
+                    return@launch
+                }
+
                 // 保存LAN配置
                 luciRepository.setUciConfig("network", "lan", "ipaddr", _uiState.value.lanIp)
                 luciRepository.setUciConfig("network", "lan", "netmask", _uiState.value.lanNetmask)
-
                 // 保存DHCP配置
                 luciRepository.setUciConfig("dhcp", "lan", "ignore", if (_uiState.value.lanDhcpEnabled) "0" else "1")
                 luciRepository.setUciConfig("dhcp", "lan", "start", _uiState.value.lanDhcpStart)
                 luciRepository.setUciConfig("dhcp", "lan", "limit", _uiState.value.lanDhcpLimit)
                 luciRepository.setUciConfig("dhcp", "lan", "leasetime", _uiState.value.lanDhcpLease)
-
                 // 提交配置
                 luciRepository.commitUci("network")
                 luciRepository.commitUci("dhcp")
-
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "LAN配置保存成功"
@@ -159,6 +185,16 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 success = null
             )
             try {
+                // 调试模式：模拟保存
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        success = "WAN配置保存成功"
+                    )
+                    return@launch
+                }
+
                 // 保存WAN配置
                 luciRepository.setUciConfig("network", "wan", "proto", _uiState.value.wanProto)
                 if (_uiState.value.wanProto == "static") {
@@ -170,10 +206,8 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                     luciRepository.setUciConfig("network", "wan", "username", _uiState.value.wanUsername)
                     luciRepository.setUciConfig("network", "wan", "password", _uiState.value.wanPassword)
                 }
-
                 // 提交配置
                 luciRepository.commitUci("network")
-
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "WAN配置保存成功"
