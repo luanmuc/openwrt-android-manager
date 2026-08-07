@@ -20,6 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Info
+import com.luanmuc.openwrtmanager.util.DebugMode
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Extension
@@ -366,6 +368,11 @@ fun HomeContent(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 演示模式提示条
+        if (DebugMode.isDebugMode) {
+            DemoModeBanner()
+        }
+        
         // 路由器状态大卡片
         RouterStatusCard(
             uiState = uiState,
@@ -401,6 +408,44 @@ fun HomeContent(
         )
         
         Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+/**
+ * 演示模式提示条
+ */
+@Composable
+fun DemoModeBanner() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MiColors.Warning.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = MiColors.Warning,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "演示模式",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiColors.Warning
+            )
+            Text(
+                text = "当前为演示数据，非真实路由器信息",
+                fontSize = 12.sp,
+                color = MiColors.TextSecondary
+            )
+        }
     }
 }
 

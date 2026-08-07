@@ -30,6 +30,13 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import com.luanmuc.openwrtmanager.util.DebugMode
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -63,7 +70,8 @@ fun ProfileScreen(
     onNavigateToWifi: () -> Unit = {},
     onNavigateToFirewall: () -> Unit = {},
     onNavigateToDdns: () -> Unit = {},
-    onNavigateToAdvanced: () -> Unit = {}
+    onNavigateToAdvanced: () -> Unit = {},
+    onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -105,7 +113,7 @@ fun ProfileScreen(
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            AboutCard()
+            AboutCard(onDebugModeToggled = onDebugModeToggled)
         }
     }
 }
@@ -342,7 +350,12 @@ fun SettingsList() {
 }
 
 @Composable
-fun AboutCard() {
+fun AboutCard(
+    onDebugModeToggled: (Boolean) -> Unit = {}
+) {
+    val context = LocalContext.current
+    var clickCount by remember { mutableIntStateOf(0) }
+    
     MiCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -376,9 +389,23 @@ fun AboutCard() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "版本 2.1.0",
+                text = "版本 2.2.0",
                 fontSize = 13.sp,
-                color = MiColors.TextTertiary
+                color = MiColors.TextTertiary,
+                modifier = Modifier.clickable {
+                    clickCount++
+                    if (clickCount >= 5) {
+                        clickCount = 0
+                        val enabled = !DebugMode.isDebugMode
+                        DebugMode.toggle()
+                        onDebugModeToggled(enabled)
+                        Toast.makeText(
+                            context,
+                            if (enabled) "演示模式已开启" else "演示模式已关闭",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             )
         }
     }
