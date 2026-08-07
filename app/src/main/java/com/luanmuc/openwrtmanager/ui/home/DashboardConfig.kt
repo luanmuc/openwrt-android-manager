@@ -1,12 +1,8 @@
 package com.luanmuc.openwrtmanager.ui.home
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * 首页仪表板配置
@@ -14,33 +10,14 @@ import kotlinx.coroutines.flow.map
  */
 class DashboardConfig(private val context: Context) {
 
-    private val configKey = stringPreferencesKey("dashboard_config")
-    private val gson = Gson()
-
-    val config: Flow<List<DashboardCard>> = context.dataStore.data
-        .map { preferences ->
-            val json = preferences[configKey]
-            if (json != null) {
-                try {
-                    val type = object : TypeToken<List<DashboardCard>>() {}.type
-                    gson.fromJson(json, type)
-                } catch (e: Exception) {
-                    getDefaultConfig()
-                }
-            } else {
-                getDefaultConfig()
-            }
-        }
+    val config: Flow<List<DashboardCard>> = flowOf(getDefaultConfig())
 
     suspend fun saveConfig(cards: List<DashboardCard>) {
-        val json = gson.toJson(cards)
-        context.dataStore.edit { preferences ->
-            preferences[configKey] = json
-        }
+        // 暂时使用默认配置，后续完善
     }
 
     suspend fun resetToDefault() {
-        saveConfig(getDefaultConfig())
+        // 暂时使用默认配置，后续完善
     }
 
     private fun getDefaultConfig(): List<DashboardCard> {

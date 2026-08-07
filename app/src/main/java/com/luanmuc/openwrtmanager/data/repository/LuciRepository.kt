@@ -842,3 +842,4 @@ enum class ErrorType {
     HTTP_ERROR,
     UNKNOWN
 }
+

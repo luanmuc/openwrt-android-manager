@@ -14,6 +14,7 @@ import com.luanmuc.openwrtmanager.data.model.*
 import com.luanmuc.openwrtmanager.data.repository.LuciException
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.util.EncryptionUtil
 
 /**

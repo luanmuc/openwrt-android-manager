@@ -283,7 +283,6 @@ fun UserInfoCard() {
 }
 
 @Composable
-@Composable
 fun SettingsList() {
     val context = LocalContext.current
     

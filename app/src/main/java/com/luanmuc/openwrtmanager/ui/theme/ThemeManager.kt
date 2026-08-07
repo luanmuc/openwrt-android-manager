@@ -1,11 +1,8 @@
 package com.luanmuc.openwrtmanager.ui.theme
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import com.luanmuc.openwrtmanager.data.repository.RouterRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * 主题管理器
@@ -13,22 +10,10 @@ import kotlinx.coroutines.flow.map
  */
 class ThemeManager(private val context: Context) {
 
-    private val themeKey = stringPreferencesKey("theme_mode")
-
-    val themeMode: Flow<ThemeMode> = context.dataStore.data
-        .map { preferences ->
-            val value = preferences[themeKey] ?: ThemeMode.SYSTEM.name
-            try {
-                ThemeMode.valueOf(value)
-            } catch (e: Exception) {
-                ThemeMode.SYSTEM
-            }
-        }
+    val themeMode: Flow<ThemeMode> = flowOf(ThemeMode.SYSTEM)
 
     suspend fun setThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { preferences ->
-            preferences[themeKey] = mode.name
-        }
+        // 暂时使用默认主题，后续完善
     }
 
     companion object {
