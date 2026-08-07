@@ -51,7 +51,8 @@ fun ProfileScreen(
     onNavigateToNetwork: () -> Unit = {},
     onNavigateToWifi: () -> Unit = {},
     onNavigateToFirewall: () -> Unit = {},
-    onNavigateToDdns: () -> Unit = {}
+    onNavigateToDdns: () -> Unit = {},
+    onNavigateToAdvanced: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {

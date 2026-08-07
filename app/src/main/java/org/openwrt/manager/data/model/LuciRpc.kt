@@ -117,31 +117,6 @@ data class CpuInfo(
 )
 
 /**
- * 路由器状态（首页显示）
- */
-data class RouterStatus(
-    val hostname: String = "",
-    val model: String = "",
-    val firmware: String = "",
-    val kernel: String = "",
-    val uptime: Long = 0,
-    val loadAverage: List<Float> = emptyList(),
-    val memoryTotal: Long = 0,
-    val memoryFree: Long = 0,
-    val memoryUsed: Long = 0,
-    val memoryCached: Long = 0,
-    val storageTotal: Long = 0,
-    val storageFree: Long = 0,
-    val storageUsed: Long = 0,
-    val onlineDevices: Int = 0,
-    val wanConnected: Boolean = false,
-    val wanIp: String = "",
-    val wanUptime: Long = 0,
-    val cpuUsage: Float = 0f,
-    val temp: Float = 0f
-)
-
-/**
  * 在线设备
  */
 data class DeviceInfo(

@@ -658,6 +658,38 @@ class LuciRepository {
         }
     }
 
+    /**
+     * 获取DDNS配置列表
+     */
+    suspend fun getDdnsConfigs(): List<DdnsConfig> {
+        return try {
+            val result = callUbus("uci", "get", mapOf("config" to "ddns"))
+            val values = result["values"] as? Map<*, *>
+            val configs = mutableListOf<DdnsConfig>()
+            values?.forEach { (key, value) ->
+                val section = value as? Map<*, *> ?: return@forEach
+                val type = section[".type"]?.toString()
+                if (type == "service") {
+                    configs.add(
+                        DdnsConfig(
+                            name = key.toString(),
+                            service = section["service_name"]?.toString() ?: section["service"]?.toString() ?: "",
+                            domain = section["domain"]?.toString() ?: "",
+                            username = section["username"]?.toString() ?: "",
+                            password = section["password"]?.toString() ?: "",
+                            interfaceName = section["interface"]?.toString() ?: "wan",
+                            enabled = section["enabled"]?.toString() != "0",
+                            status = ""
+                        )
+                    )
+                }
+            }
+            configs
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     // ========== 工具方法 ==========
 
     private fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
