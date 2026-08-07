@@ -286,7 +286,7 @@ jobs:
         if: success()
         run: |
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
-          VERSION_NAME="v2.0.0"
+          VERSION_NAME="v2.1.0"
           APK_NAME="OpenWrtManager_${VERSION_NAME}_${SHORT_SHA}_debug.apk"
 
           cp app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/$APK_NAME"
