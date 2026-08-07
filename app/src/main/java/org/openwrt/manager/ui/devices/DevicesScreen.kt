@@ -163,7 +163,7 @@ fun RouterItem(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = router.name.ifEmpty { router.address },
+                    text = router.name.ifEmpty { "OpenWrt路由器" },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

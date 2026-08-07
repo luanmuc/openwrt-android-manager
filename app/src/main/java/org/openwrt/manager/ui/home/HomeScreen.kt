@@ -193,7 +193,7 @@ fun RouterStatusCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = router?.name ?: status?.hostname ?: "路由器",
+                        text = router?.name?.ifEmpty { null } ?: status?.hostname ?: "OpenWrt路由器",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )

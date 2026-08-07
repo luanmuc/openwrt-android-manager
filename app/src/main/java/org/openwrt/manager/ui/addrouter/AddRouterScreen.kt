@@ -119,6 +119,7 @@ fun AddRouterScreen(
                 onValueChange = { value: String -> viewModel.onNameChange(value) },
                 label = { Text(stringResource(R.string.add_router_name)) },
                 placeholder = { Text(stringResource(R.string.add_router_name_hint)) },
+                supportingText = { Text("可选，留空将自动获取") },
                 leadingIcon = {
                     Icon(Icons.Default.Label, contentDescription = null)
                 },
@@ -155,12 +156,13 @@ fun AddRouterScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // 密码
+            // 密码（可选，支持无密码登录）
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = { value: String -> viewModel.onPasswordChange(value) },
                 label = { Text(stringResource(R.string.add_router_password)) },
                 placeholder = { Text(stringResource(R.string.add_router_password_hint)) },
+                supportingText = { Text("可选，无密码路由器可留空") },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null)
                 },
@@ -177,8 +179,7 @@ fun AddRouterScreen(
                 else PasswordVisualTransformation(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(),
-                isError = uiState.error != null && uiState.password.isBlank()
+                modifier = Modifier.fillMaxWidth()
             )
 
             // 错误提示

@@ -63,10 +63,7 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
             _uiState.value = state.copy(error = "请输入用户名")
             return
         }
-        if (state.password.isBlank()) {
-            _uiState.value = state.copy(error = "请输入密码")
-            return
-        }
+        // 密码可以为空，支持无密码登录
 
         viewModelScope.launch {
             _uiState.value = state.copy(isConnecting = true, error = null)
