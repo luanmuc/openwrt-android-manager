@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
+import com.luanmuc.openwrtmanager.ui.components.DualLineChart
 import com.luanmuc.openwrtmanager.util.DebugMode
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Download
