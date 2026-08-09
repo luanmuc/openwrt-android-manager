@@ -704,7 +704,7 @@ fun MiErrorState(
             modifier = Modifier
                 .size(80.dp)
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFFFFF1F0)),
+                .background(MiTheme.Error.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
