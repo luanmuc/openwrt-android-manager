@@ -330,17 +330,19 @@ fun PluginsScreen(
                 },
                 containerColor = MiTheme.CardBackground
             ) {
-                PluginDetailSheet(
-                    plugin = uiState.selectedPackage!!,
-                    isInstalled = uiState.installedPackages.any { it.name == uiState.selectedPackage!!.name },
-                    isLoading = uiState.actionLoading == uiState.selectedPackage!!.name,
-                    onInstall = { viewModel.installPackage(uiState.selectedPackage!!.name) },
-                    onRemove = { viewModel.removePackage(uiState.selectedPackage!!.name) },
-                    onOpen = {
-                        onPluginClick(uiState.selectedPackage!!)
-                        scope.launch { sheetState.hide() }
-                    }
-                )
+                uiState.selectedPackage?.let { pkg ->
+                    PluginDetailSheet(
+                        plugin = pkg,
+                        isInstalled = uiState.installedPackages.any { it.name == pkg.name },
+                        isLoading = uiState.actionLoading == pkg.name,
+                        onInstall = { viewModel.installPackage(pkg.name) },
+                        onRemove = { viewModel.removePackage(pkg.name) },
+                        onOpen = {
+                            onPluginClick(pkg)
+                            scope.launch { sheetState.hide() }
+                        }
+                    )
+                }
             }
         }
     }
