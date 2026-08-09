@@ -1138,10 +1138,7 @@ object DebugMode {
             md5 = "abc123def456",
             sha256 = "sha256hash123456",
             downloadUrl = "https://example.com/firmware.bin",
-            changelog = "• 修复了若干已知问题
-• 提升了系统稳定性
-• 更新了部分插件版本
-• 优化了网络性能",
+            changelog = "• 修复了若干已知问题\n• 提升了系统稳定性\n• 更新了部分插件版本\n• 优化了网络性能",
             isNewer = true
         )
     }
