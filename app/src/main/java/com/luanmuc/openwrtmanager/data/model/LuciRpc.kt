@@ -297,3 +297,68 @@ data class CpuDataPoint(
     val time: Long = 0,
     val usage: Float = 0f
 )
+
+
+/**
+ * 系统信息
+ */
+data class SystemInfo(
+    val hostname: String = "",
+    val model: String = "",
+    val firmwareVersion: String = "",
+    val kernelVersion: String = "",
+    val architecture: String = "",
+    val packageManager: PackageManagerType = PackageManagerType.OPKG,
+    val boardName: String = "",
+    val release: String = "",
+    val distribution: String = "",
+    val revision: String = "",
+    val target: String = "",
+    val description: String = "",
+    val title: String = ""
+)
+
+/**
+ * 包管理器类型
+ */
+enum class PackageManagerType(val displayName: String) {
+    OPKG("OPKG"),
+    APK("APK"),
+    UNKNOWN("未知")
+}
+
+/**
+ * 架构类型
+ */
+enum class ArchitectureType(val displayName: String, val opkgArch: String, val apkArch: String) {
+    X86_64("x86_64", "x86_64", "x86_64"),
+    ARMV7("armv7", "arm_cortex-a7_neon-vfpv4", "armv7"),
+    AARCH64("aarch64", "aarch64_cortex-a53", "aarch64"),
+    MIPSEL("mipsel", "mipsel_24kc", "mipsel"),
+    MIPS("mips", "mips_24kc", "mips"),
+    UNKNOWN("未知", "all", "all")
+}
+
+/**
+ * 软件源预设
+ */
+data class RepoPreset(
+    val id: String,
+    val name: String,
+    val description: String,
+    val baseUrl: String,
+    val type: RepoPresetType,
+    val supportedArchitectures: List<ArchitectureType> = listOf()
+)
+
+/**
+ * 软件源预设类型
+ */
+enum class RepoPresetType(val displayName: String) {
+    OFFICIAL("官方源"),
+    TSINGHUA("清华源"),
+    USTC("中科大源"),
+    ALIYUN("阿里云源"),
+    KENZOK8("kenzok8源"),
+    CUSTOM("自定义")
+}

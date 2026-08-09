@@ -1076,4 +1076,41 @@ object DebugMode {
             )
         }
     }
+
+    /**
+     * 获取假的系统信息
+     */
+    fun getFakeSystemInfo(): SystemInfo {
+        return SystemInfo(
+            hostname = "OpenWrt-Router",
+            model = "Generic x86/64",
+            firmwareVersion = "23.05.0",
+            kernelVersion = "5.15.120",
+            architecture = "x86_64",
+            packageManager = PackageManagerType.OPKG,
+            boardName = "x86_64",
+            release = "23.05.0",
+            distribution = "OpenWrt",
+            revision = "r23497-6637af95aa",
+            target = "x86/64",
+            description = "OpenWrt 23.05.0 r23497-6637af95aa",
+            title = "OpenWrt 23.05.0"
+        )
+    }
+
+    /**
+     * 模拟切换包管理器模式（用于演示）
+     */
+    fun simulatePackageManagerMode(mode: PackageManagerType) {
+        // 这个方法用于演示模式下切换包管理器显示
+        // 实际实现可以根据需要修改
+    }
+
+    /**
+     * 模拟架构验证
+     */
+    fun simulateArchitectureValidation(packageName: String, architecture: String): Boolean {
+        // 演示模式下默认验证通过
+        return true
+    }
 }

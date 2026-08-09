@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.PackageInfo
 import com.luanmuc.openwrtmanager.data.model.RepoInfo
 import com.luanmuc.openwrtmanager.data.model.RecommendedPlugin
+import com.luanmuc.openwrtmanager.data.model.SystemInfo
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
@@ -68,7 +69,10 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         val repos: List<RepoInfo> = emptyList(),
         val recommendedPlugins: List<RecommendedPlugin> = emptyList(),
         val isUploadingIpk: Boolean = false,
-        val uploadProgress: Int = 0
+        val uploadProgress: Int = 0,
+        val systemInfo: SystemInfo = SystemInfo(),
+        val isLoadingSystemInfo: Boolean = false,
+        val architectureWarning: String? = null
     )
 
     init {
@@ -241,15 +245,38 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(actionLoading = name)
             try {
+                // 查找包信息
+                val pkg = _uiState.value.availablePackages.find { it.name == name }
+                    ?: _uiState.value.installedPackages.find { it.name == name }
+
+                // 架构验证
+                if (pkg != null) {
+                    val isValid = if (DebugMode.isDebugMode) {
+                        DebugMode.simulateArchitectureValidation(name, _uiState.value.systemInfo.architecture)
+                    } else {
+                        luciRepository.validatePackageArchitecture(pkg, _uiState.value.systemInfo)
+                    }
+
+                    if (!isValid) {
+                        _uiState.value = _uiState.value.copy(
+                            actionLoading = null,
+                            architectureWarning = "插件 ${pkg.name} 的架构与当前设备不匹配，安装可能失败。
+当前架构：${_uiState.value.systemInfo.architecture}
+插件架构：${pkg.architecture}"
+                        )
+                        return@launch
+                    }
+                }
+
                 // 调试模式：模拟安装
                 if (DebugMode.isDebugMode) {
                     DebugMode.simulateDelay(1500)
                     val installed = _uiState.value.installedPackages.toMutableList()
                     val available = _uiState.value.availablePackages.toMutableList()
-                    val pkg = available.find { it.name == name }
-                    if (pkg != null) {
-                        available.remove(pkg)
-                        installed.add(pkg.copy(installed = true))
+                    val pkgToInstall = available.find { it.name == name }
+                    if (pkgToInstall != null) {
+                        available.remove(pkgToInstall)
+                        installed.add(pkgToInstall.copy(installed = true))
                     }
                     _uiState.value = _uiState.value.copy(
                         installedPackages = installed,
@@ -730,5 +757,49 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         } else {
             routers.firstOrNull()
         }
+    }
+
+    /**
+     * 加载系统信息（用于架构验证）
+     */
+    fun loadSystemInfo() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingSystemInfo = true)
+            try {
+                if (DebugMode.isDebugMode) {
+                    _uiState.value = _uiState.value.copy(
+                        systemInfo = DebugMode.getFakeSystemInfo(),
+                        isLoadingSystemInfo = false
+                    )
+                    return@launch
+                }
+
+                val info = luciRepository.getFullSystemInfo()
+                _uiState.value = _uiState.value.copy(
+                    systemInfo = info,
+                    isLoadingSystemInfo = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingSystemInfo = false
+                )
+            }
+        }
+    }
+
+    /**
+     * 清除架构警告
+     */
+    fun clearArchitectureWarning() {
+        _uiState.value = _uiState.value.copy(architectureWarning = null)
+    }
+
+    /**
+     * 强制安装（忽略架构警告）
+     */
+    fun forceInstallPackage(name: String) {
+        clearArchitectureWarning()
+        // 这里可以添加强制安装的逻辑
+        // 为了安全，暂时不实现强制安装
     }
 }

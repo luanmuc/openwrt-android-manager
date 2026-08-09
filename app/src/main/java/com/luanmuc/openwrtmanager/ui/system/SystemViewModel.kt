@@ -9,6 +9,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.luanmuc.openwrtmanager.data.model.LogEntry
 import com.luanmuc.openwrtmanager.data.model.ProcessInfo
+import com.luanmuc.openwrtmanager.data.model.SystemInfo
+import com.luanmuc.openwrtmanager.data.model.PackageManagerType
+import com.luanmuc.openwrtmanager.data.model.RepoPreset
+import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
@@ -45,7 +49,14 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
         val cpuUsage: Float = 0f,
         val memoryUsage: Float = 0f,
         val cpuHistory: List<Float> = emptyList(),
-        val memoryHistory: List<Float> = emptyList()
+        val memoryHistory: List<Float> = emptyList(),
+        val systemInfo: SystemInfo = SystemInfo(),
+        val isLoadingSystemInfo: Boolean = false,
+        val installedPackagesCount: Int = 0,
+        val availablePackagesCount: Int = 0,
+        val reposCount: Int = 0,
+        val presetRepos: List<RepoPreset> = emptyList(),
+        val isSwitchingRepo: Boolean = false
     )
 
     init {
@@ -101,10 +112,12 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
 
     fun setSelectedTab(tab: Int) {
         _uiState.value = _uiState.value.copy(selectedTab = tab)
-        if (tab == 1 && _uiState.value.processes.isEmpty()) {
-            // 先加载缓存
+        if (tab == 0 && _uiState.value.systemInfo.hostname.isEmpty()) {
+            // 系统信息Tab：加载系统信息
+            loadSystemInfo()
+        } else if (tab == 2 && _uiState.value.processes.isEmpty()) {
+            // 进程管理Tab：加载进程列表
             loadProcessesFromCache()
-            // 然后从网络加载
             loadProcesses()
         }
     }
@@ -397,6 +410,123 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
             routers.find { it.id == activeId } ?: routers.firstOrNull()
         } else {
             routers.firstOrNull()
+        }
+    }
+
+    // ==================== 系统信息 ====================
+
+    /**
+     * 加载系统信息
+     */
+    fun loadSystemInfo() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingSystemInfo = true)
+            try {
+                val activeRouter = getActiveRouter() ?: return@launch
+
+                if (DebugMode.isDebugMode) {
+                    // 调试模式：使用假数据
+                    val fakeInfo = DebugMode.getFakeSystemInfo()
+                    val presetRepos = luciRepository.getPresetRepos(fakeInfo)
+                    _uiState.value = _uiState.value.copy(
+                        systemInfo = fakeInfo,
+                        isLoadingSystemInfo = false,
+                        installedPackagesCount = DebugMode.getFakeInstalledPackages().size,
+                        availablePackagesCount = DebugMode.getFakeAvailablePackages().size,
+                        reposCount = DebugMode.getFakeRepos().size,
+                        presetRepos = presetRepos
+                    )
+                    return@launch
+                }
+
+                // 从缓存加载
+                val cachedInfo = cacheRepository.getCacheEvenExpired(
+                    CacheRepository.KEY_SYSTEM_INFO,
+                    activeRouter.id
+                )?.let {
+                    // 这里简化处理，实际应该反序列化
+                    null
+                }
+
+                // 从网络加载
+                val systemInfo = luciRepository.getFullSystemInfo()
+                val presetRepos = luciRepository.getPresetRepos(systemInfo)
+
+                // 获取软件源数量
+                val repos = try {
+                    luciRepository.getPackageRepos()
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    systemInfo = systemInfo,
+                    isLoadingSystemInfo = false,
+                    reposCount = repos.size,
+                    presetRepos = presetRepos
+                )
+
+                // 保存到缓存
+                cacheRepository.putCache(
+                    CacheRepository.KEY_SYSTEM_INFO,
+                    activeRouter.id,
+                    systemInfo.toString() // 简化处理
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingSystemInfo = false,
+                    error = e.message ?: "加载系统信息失败"
+                )
+            }
+        }
+    }
+
+    /**
+     * 切换软件源
+     */
+    fun switchRepo(preset: RepoPreset) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSwitchingRepo = true)
+            try {
+                val success = luciRepository.switchRepo(preset, _uiState.value.systemInfo)
+                if (success) {
+                    // 切换成功，重新加载软件源列表
+                    loadSystemInfo()
+                }
+                _uiState.value = _uiState.value.copy(
+                    isSwitchingRepo = false,
+                    error = if (!success) "切换软件源失败" else null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isSwitchingRepo = false,
+                    error = e.message ?: "切换软件源失败"
+                )
+            }
+        }
+    }
+
+    /**
+     * 自动配置官方软件源
+     */
+    fun autoConfigureOfficialRepos() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSwitchingRepo = true)
+            try {
+                val success = luciRepository.autoConfigureOfficialRepos(_uiState.value.systemInfo)
+                if (success) {
+                    loadSystemInfo()
+                }
+                _uiState.value = _uiState.value.copy(
+                    isSwitchingRepo = false,
+                    error = if (!success) "配置软件源失败" else null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isSwitchingRepo = false,
+                    error = e.message ?: "配置软件源失败"
+                )
+            }
         }
     }
 }

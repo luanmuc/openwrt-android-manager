@@ -345,5 +345,6 @@ class CacheRepository private constructor(
         const val KEY_LAN_CONFIG = "lan_config"
         const val KEY_WAN_CONFIG = "wan_config"
         const val KEY_DHCP_CONFIG = "dhcp_config"
+        const val KEY_SYSTEM_INFO = "system_info"
     }
 }

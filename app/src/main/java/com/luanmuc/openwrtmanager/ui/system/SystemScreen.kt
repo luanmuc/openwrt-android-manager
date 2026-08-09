@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.system
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
@@ -41,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +51,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.data.model.LogEntry
 import com.luanmuc.openwrtmanager.data.model.ProcessInfo
+import com.luanmuc.openwrtmanager.data.model.SystemInfo
+import com.luanmuc.openwrtmanager.data.model.RepoPreset
+import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.MiButton
+import com.luanmuc.openwrtmanager.ui.components.MiListItem
+import com.luanmuc.openwrtmanager.ui.components.MiTag
+import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
+import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
+import androidx.compose.foundation.lazy.items
 import com.luanmuc.openwrtmanager.ui.components.MiButton
 import com.luanmuc.openwrtmanager.ui.components.MiButtonType
 import com.luanmuc.openwrtmanager.ui.components.MiCard
@@ -73,7 +84,7 @@ fun SystemScreen(
     viewModel: SystemViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val tabs = listOf("系统日志", "进程管理")
+    val tabs = listOf("系统信息", "系统日志", "进程管理")
     
     Scaffold(
         topBar = {
@@ -156,6 +167,19 @@ fun SystemScreen(
             }
             
             if (uiState.selectedTab == 0) {
+                SystemInfoContent(
+                    systemInfo = uiState.systemInfo,
+                    isLoading = uiState.isLoadingSystemInfo,
+                    installedPackagesCount = uiState.installedPackagesCount,
+                    availablePackagesCount = uiState.availablePackagesCount,
+                    reposCount = uiState.reposCount,
+                    presetRepos = uiState.presetRepos,
+                    isSwitchingRepo = uiState.isSwitchingRepo,
+                    onRefresh = { viewModel.loadSystemInfo() },
+                    onSwitchRepo = { viewModel.switchRepo(it) },
+                    onAutoConfigure = { viewModel.autoConfigureOfficialRepos() }
+                )
+            } else if (uiState.selectedTab == 1) {
                 LogsContent(
                     logs = uiState.logs,
                     isLoading = uiState.isLoadingLogs,
@@ -208,6 +232,251 @@ fun LogsContent(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * 系统信息内容
+ */
+@Composable
+private fun SystemInfoContent(
+    systemInfo: SystemInfo,
+    isLoading: Boolean,
+    installedPackagesCount: Int,
+    availablePackagesCount: Int,
+    reposCount: Int,
+    presetRepos: List<RepoPreset>,
+    isSwitchingRepo: Boolean,
+    onRefresh: () -> Unit,
+    onSwitchRepo: (RepoPreset) -> Unit,
+    onAutoConfigure: () -> Unit
+) {
+    if (isLoading) {
+        MiLoadingState(text = "正在加载系统信息...")
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 基本信息卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "基本信息",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiTheme.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        InfoItem(label = "设备型号", value = systemInfo.model)
+                        InfoItem(label = "主机名称", value = systemInfo.hostname)
+                        InfoItem(label = "固件版本", value = systemInfo.firmwareVersion)
+                        InfoItem(label = "发行版", value = systemInfo.distribution)
+                        InfoItem(label = "内核版本", value = systemInfo.kernelVersion)
+                        InfoItem(label = "架构", value = systemInfo.architecture)
+                        InfoItem(label = "目标平台", value = systemInfo.target.ifEmpty { "未知" })
+                    }
+                }
+            }
+
+            // 包管理器信息卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "包管理器",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiTheme.TextPrimary
+                            )
+                            MiTag(
+                                text = systemInfo.packageManager.displayName,
+                                color = MiColors.Primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        InfoItem(label = "包管理器类型", value = systemInfo.packageManager.displayName)
+                        InfoItem(label = "软件源数量", value = "$reposCount 个")
+                        InfoItem(label = "已安装插件", value = "$installedPackagesCount 个")
+                        InfoItem(label = "可用插件", value = "$availablePackagesCount 个")
+                    }
+                }
+            }
+
+            // 软件源切换卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "软件源切换",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiTheme.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "一键切换到不同的软件源镜像",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // 自动配置按钮
+                        MiButton(
+                            text = "自动配置官方源",
+                            onClick = onAutoConfigure,
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSwitchingRepo
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // 预设源列表
+                        presetRepos.forEach { preset ->
+                            RepoPresetItem(
+                                preset = preset,
+                                isLoading = isSwitchingRepo,
+                                onClick = { onSwitchRepo(preset) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+
+            // 架构验证提示
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MiColors.Primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "架构验证已启用",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiTheme.TextPrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "安装插件前会自动验证架构是否匹配，防止下载错误架构的插件包。",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary,
+                            lineHeight = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 信息项
+ */
+@Composable
+private fun InfoItem(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = MiTheme.TextSecondary
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MiTheme.TextPrimary
+        )
+    }
+}
+
+/**
+ * 软件源预设项
+ */
+@Composable
+private fun RepoPresetItem(
+    preset: RepoPreset,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MiColors.Primary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = MiColors.Primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = preset.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiTheme.TextPrimary
+            )
+            Text(
+                text = preset.description,
+                fontSize = 12.sp,
+                color = MiTheme.TextTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = MiColors.Primary
+            )
+        } else {
+            Icon(
+                Icons.Default.ArrowBack,
+                contentDescription = null,
+                tint = MiTheme.TextTertiary,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
@@ -465,7 +734,7 @@ fun SystemStatusOverview(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Storage,
+                            imageVector = Icons.Default.Info,
                             contentDescription = null,
                             tint = MiColors.Success,
                             modifier = Modifier.size(18.dp)
@@ -496,6 +765,251 @@ fun SystemStatusOverview(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * 系统信息内容
+ */
+@Composable
+private fun SystemInfoContent(
+    systemInfo: SystemInfo,
+    isLoading: Boolean,
+    installedPackagesCount: Int,
+    availablePackagesCount: Int,
+    reposCount: Int,
+    presetRepos: List<RepoPreset>,
+    isSwitchingRepo: Boolean,
+    onRefresh: () -> Unit,
+    onSwitchRepo: (RepoPreset) -> Unit,
+    onAutoConfigure: () -> Unit
+) {
+    if (isLoading) {
+        MiLoadingState(text = "正在加载系统信息...")
+    } else {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 基本信息卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "基本信息",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiTheme.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        InfoItem(label = "设备型号", value = systemInfo.model)
+                        InfoItem(label = "主机名称", value = systemInfo.hostname)
+                        InfoItem(label = "固件版本", value = systemInfo.firmwareVersion)
+                        InfoItem(label = "发行版", value = systemInfo.distribution)
+                        InfoItem(label = "内核版本", value = systemInfo.kernelVersion)
+                        InfoItem(label = "架构", value = systemInfo.architecture)
+                        InfoItem(label = "目标平台", value = systemInfo.target.ifEmpty { "未知" })
+                    }
+                }
+            }
+
+            // 包管理器信息卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "包管理器",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiTheme.TextPrimary
+                            )
+                            MiTag(
+                                text = systemInfo.packageManager.displayName,
+                                color = MiColors.Primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        InfoItem(label = "包管理器类型", value = systemInfo.packageManager.displayName)
+                        InfoItem(label = "软件源数量", value = "$reposCount 个")
+                        InfoItem(label = "已安装插件", value = "$installedPackagesCount 个")
+                        InfoItem(label = "可用插件", value = "$availablePackagesCount 个")
+                    }
+                }
+            }
+
+            // 软件源切换卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "软件源切换",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MiTheme.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "一键切换到不同的软件源镜像",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // 自动配置按钮
+                        MiButton(
+                            text = "自动配置官方源",
+                            onClick = onAutoConfigure,
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isSwitchingRepo
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        // 预设源列表
+                        presetRepos.forEach { preset ->
+                            RepoPresetItem(
+                                preset = preset,
+                                isLoading = isSwitchingRepo,
+                                onClick = { onSwitchRepo(preset) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+
+            // 架构验证提示
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MiColors.Primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "架构验证已启用",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiTheme.TextPrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "安装插件前会自动验证架构是否匹配，防止下载错误架构的插件包。",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary,
+                            lineHeight = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 信息项
+ */
+@Composable
+private fun InfoItem(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = MiTheme.TextSecondary
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = MiTheme.TextPrimary
+        )
+    }
+}
+
+/**
+ * 软件源预设项
+ */
+@Composable
+private fun RepoPresetItem(
+    preset: RepoPreset,
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MiColors.Primary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Info,
+                contentDescription = null,
+                tint = MiColors.Primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = preset.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiTheme.TextPrimary
+            )
+            Text(
+                text = preset.description,
+                fontSize = 12.sp,
+                color = MiTheme.TextTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = MiColors.Primary
+            )
+        } else {
+            Icon(
+                Icons.Default.ArrowBack,
+                contentDescription = null,
+                tint = MiTheme.TextTertiary,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }

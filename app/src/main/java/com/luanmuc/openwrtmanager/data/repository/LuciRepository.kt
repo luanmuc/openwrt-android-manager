@@ -1191,3 +1191,343 @@ enum class ErrorType {
     UNKNOWN
 }
 
+
+
+    // ==================== 系统信息检测 ====================
+
+    /**
+     * 获取完整的系统信息
+     */
+    suspend fun getFullSystemInfo(): SystemInfo {
+        return try {
+            val sysInfo = getSystemInfo()
+            val boardInfo = getBoardInfo()
+            val releaseInfo = boardInfo["release"] as? Map<*, *>
+
+            val hostname = sysInfo["hostname"]?.toString()
+                ?: boardInfo["hostname"]?.toString()
+                ?: "OpenWrt"
+            val model = boardInfo["model"]?.toString()
+                ?: sysInfo["model"]?.toString()
+                ?: "Unknown"
+            val kernel = sysInfo["kernel"]?.toString() ?: "Unknown"
+            val boardName = boardInfo["board_name"]?.toString() ?: ""
+
+            // 解析release信息
+            val distribution = releaseInfo?.get("distribution")?.toString() ?: "OpenWrt"
+            val version = releaseInfo?.get("version")?.toString() ?: "Unknown"
+            val revision = releaseInfo?.get("revision")?.toString() ?: ""
+            val target = releaseInfo?.get("target")?.toString() ?: ""
+            val description = releaseInfo?.get("description")?.toString() ?: ""
+            val title = releaseInfo?.get("title")?.toString() ?: ""
+
+            // 检测架构
+            val architecture = detectArchitecture(boardInfo, sysInfo)
+
+            // 检测包管理器
+            val packageManager = detectPackageManager()
+
+            SystemInfo(
+                hostname = hostname,
+                model = model,
+                firmwareVersion = version,
+                kernelVersion = kernel,
+                architecture = architecture.displayName,
+                packageManager = packageManager,
+                boardName = boardName,
+                release = version,
+                distribution = distribution,
+                revision = revision,
+                target = target,
+                description = description,
+                title = title
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            SystemInfo()
+        }
+    }
+
+    /**
+     * 检测架构
+     */
+    private suspend fun detectArchitecture(boardInfo: Map<String, Any>, sysInfo: Map<String, Any>): ArchitectureType {
+        return try {
+            val boardName = boardInfo["board_name"]?.toString() ?: ""
+            val model = boardInfo["model"]?.toString() ?: ""
+            val system = sysInfo["system"]?.toString() ?: ""
+
+            when {
+                // x86_64
+                boardName.contains("x86", ignoreCase = true) ||
+                model.contains("x86", ignoreCase = true) ||
+                system.contains("x86_64", ignoreCase = true) -> ArchitectureType.X86_64
+
+                // aarch64
+                boardName.contains("aarch64", ignoreCase = true) ||
+                model.contains("aarch64", ignoreCase = true) ||
+                system.contains("aarch64", ignoreCase = true) -> ArchitectureType.AARCH64
+
+                // armv7
+                boardName.contains("armv7", ignoreCase = true) ||
+                model.contains("armv7", ignoreCase = true) ||
+                system.contains("armv7", ignoreCase = true) ||
+                boardName.contains("cortex-a7", ignoreCase = true) -> ArchitectureType.ARMV7
+
+                // mipsel
+                boardName.contains("mipsel", ignoreCase = true) ||
+                system.contains("mipsel", ignoreCase = true) -> ArchitectureType.MIPSEL
+
+                // mips
+                boardName.contains("mips", ignoreCase = true) ||
+                system.contains("mips", ignoreCase = true) -> ArchitectureType.MIPS
+
+                else -> ArchitectureType.UNKNOWN
+            }
+        } catch (e: Exception) {
+            ArchitectureType.UNKNOWN
+        }
+    }
+
+    /**
+     * 检测包管理器类型
+     */
+    suspend fun detectPackageManager(): PackageManagerType {
+        return try {
+            // 尝试执行opkg命令
+            val result = try {
+                callUbus("luci-rpc", "getInstalledPackages")
+                PackageManagerType.OPKG
+            } catch (e: Exception) {
+                null
+            }
+
+            if (result != null) {
+                return PackageManagerType.OPKG
+            }
+
+            // 尝试执行apk命令（通过shell）
+            try {
+                val apkResult = callUbus("file", "exec", mapOf(
+                    "command" to "/bin/sh",
+                    "params" to listOf("-c", "apk --version")
+                ))
+                if (apkResult.isNotEmpty()) {
+                    return PackageManagerType.APK
+                }
+            } catch (e: Exception) {
+                // 忽略
+            }
+
+            PackageManagerType.UNKNOWN
+        } catch (e: Exception) {
+            PackageManagerType.OPKG // 默认返回OPKG
+        }
+    }
+
+    // ==================== 软件源自动配置 ====================
+
+    /**
+     * 获取预设软件源列表
+     */
+    fun getPresetRepos(systemInfo: SystemInfo): List<RepoPreset> {
+        val arch = when (systemInfo.architecture) {
+            "x86_64" -> ArchitectureType.X86_64
+            "aarch64" -> ArchitectureType.AARCH64
+            "armv7" -> ArchitectureType.ARMV7
+            "mipsel" -> ArchitectureType.MIPSEL
+            "mips" -> ArchitectureType.MIPS
+            else -> ArchitectureType.UNKNOWN
+        }
+
+        val version = systemInfo.firmwareVersion
+
+        return listOf(
+            // 官方源
+            RepoPreset(
+                id = "official",
+                name = "官方源",
+                description = "OpenWrt官方软件源",
+                baseUrl = "https://downloads.openwrt.org/releases/$version/packages/${arch.opkgArch}",
+                type = RepoPresetType.OFFICIAL,
+                supportedArchitectures = ArchitectureType.values().toList()
+            ),
+            // 清华源
+            RepoPreset(
+                id = "tsinghua",
+                name = "清华源",
+                description = "清华大学TUNA镜像源",
+                baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/$version/packages/${arch.opkgArch}",
+                type = RepoPresetType.TSINGHUA,
+                supportedArchitectures = ArchitectureType.values().toList()
+            ),
+            // 中科大源
+            RepoPreset(
+                id = "ustc",
+                name = "中科大源",
+                description = "中国科学技术大学镜像源",
+                baseUrl = "https://mirrors.ustc.edu.cn/openwrt/releases/$version/packages/${arch.opkgArch}",
+                type = RepoPresetType.USTC,
+                supportedArchitectures = ArchitectureType.values().toList()
+            ),
+            // 阿里云源
+            RepoPreset(
+                id = "aliyun",
+                name = "阿里云源",
+                description = "阿里云镜像源",
+                baseUrl = "https://mirrors.aliyun.com/openwrt/releases/$version/packages/${arch.opkgArch}",
+                type = RepoPresetType.ALIYUN,
+                supportedArchitectures = ArchitectureType.values().toList()
+            ),
+            // kenzok8源
+            RepoPreset(
+                id = "kenzok8",
+                name = "kenzok8源",
+                description = "第三方软件源，包含更多插件",
+                baseUrl = "https://op.dllkids.xyz/packages/${arch.opkgArch}",
+                type = RepoPresetType.KENZOK8,
+                supportedArchitectures = listOf(
+                    ArchitectureType.X86_64,
+                    ArchitectureType.AARCH64,
+                    ArchitectureType.ARMV7
+                )
+            )
+        )
+    }
+
+    /**
+     * 自动配置官方软件源
+     */
+    suspend fun autoConfigureOfficialRepos(systemInfo: SystemInfo): Boolean {
+        return try {
+            val arch = when (systemInfo.architecture) {
+                "x86_64" -> ArchitectureType.X86_64
+                "aarch64" -> ArchitectureType.AARCH64
+                "armv7" -> ArchitectureType.ARMV7
+                "mipsel" -> ArchitectureType.MIPSEL
+                "mips" -> ArchitectureType.MIPS
+                else -> return false
+            }
+
+            val version = systemInfo.firmwareVersion
+            if (version == "Unknown") return false
+
+            // 备份原有配置
+            backupOpkgConfig()
+
+            // 配置官方源
+            val baseUrl = "https://downloads.openwrt.org/releases/$version/packages/${arch.opkgArch}"
+
+            // 添加各个源
+            val repos = listOf(
+                "base" to "$baseUrl/base",
+                "luci" to "$baseUrl/luci",
+                "packages" to "$baseUrl/packages",
+                "routing" to "$baseUrl/routing",
+                "telephony" to "$baseUrl/telephony"
+            )
+
+            for ((name, url) in repos) {
+                addPackageRepo(name, url, true)
+            }
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * 切换软件源
+     */
+    suspend fun switchRepo(preset: RepoPreset, systemInfo: SystemInfo): Boolean {
+        return try {
+            // 备份原有配置
+            backupOpkgConfig()
+
+            // 获取当前源列表
+            val currentRepos = getPackageRepos()
+
+            // 删除所有现有源
+            for (repo in currentRepos) {
+                removePackageRepo(repo.name)
+            }
+
+            // 添加新源
+            val baseUrl = preset.baseUrl
+            val repos = listOf(
+                "base" to "$baseUrl/base",
+                "luci" to "$baseUrl/luci",
+                "packages" to "$baseUrl/packages",
+                "routing" to "$baseUrl/routing",
+                "telephony" to "$baseUrl/telephony"
+            )
+
+            for ((name, url) in repos) {
+                addPackageRepo(name, url, true)
+            }
+
+            // 更新软件源
+            updatePackageLists()
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    /**
+     * 备份opkg配置
+     */
+    private suspend fun backupOpkgConfig(): Boolean {
+        return try {
+            callUbus("file", "exec", mapOf(
+                "command" to "/bin/sh",
+                "params" to listOf("-c", "cp /etc/opkg/customfeeds.conf /etc/opkg/customfeeds.conf.bak")
+            ))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ==================== 架构验证 ====================
+
+    /**
+     * 验证插件架构是否匹配
+     */
+    fun validatePackageArchitecture(pkg: PackageInfo, systemInfo: SystemInfo): Boolean {
+        return try {
+            val arch = when (systemInfo.architecture) {
+                "x86_64" -> ArchitectureType.X86_64
+                "aarch64" -> ArchitectureType.AARCH64
+                "armv7" -> ArchitectureType.ARMV7
+                "mipsel" -> ArchitectureType.MIPSEL
+                "mips" -> ArchitectureType.MIPS
+                else -> return true // 未知架构时跳过验证
+            }
+
+            // 如果包信息中没有架构信息，默认通过
+            if (pkg.architecture.isEmpty()) return true
+
+            // 检查架构是否匹配
+            pkg.architecture.contains(arch.opkgArch, ignoreCase = true) ||
+            pkg.architecture.contains("all", ignoreCase = true) ||
+            pkg.architecture.contains("noarch", ignoreCase = true)
+        } catch (e: Exception) {
+            true
+        }
+    }
+
+    /**
+     * 获取插件支持的架构列表
+     */
+    fun getPackageArchitectures(pkg: PackageInfo): List<String> {
+        return if (pkg.architecture.isEmpty()) {
+            listOf("all")
+        } else {
+            pkg.architecture.split(" ").filter { it.isNotEmpty() }
+        }
+    }
