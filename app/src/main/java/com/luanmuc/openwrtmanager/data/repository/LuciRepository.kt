@@ -1651,17 +1651,7 @@ class LuciRepository {
         }
     }
 
-}
 
-/**
- * 错误类型枚举
- */
-enum class ErrorType {
-    NETWORK_ERROR,
-    TIMEOUT,
-    AUTH_FAILED,
-    NOT_FOUND,
-    FORBIDDEN,
 /**
  * LuCI 异常类
  */
@@ -1672,9 +1662,15 @@ class LuciException(
 ) : Exception(message)
 
 
+/**
+ * 错误类型枚举
+ */
+enum class ErrorType {
+    NETWORK_ERROR,
+    TIMEOUT,
+    AUTH_FAILED,
+    NOT_FOUND,
+    FORBIDDEN,
     HTTP_ERROR,
     UNKNOWN
 }
-
-
-
