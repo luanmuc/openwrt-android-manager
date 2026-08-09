@@ -260,9 +260,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
                     if (!isValid) {
                         _uiState.value = _uiState.value.copy(
                             actionLoading = null,
-                            architectureWarning = "插件 ${pkg.name} 的架构与当前设备不匹配，安装可能失败。
-当前架构：${_uiState.value.systemInfo.architecture}
-插件架构：${pkg.architecture}"
+                            architectureWarning = "插件 ${pkg.name} 的架构与当前设备不匹配，安装可能失败。\n当前架构：${_uiState.value.systemInfo.architecture}\n插件架构：${pkg.architecture}"
                         )
                         return@launch
                     }
