@@ -1,24 +1,28 @@
 package com.luanmuc.openwrtmanager.ui.network
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.Router
+import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.util.EncryptionUtil
 
 /**
  * 网络设置 ViewModel
+ * 实现缓存优先策略：先显示缓存数据，同时后台发起网络请求
  */
-class NetworkViewModel(application: Application) : AndroidViewModel(application) {
+class NetworkViewModel(application: Application) : BaseViewModel(application) {
     private val routerRepository = RouterRepository.getInstance(application)
-    private val luciRepository = LuciRepository()
+    private val luciRepository = LuciRepository.getInstance(getApplication())
+    private val cacheRepository = CacheRepository.getInstance(application)
 
     private val _uiState = MutableStateFlow(NetworkUiState())
     val uiState: StateFlow<NetworkUiState> = _uiState.asStateFlow()
@@ -41,11 +45,37 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
         val isSaving: Boolean = false,
         val error: String? = null,
         val success: String? = null,
-        val hasRouter: Boolean = false
+        val hasRouter: Boolean = false,
+        val isFromCache: Boolean = false,
+        val cacheTimestamp: Long? = null,
+        val isOfflineMode: Boolean = false
+    )
+
+    /**
+     * 网络配置缓存数据类
+     */
+    data class NetworkConfigCache(
+        val lanIp: String = "",
+        val lanNetmask: String = "",
+        val lanDhcpEnabled: Boolean = true,
+        val lanDhcpStart: String = "",
+        val lanDhcpLimit: String = "",
+        val lanDhcpLease: String = "",
+        val wanProto: String = "dhcp",
+        val wanIp: String = "",
+        val wanNetmask: String = "",
+        val wanGateway: String = "",
+        val wanDns: String = "",
+        val wanUsername: String = "",
+        val wanPassword: String = ""
     )
 
     init {
-        observeRouters()
+        initNetworkMonitor()
+    }
+
+    override fun refreshData() {
+        loadNetworkConfig()
     }
 
     private fun observeRouters() {
@@ -53,19 +83,75 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
             routerRepository.routers.collect { routers ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 if (routers.isNotEmpty()) {
+                    // 先加载缓存
+                    loadFromCache()
+                    // 然后从网络加载
                     loadNetworkConfig()
                 }
             }
         }
     }
 
+    /**
+     * 从缓存加载数据
+     */
+    private fun loadFromCache() {
+        viewModelScope.launch {
+            try {
+                // 调试模式不使用缓存
+                if (DebugMode.isDebugMode) {
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter() ?: return@launch
+
+                val cachedConfig = cacheRepository.getCacheEvenExpired(
+                    CacheRepository.KEY_LAN_CONFIG,
+                    activeRouter.id,
+                    NetworkConfigCache::class.java
+                )
+
+                if (cachedConfig != null) {
+                    val cacheTime = cacheRepository.getCacheTimestamp(
+                        CacheRepository.KEY_LAN_CONFIG,
+                        activeRouter.id
+                    )
+
+                    _uiState.value = _uiState.value.copy(
+                        lanIp = cachedConfig.lanIp,
+                        lanNetmask = cachedConfig.lanNetmask,
+                        lanDhcpEnabled = cachedConfig.lanDhcpEnabled,
+                        lanDhcpStart = cachedConfig.lanDhcpStart,
+                        lanDhcpLimit = cachedConfig.lanDhcpLimit,
+                        lanDhcpLease = cachedConfig.lanDhcpLease,
+                        wanProto = cachedConfig.wanProto,
+                        wanIp = cachedConfig.wanIp,
+                        wanNetmask = cachedConfig.wanNetmask,
+                        wanGateway = cachedConfig.wanGateway,
+                        wanDns = cachedConfig.wanDns,
+                        wanUsername = cachedConfig.wanUsername,
+                        wanPassword = cachedConfig.wanPassword,
+                        isFromCache = true,
+                        cacheTimestamp = cacheTime,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun loadNetworkConfig() {
         viewModelScope.launch {
+            val isFirstLoad = _uiState.value.lanIp.isEmpty()
             _uiState.value = _uiState.value.copy(
-                isLoading = true,
+                isLoading = isFirstLoad,
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：使用假数据
                 if (DebugMode.isDebugMode) {
@@ -85,6 +171,8 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                         wanUsername = "",
                         wanPassword = "",
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
                         error = null
                     )
                     return@launch
@@ -96,40 +184,107 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
+
                     // 加载LAN配置
                     val lanConfig = luciRepository.getUciConfig("network", "lan")
-                    _uiState.value = _uiState.value.copy(
-                        lanIp = lanConfig["ipaddr"] ?: "192.168.1.1",
-                        lanNetmask = lanConfig["netmask"] ?: "255.255.255.0"
-                    )
+                    val lanIp = lanConfig["ipaddr"] ?: "192.168.1.1"
+                    val lanNetmask = lanConfig["netmask"] ?: "255.255.255.0"
+
                     // 加载DHCP配置
                     val dhcpConfig = luciRepository.getUciConfig("dhcp", "lan")
-                    _uiState.value = _uiState.value.copy(
-                        lanDhcpEnabled = (dhcpConfig["ignore"] ?: "0") != "1",
-                        lanDhcpStart = dhcpConfig["start"] ?: "100",
-                        lanDhcpLimit = dhcpConfig["limit"] ?: "150",
-                        lanDhcpLease = dhcpConfig["leasetime"] ?: "12h"
-                    )
+                    val lanDhcpEnabled = (dhcpConfig["ignore"] ?: "0") != "1"
+                    val lanDhcpStart = dhcpConfig["start"] ?: "100"
+                    val lanDhcpLimit = dhcpConfig["limit"] ?: "150"
+                    val lanDhcpLease = dhcpConfig["leasetime"] ?: "12h"
+
                     // 加载WAN配置
                     val wanConfig = luciRepository.getUciConfig("network", "wan")
-                    _uiState.value = _uiState.value.copy(
-                        wanProto = wanConfig["proto"] ?: "dhcp",
-                        wanIp = wanConfig["ipaddr"] ?: "",
-                        wanNetmask = wanConfig["netmask"] ?: "",
-                        wanGateway = wanConfig["gateway"] ?: "",
-                        wanDns = wanConfig["dns"] ?: "",
-                        wanUsername = wanConfig["username"] ?: "",
-                        wanPassword = wanConfig["password"] ?: ""
+                    val wanProto = wanConfig["proto"] ?: "dhcp"
+                    val wanIp = wanConfig["ipaddr"] ?: ""
+                    val wanNetmask = wanConfig["netmask"] ?: ""
+                    val wanGateway = wanConfig["gateway"] ?: ""
+                    val wanDns = wanConfig["dns"] ?: ""
+                    val wanUsername = wanConfig["username"] ?: ""
+                    val wanPassword = wanConfig["password"] ?: ""
+
+                    val now = System.currentTimeMillis()
+
+                    // 保存到缓存
+                    val configCache = NetworkConfigCache(
+                        lanIp = lanIp,
+                        lanNetmask = lanNetmask,
+                        lanDhcpEnabled = lanDhcpEnabled,
+                        lanDhcpStart = lanDhcpStart,
+                        lanDhcpLimit = lanDhcpLimit,
+                        lanDhcpLease = lanDhcpLease,
+                        wanProto = wanProto,
+                        wanIp = wanIp,
+                        wanNetmask = wanNetmask,
+                        wanGateway = wanGateway,
+                        wanDns = wanDns,
+                        wanUsername = wanUsername,
+                        wanPassword = wanPassword
                     )
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_LAN_CONFIG,
+                        activeRouter.id,
+                        "NetworkConfigCache",
+                        configCache
+                    )
+
                     _uiState.value = _uiState.value.copy(
+                        lanIp = lanIp,
+                        lanNetmask = lanNetmask,
+                        lanDhcpEnabled = lanDhcpEnabled,
+                        lanDhcpStart = lanDhcpStart,
+                        lanDhcpLimit = lanDhcpLimit,
+                        lanDhcpLease = lanDhcpLease,
+                        wanProto = wanProto,
+                        wanIp = wanIp,
+                        wanNetmask = wanNetmask,
+                        wanGateway = wanGateway,
+                        wanDns = wanDns,
+                        wanUsername = wanUsername,
+                        wanPassword = wanPassword,
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
+                        cacheTimestamp = now,
                         error = null
                     )
                 }
             } catch (e: Exception) {
+                handleLoadError(e.message ?: "加载失败")
+            }
+        }
+    }
+
+    /**
+     * 处理加载错误
+     */
+    private fun handleLoadError(errorMsg: String) {
+        viewModelScope.launch {
+            // 检查是否有缓存
+            val activeRouter = getActiveRouter()
+            val hasCache = activeRouter?.let {
+                cacheRepository.hasCache(
+                    CacheRepository.KEY_LAN_CONFIG,
+                    it.id
+                )
+            } ?: false
+
+            if (hasCache && _uiState.value.lanIp.isNotEmpty()) {
+                // 有缓存，显示离线模式
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "加载失败"
+                    isOfflineMode = true,
+                    error = null
+                )
+            } else {
+                // 没有缓存，显示错误
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = errorMsg
                 )
             }
         }
@@ -142,6 +297,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：模拟保存
                 if (DebugMode.isDebugMode) {
@@ -164,6 +320,33 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 // 提交配置
                 luciRepository.commitUci("network")
                 luciRepository.commitUci("dhcp")
+
+                // 保存成功后更新缓存
+                val activeRouter = getActiveRouter()
+                activeRouter?.let {
+                    val configCache = NetworkConfigCache(
+                        lanIp = _uiState.value.lanIp,
+                        lanNetmask = _uiState.value.lanNetmask,
+                        lanDhcpEnabled = _uiState.value.lanDhcpEnabled,
+                        lanDhcpStart = _uiState.value.lanDhcpStart,
+                        lanDhcpLimit = _uiState.value.lanDhcpLimit,
+                        lanDhcpLease = _uiState.value.lanDhcpLease,
+                        wanProto = _uiState.value.wanProto,
+                        wanIp = _uiState.value.wanIp,
+                        wanNetmask = _uiState.value.wanNetmask,
+                        wanGateway = _uiState.value.wanGateway,
+                        wanDns = _uiState.value.wanDns,
+                        wanUsername = _uiState.value.wanUsername,
+                        wanPassword = _uiState.value.wanPassword
+                    )
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_LAN_CONFIG,
+                        it.id,
+                        "NetworkConfigCache",
+                        configCache
+                    )
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "LAN配置保存成功"
@@ -184,6 +367,7 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：模拟保存
                 if (DebugMode.isDebugMode) {
@@ -208,6 +392,33 @@ class NetworkViewModel(application: Application) : AndroidViewModel(application)
                 }
                 // 提交配置
                 luciRepository.commitUci("network")
+
+                // 保存成功后更新缓存
+                val activeRouter = getActiveRouter()
+                activeRouter?.let {
+                    val configCache = NetworkConfigCache(
+                        lanIp = _uiState.value.lanIp,
+                        lanNetmask = _uiState.value.lanNetmask,
+                        lanDhcpEnabled = _uiState.value.lanDhcpEnabled,
+                        lanDhcpStart = _uiState.value.lanDhcpStart,
+                        lanDhcpLimit = _uiState.value.lanDhcpLimit,
+                        lanDhcpLease = _uiState.value.lanDhcpLease,
+                        wanProto = _uiState.value.wanProto,
+                        wanIp = _uiState.value.wanIp,
+                        wanNetmask = _uiState.value.wanNetmask,
+                        wanGateway = _uiState.value.wanGateway,
+                        wanDns = _uiState.value.wanDns,
+                        wanUsername = _uiState.value.wanUsername,
+                        wanPassword = _uiState.value.wanPassword
+                    )
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_LAN_CONFIG,
+                        it.id,
+                        "NetworkConfigCache",
+                        configCache
+                    )
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "WAN配置保存成功"

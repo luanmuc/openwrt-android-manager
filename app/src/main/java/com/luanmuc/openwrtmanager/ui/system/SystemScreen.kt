@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
@@ -50,6 +52,7 @@ import com.luanmuc.openwrtmanager.data.model.ProcessInfo
 import com.luanmuc.openwrtmanager.ui.components.MiButton
 import com.luanmuc.openwrtmanager.ui.components.MiButtonType
 import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.LineChart
 import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
 import com.luanmuc.openwrtmanager.ui.components.MiErrorState
@@ -57,6 +60,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiLinearProgress
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 系统管理页面 - 小米路由器风格
@@ -79,7 +83,7 @@ fun SystemScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -96,29 +100,40 @@ fun SystemScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+                        // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
+            // 系统状态概览
+            SystemStatusOverview(
+                cpuUsage = uiState.cpuUsage,
+                memoryUsage = uiState.memoryUsage,
+                cpuHistory = uiState.cpuHistory,
+                memoryHistory = uiState.memoryHistory
+            )
+            
             // Tab栏
             TabRow(
                 selectedTabIndex = uiState.selectedTab,
-                containerColor = MiColors.Background,
+                containerColor = MiTheme.Background,
                 divider = {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(0.5.dp)
-                            .background(MiColors.Divider)
+                            .background(MiTheme.Divider)
                     )
                 }
             ) {
@@ -134,7 +149,7 @@ fun SystemScreen(
                             )
                         },
                         selectedContentColor = MiColors.Primary,
-                        unselectedContentColor = MiColors.TextTertiary
+                        unselectedContentColor = MiTheme.TextTertiary
                     )
                 }
             }
@@ -216,7 +231,7 @@ fun ProcessesContent(
                 Icon(
                     imageVector = Icons.Default.BugReport,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(40.dp)
                 )
             },
@@ -273,7 +288,7 @@ fun ProcessesContent(
                 TextButton(onClick = { showKillDialog = null }) {
                     Text(
                         "取消",
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             },
@@ -315,13 +330,13 @@ fun ProcessCard(
                     text = process.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "PID: ${process.pid} | 用户: ${process.user}",
                     fontSize = 12.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -364,6 +379,122 @@ fun ProcessCard(
                 modifier = Modifier.width(60.dp),
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
             )
+        }
+    }
+}
+
+
+/**
+ * 系统状态概览 - CPU和内存使用率
+ */
+@Composable
+fun SystemStatusOverview(
+    cpuUsage: Float,
+    memoryUsage: Float,
+    cpuHistory: List<Float>,
+    memoryHistory: List<Float>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // CPU使用率
+            MiCard(
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Memory,
+                            contentDescription = null,
+                            tint = MiColors.Primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "CPU",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${cpuUsage.toInt()}%",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MiTheme.TextPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LineChart(
+                        data = cpuHistory,
+                        color = MiColors.Primary,
+                        showGrid = false,
+                        
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                    )
+                }
+            }
+            
+            // 内存使用率
+            MiCard(
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storage,
+                            contentDescription = null,
+                            tint = MiColors.Success,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "内存",
+                            fontSize = 13.sp,
+                            color = MiTheme.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${memoryUsage.toInt()}%",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MiTheme.TextPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LineChart(
+                        data = memoryHistory,
+                        color = MiColors.Success,
+                        showGrid = false,
+                        
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                    )
+                }
+            }
         }
     }
 }

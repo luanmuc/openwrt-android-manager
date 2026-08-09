@@ -1,22 +1,218 @@
 package com.luanmuc.openwrtmanager.data.repository
 
+import android.content.Context
+import android.content.SharedPreferences
 import com.luanmuc.openwrtmanager.data.api.LuciApiService
 import com.luanmuc.openwrtmanager.data.api.RetrofitClient
 import com.luanmuc.openwrtmanager.data.model.*
+import kotlinx.coroutines.*
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
 
 /**
  * LuCI API 仓库
  * 封装所有与 OpenWrt LuCI ubus RPC 的交互
  * 支持 ImmortalWrt / OpenWrt 21.02+ 新版 LuCI
+ * 
+ * Session自动续期特性：
+ * - 登录成功记录session过期时间
+ * - 每次请求前检查，快过期自动刷新
+ * - 过期了自动重新登录，用户无感知
+ * - APP重启自动恢复session
+ * - 前台定时自动续期
  */
 class LuciRepository {
     private var authToken: String = ""
     private var currentAddress: String = ""
     private var currentUsername: String = ""
     private var currentPassword: String = ""
+    
+    // Session过期时间相关
+    private var sessionExpireTime: Long = 0L  // session过期时间戳（毫秒）
+    private var sessionExpiresIn: Long = TimeUnit.MINUTES.toMillis(30)  // session有效期，默认30分钟
+    private val sessionRefreshThreshold = TimeUnit.MINUTES.toMillis(5)  // 快过期阈值：剩余5分钟时刷新
+    
+    // Session重试相关
+    private val maxRefreshRetries = 3  // 最大重试次数
+    private var currentRefreshRetryCount = 0  // 当前重试次数
+    private val baseRetryDelay = 2000L  // 基础重试延迟（毫秒）
+    
+    // 自动续期相关
+    private var autoRefreshJob: Job? = null
+    private var isAutoRefreshRunning = false
+    
+    // 持久化相关
+    private var prefs: SharedPreferences? = null
+    private val PREFS_NAME = "luci_session_prefs"
+    private val KEY_AUTH_TOKEN = "auth_token"
+    private val KEY_ADDRESS = "address"
+    private val KEY_USERNAME = "username"
+    private val KEY_PASSWORD = "password"
+    private val KEY_EXPIRE_TIME = "expire_time"
+    private val KEY_EXPIRES_IN = "expires_in"
+    
+    // 单例
+    companion object {
+        @Volatile
+        private var instance: LuciRepository? = null
+        
+        fun getInstance(context: Context? = null): LuciRepository {
+            return instance ?: synchronized(this) {
+                instance ?: LuciRepository().also { 
+                    instance = it
+                    context?.let { ctx -> it.init(ctx) }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 初始化，加载持久化的session
+     */
+    fun init(context: Context) {
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        loadSessionFromPrefs()
+        // 如果恢复的session有效，启动自动续期
+        if (isSessionValid()) {
+            startAutoRefresh()
+        }
+    }
+    
+    /**
+     * 从SharedPreferences加载session
+     */
+    private fun loadSessionFromPrefs() {
+        prefs?.let {
+            authToken = it.getString(KEY_AUTH_TOKEN, "") ?: ""
+            currentAddress = it.getString(KEY_ADDRESS, "") ?: ""
+            currentUsername = it.getString(KEY_USERNAME, "") ?: ""
+            currentPassword = it.getString(KEY_PASSWORD, "") ?: ""
+            sessionExpireTime = it.getLong(KEY_EXPIRE_TIME, 0L)
+            sessionExpiresIn = it.getLong(KEY_EXPIRES_IN, TimeUnit.MINUTES.toMillis(30))
+        }
+    }
+    
+    /**
+     * 保存session到SharedPreferences
+     */
+    private fun saveSessionToPrefs() {
+        prefs?.edit()?.apply {
+            putString(KEY_AUTH_TOKEN, authToken)
+            putString(KEY_ADDRESS, currentAddress)
+            putString(KEY_USERNAME, currentUsername)
+            putString(KEY_PASSWORD, currentPassword)
+            putLong(KEY_EXPIRE_TIME, sessionExpireTime)
+            putLong(KEY_EXPIRES_IN, sessionExpiresIn)
+            apply()
+        }
+    }
+    
+    /**
+     * 清除持久化的session
+     */
+    private fun clearSessionPrefs() {
+        prefs?.edit()?.clear()?.apply()
+    }
+    
+    /**
+     * 检查session是否有效
+     */
+    fun isSessionValid(): Boolean {
+        return authToken.isNotEmpty() && System.currentTimeMillis() < sessionExpireTime
+    }
+    
+    /**
+     * 检查session是否快过期
+     */
+    private fun isSessionExpiringSoon(): Boolean {
+        val remainingTime = sessionExpireTime - System.currentTimeMillis()
+        return authToken.isNotEmpty() && remainingTime in 0..sessionRefreshThreshold
+    }
+    
+    /**
+     * 检查并刷新session（如果快过期的话）
+     */
+    private suspend fun checkAndRefreshSession() {
+        if (isSessionExpiringSoon()) {
+            try {
+                refreshSession()
+            } catch (e: Exception) {
+                // 刷新失败，忽略，等真正过期了再重新登录
+            }
+        }
+    }
+    
+    /**
+     * 刷新session（通过重新登录）
+     * 支持指数退避重试
+     */
+    private suspend fun refreshSession() {
+        if (currentUsername.isEmpty() || currentPassword.isEmpty()) {
+            return
+        }
+        
+        currentRefreshRetryCount = 0
+        while (currentRefreshRetryCount < maxRefreshRetries) {
+            try {
+                login(currentAddress, currentUsername, currentPassword)
+                // 刷新成功，重置重试计数
+                currentRefreshRetryCount = 0
+                isRefreshFailed = false
+                lastRefreshError = null
+                return
+            } catch (e: Exception) {
+                currentRefreshRetryCount++
+                if (currentRefreshRetryCount < maxRefreshRetries) {
+                    // 指数退避重试
+                    val delay = baseRetryDelay * (1 shl (currentRefreshRetryCount - 1))
+                    delay(delay)
+                }
+            }
+        }
+        
+        // 所有重试都失败了
+        isRefreshFailed = true
+        lastRefreshError = "Session续期失败，请重新登录"
+        onRefreshFailed?.invoke(lastRefreshError ?: "续期失败")
+        // 清除无效session
+        authToken = ""
+        sessionExpireTime = 0L
+        onSessionExpired?.invoke()
+    }
+    
+    /**
+     * 启动自动续期
+     */
+    fun startAutoRefresh() {
+        if (isAutoRefreshRunning || autoRefreshJob?.isActive == true) {
+            return
+        }
+        
+        isAutoRefreshRunning = true
+        autoRefreshJob = CoroutineScope(Dispatchers.IO).launch {
+            while (isAutoRefreshRunning && isLoggedIn()) {
+                try {
+                    delay(TimeUnit.MINUTES.toMillis(10))  // 每10分钟检查一次
+                    if (isSessionExpiringSoon()) {
+                        refreshSession()
+                    }
+                } catch (e: Exception) {
+                    // 忽略错误，继续循环
+                }
+            }
+        }
+    }
+    
+    /**
+     * 停止自动续期
+     */
+    fun stopAutoRefresh() {
+        isAutoRefreshRunning = false
+        autoRefreshJob?.cancel()
+        autoRefreshJob = null
+    }
 
     // ========== 认证相关 ==========
 
@@ -66,6 +262,21 @@ class LuciRepository {
             if (authToken.isEmpty()) {
                 throw LuciException(message = "未获取到会话令牌", type = ErrorType.AUTH_FAILED)
             }
+            
+            // 记录session过期时间
+            // 尝试从响应中获取过期时间，如果没有则使用默认值
+            val expires = data?.get("expires") as? Number
+            if (expires != null) {
+                sessionExpiresIn = TimeUnit.SECONDS.toMillis(expires.toLong())
+            }
+            sessionExpireTime = System.currentTimeMillis() + sessionExpiresIn
+            
+            // 保存到SharedPreferences
+            saveSessionToPrefs()
+            
+            // 启动自动续期
+            startAutoRefresh()
+            
             return authToken
         } catch (e: Exception) {
             throw wrapException(e)
@@ -80,6 +291,9 @@ class LuciRepository {
         method: String,
         params: Map<String, Any> = emptyMap()
     ): Map<String, Any> {
+        // 请求前检查session是否快过期，快过期则自动刷新
+        checkAndRefreshSession()
+        
         val api = RetrofitClient.getApi(currentAddress)
         try {
             val request = LuciRpcRequest.callRequest(authToken, obj, method, params)
@@ -811,14 +1025,36 @@ class LuciRepository {
     }
 
     fun getCurrentAddress(): String = currentAddress
+    fun getCurrentAuthToken(): String = authToken
     fun isLoggedIn(): Boolean = authToken.isNotEmpty()
     fun logout() {
+        // 停止自动续期
+        stopAutoRefresh()
+        
         authToken = ""
         currentAddress = ""
         currentUsername = ""
         currentPassword = ""
+        sessionExpireTime = 0L
+        
+        // 清除持久化的session
+        clearSessionPrefs()
+        
         RetrofitClient.reset()
     }
+    
+    /**
+     * 获取session剩余有效时间（毫秒）
+     */
+    fun getSessionRemainingTime(): Long {
+        val remaining = sessionExpireTime - System.currentTimeMillis()
+        return if (remaining > 0) remaining else 0L
+    }
+    
+    /**
+     * 获取session总有效期（毫秒）
+     */
+    fun getSessionExpiresIn(): Long = sessionExpiresIn
 }
 
 /**

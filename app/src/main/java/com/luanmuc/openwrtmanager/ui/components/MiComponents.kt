@@ -48,6 +48,111 @@ object MiColors {
     val GradientGold = Brush.linearGradient(listOf(Color(0xFFFAAD14), Color(0xFFFFC53D)))
 }
 
+// ========== 深色模式颜色 ==========
+object MiColorsDark {
+    val Primary = Color(0xFF3385FF)
+    val PrimaryDark = Color(0xFF1677FF)
+    val PrimaryLight = Color(0xFF5CADFF)
+    val Background = Color(0xFF17171A)
+    val CardBackground = Color(0xFF232324)
+    val TextPrimary = Color(0xFFF2F3F5)
+    val TextSecondary = Color(0xFFC9CDD4)
+    val TextTertiary = Color(0xFF86909C)
+    val Divider = Color(0xFF3A3A3C)
+    val Success = Color(0xFF00B578)
+    val Warning = Color(0xFFFF7D00)
+    val Error = Color(0xFFF53F3F)
+    val Purple = Color(0xFF9254DE)
+    val Cyan = Color(0xFF36CFC9)
+    val Orange = Color(0xFFFFA940)
+    val Info = Color(0xFF3385FF)
+    
+    // 功能图标渐变色
+    val GradientBlue = Brush.linearGradient(listOf(Color(0xFF1677FF), Color(0xFF4096FF)))
+    val GradientGreen = Brush.linearGradient(listOf(Color(0xFF00B578), Color(0xFF36CFC9)))
+    val GradientOrange = Brush.linearGradient(listOf(Color(0xFFFF7D00), Color(0xFFFFA940)))
+    val GradientPurple = Brush.linearGradient(listOf(Color(0xFF722ED1), Color(0xFF9254DE)))
+    val GradientRed = Brush.linearGradient(listOf(Color(0xFFF53F3F), Color(0xFFFF7875)))
+    val GradientCyan = Brush.linearGradient(listOf(Color(0xFF13C2C2), Color(0xFF36CFC9)))
+    val GradientGold = Brush.linearGradient(listOf(Color(0xFFFAAD14), Color(0xFFFFC53D)))
+}
+
+// ========== 主题状态 ==========
+object MiTheme {
+    private val _isDarkMode = mutableStateOf(false)
+    var isDarkMode: Boolean
+        get() = _isDarkMode.value
+        set(value) { _isDarkMode.value = value }
+    
+    // 根据当前主题返回对应的颜色
+    val colors: MiColorsTheme
+        get() = if (_isDarkMode.value) DarkColors else LightColors
+    
+    // 便捷属性
+    val Primary: Color get() = if (_isDarkMode.value) MiColorsDark.Primary else MiColors.Primary
+    val Background: Color get() = if (_isDarkMode.value) MiColorsDark.Background else MiColors.Background
+    val CardBackground: Color get() = if (_isDarkMode.value) MiColorsDark.CardBackground else MiColors.CardBackground
+    val TextPrimary: Color get() = if (_isDarkMode.value) MiColorsDark.TextPrimary else MiColors.TextPrimary
+    val TextSecondary: Color get() = if (_isDarkMode.value) MiColorsDark.TextSecondary else MiColors.TextSecondary
+    val TextTertiary: Color get() = if (_isDarkMode.value) MiColorsDark.TextTertiary else MiColors.TextTertiary
+    val Divider: Color get() = if (_isDarkMode.value) MiColorsDark.Divider else MiColors.Divider
+    val Success: Color get() = if (_isDarkMode.value) MiColorsDark.Success else MiColors.Success
+    val Warning: Color get() = if (_isDarkMode.value) MiColorsDark.Warning else MiColors.Warning
+    val Error: Color get() = if (_isDarkMode.value) MiColorsDark.Error else MiColors.Error
+    val Purple: Color get() = if (_isDarkMode.value) MiColorsDark.Purple else MiColors.Purple
+    val Cyan: Color get() = if (_isDarkMode.value) MiColorsDark.Cyan else MiColors.Cyan
+    val Orange: Color get() = if (_isDarkMode.value) MiColorsDark.Orange else MiColors.Orange
+}
+
+// 主题颜色接口
+data class MiColorsTheme(
+    val Primary: Color,
+    val Background: Color,
+    val CardBackground: Color,
+    val TextPrimary: Color,
+    val TextSecondary: Color,
+    val TextTertiary: Color,
+    val Divider: Color,
+    val Success: Color,
+    val Warning: Color,
+    val Error: Color,
+    val Purple: Color,
+    val Cyan: Color,
+    val Orange: Color
+)
+
+private val LightColors = MiColorsTheme(
+    Primary = MiColors.Primary,
+    Background = MiColors.Background,
+    CardBackground = MiColors.CardBackground,
+    TextPrimary = MiColors.TextPrimary,
+    TextSecondary = MiColors.TextSecondary,
+    TextTertiary = MiColors.TextTertiary,
+    Divider = MiColors.Divider,
+    Success = MiColors.Success,
+    Warning = MiColors.Warning,
+    Error = MiColors.Error,
+    Purple = MiColors.Purple,
+    Cyan = MiColors.Cyan,
+    Orange = MiColors.Orange
+)
+
+private val DarkColors = MiColorsTheme(
+    Primary = MiColorsDark.Primary,
+    Background = MiColorsDark.Background,
+    CardBackground = MiColorsDark.CardBackground,
+    TextPrimary = MiColorsDark.TextPrimary,
+    TextSecondary = MiColorsDark.TextSecondary,
+    TextTertiary = MiColorsDark.TextTertiary,
+    Divider = MiColorsDark.Divider,
+    Success = MiColorsDark.Success,
+    Warning = MiColorsDark.Warning,
+    Error = MiColorsDark.Error,
+    Purple = MiColorsDark.Purple,
+    Cyan = MiColorsDark.Cyan,
+    Orange = MiColorsDark.Orange
+)
+
 // ========== 小米风格尺寸 ==========
 object MiDimens {
     val cardRadius = 16.dp
@@ -72,7 +177,7 @@ object MiDimens {
 fun MiCard(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(MiDimens.cardRadius),
-    backgroundColor: Color = MiColors.CardBackground,
+    backgroundColor: Color = MiTheme.CardBackground,
     elevation: Dp = 2.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -112,9 +217,9 @@ fun MiButton(
                 enabled = enabled,
                 shape = RoundedCornerShape(MiDimens.buttonRadius),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MiColors.Primary,
+                    containerColor = MiTheme.Primary,
                     contentColor = Color.White,
-                    disabledContainerColor = MiColors.Primary.copy(alpha = 0.4f),
+                    disabledContainerColor = MiTheme.Primary.copy(alpha = 0.4f),
                     disabledContentColor = Color.White.copy(alpha = 0.7f)
                 ),
                 elevation = ButtonDefaults.buttonElevation(
@@ -138,8 +243,8 @@ fun MiButton(
                 shape = RoundedCornerShape(MiDimens.buttonRadius),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = Color.Transparent,
-                    contentColor = MiColors.TextSecondary,
-                    disabledContentColor = MiColors.TextTertiary
+                    contentColor = MiTheme.TextSecondary,
+                    disabledContentColor = MiTheme.TextTertiary
                 ),
                 border = BorderStroke(1.dp, MiColors.Divider),
                 contentPadding = contentPadding
@@ -158,7 +263,7 @@ fun MiButton(
                 enabled = enabled,
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MiColors.Primary,
-                    disabledContentColor = MiColors.TextTertiary
+                    disabledContentColor = MiTheme.TextTertiary
                 ),
                 contentPadding = contentPadding
             ) {
@@ -215,9 +320,9 @@ fun MiPrimaryButton(
         enabled = enabled,
         shape = RoundedCornerShape(MiDimens.buttonRadius),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MiColors.Primary,
+            containerColor = MiTheme.Primary,
             contentColor = Color.White,
-            disabledContainerColor = MiColors.Primary.copy(alpha = 0.4f),
+            disabledContainerColor = MiTheme.Primary.copy(alpha = 0.4f),
             disabledContentColor = Color.White.copy(alpha = 0.7f)
         ),
         elevation = ButtonDefaults.buttonElevation(
@@ -482,7 +587,7 @@ fun MiFeatureIcon(
 fun MiTag(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MiColors.Primary.copy(alpha = 0.1f),
+    backgroundColor: Color = MiTheme.Primary.copy(alpha = 0.1f),
     textColor: Color = MiColors.Primary
 ) {
     Box(
@@ -506,7 +611,7 @@ fun MiTag(
 fun MiLinearProgress(
     progress: Float,
     modifier: Modifier = Modifier,
-    color: Color = MiColors.Primary,
+    color: Color = MiTheme.Primary,
     trackColor: Color = Color(0xFFF2F3F5),
     height: Dp = 6.dp
 ) {

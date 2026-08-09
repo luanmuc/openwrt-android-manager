@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import com.luanmuc.openwrtmanager.ui.components.DualLineChart
 import com.luanmuc.openwrtmanager.util.DebugMode
@@ -62,6 +64,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.R
 import com.luanmuc.openwrtmanager.ui.components.MiCard
+import com.luanmuc.openwrtmanager.ui.components.LineChart
 import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiDimens
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
@@ -70,6 +73,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiListItem
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiPrimaryButton
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 首页 - 小米路由器风格
@@ -105,7 +109,7 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = null,
-                                    tint = MiColors.TextSecondary
+                                    tint = MiTheme.TextSecondary
                                 )
                             }
                         }
@@ -121,7 +125,7 @@ fun HomeScreen(
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         if (!uiState.hasRouter) {
             EmptyRouterView(
@@ -210,13 +214,13 @@ fun DeviceSelectorDialog(
                                 text = router.name,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MiColors.TextPrimary
+                                color = MiTheme.TextPrimary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = router.address,
                                 fontSize = 12.sp,
-                                color = MiColors.TextTertiary
+                                color = MiTheme.TextTertiary
                             )
                         }
                         Box(
@@ -248,13 +252,13 @@ fun DeviceSelectorDialog(
                     Text(
                         text = "在线设备",
                         fontSize = 15.sp,
-                        color = MiColors.TextPrimary,
+                        color = MiTheme.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowForward,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -277,13 +281,13 @@ fun DeviceSelectorDialog(
                     Text(
                         text = "添加路由器",
                         fontSize = 15.sp,
-                        color = MiColors.TextPrimary,
+                        color = MiTheme.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowForward,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -331,13 +335,13 @@ fun EmptyRouterView(
             text = "还没有添加路由器",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = MiColors.TextPrimary
+            color = MiTheme.TextPrimary
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = "添加你的 OpenWrt 路由器，开始智能管理",
             fontSize = 14.sp,
-            color = MiColors.TextTertiary
+            color = MiTheme.TextTertiary
         )
         Spacer(modifier = Modifier.height(32.dp))
         MiPrimaryButton(
@@ -350,6 +354,7 @@ fun EmptyRouterView(
 /**
  * 首页内容 - 小米路由器风格
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HomeContent(
     uiState: HomeViewModel.HomeUiState,
@@ -360,8 +365,14 @@ fun HomeContent(
     onNavigateToNetwork: () -> Unit,
     onNavigateToSystem: () -> Unit,
     onNavigateToAdvanced: () -> Unit,
+    isOffline: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val dashboardConfig = viewModel.dashboardConfig
+    val cards by dashboardConfig.config.collectAsStateWithLifecycle()
+    val isEditMode by dashboardConfig.isEditMode.collectAsStateWithLifecycle()
+    var showPresetDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -369,44 +380,153 @@ fun HomeContent(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 离线提示条
+        OfflineBanner(isOffline = isOffline)
+        
         // 演示模式提示条
         if (DebugMode.isDebugMode) {
             DemoModeBanner()
         }
         
-        // 路由器状态大卡片
-        RouterStatusCard(
-            uiState = uiState,
-            onRefresh = { viewModel.refresh() },
-            onClick = onNavigateToSystem
-        )
+        // 长按进入编辑模式提示
+        if (!isEditMode) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .combinedClickable(
+                        onClick = { dashboardConfig.toggleEditMode() },
+                        onLongClick = { dashboardConfig.toggleEditMode() }
+                    ),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = { dashboardConfig.toggleEditMode() }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "编辑首页",
+                        fontSize = 12.sp,
+                        color = MiTheme.TextSecondary
+                    )
+                }
+            }
+        }
         
-        // 网速监控卡片
-        NetworkSpeedCard(
-            uiState = uiState,
-            viewModel = viewModel,
-            onClick = onNavigateToNetwork
-        )
+        // 编辑模式工具栏
+        if (isEditMode) {
+            EditModeToolbar(
+                onDone = { dashboardConfig.exitEditMode() },
+                onReset = { dashboardConfig.resetToDefault() },
+                onPreset = { showPresetDialog = true }
+            )
+        }
         
-        // 常用功能网格
-        QuickFunctionsGrid(
-            onNavigateToDevices = onNavigateToDevices,
-            onNavigateToWifi = onNavigateToWifi,
-            onNavigateToPlugins = onNavigateToPlugins,
-            onNavigateToNetwork = onNavigateToNetwork
-        )
+        // 动态渲染卡片（根据DashboardConfig配置）
+        cards.filter { it.visible }.forEach { card ->
+            DashboardCardWrapper(
+                card = card,
+                isEditMode = isEditMode,
+                onRemove = { dashboardConfig.toggleCardVisibility(card.id) },
+                onMoveUp = { 
+                    val index = cards.indexOf(card)
+                    if (index > 0) {
+                        dashboardConfig.moveCard(index, index - 1)
+                    }
+                },
+                onMoveDown = { 
+                    val index = cards.indexOf(card)
+                    if (index < cards.size - 1) {
+                        dashboardConfig.moveCard(index, index + 1)
+                    }
+                },
+                onSizeChange = { newSize ->
+                    dashboardConfig.changeCardSize(card.id, newSize)
+                }
+            ) {
+                // 根据卡片类型渲染对应内容
+                when (card.id) {
+                    CardType.ROUTER_STATUS -> {
+                        RouterStatusCard(
+                            uiState = uiState,
+                            onRefresh = { viewModel.refresh() },
+                            onClick = onNavigateToSystem
+                        )
+                    }
+                    CardType.NETWORK_SPEED -> {
+                        NetworkSpeedCard(
+                            uiState = uiState,
+                            viewModel = viewModel,
+                            onClick = onNavigateToNetwork
+                        )
+                    }
+                    CardType.QUICK_ACTIONS -> {
+                        QuickFunctionsGrid(
+                            onNavigateToDevices = onNavigateToDevices,
+                            onNavigateToWifi = onNavigateToWifi,
+                            onNavigateToPlugins = onNavigateToPlugins,
+                            onNavigateToNetwork = onNavigateToNetwork
+                        )
+                    }
+                    CardType.SYSTEM_STATUS -> {
+                        SystemStatusCard(
+                            uiState = uiState,
+                            onClick = onNavigateToSystem
+                        )
+                    }
+                    CardType.ONLINE_DEVICES -> {
+                        OnlineDevicesCard(
+                            uiState = uiState,
+                            onClick = onNavigateToDevices
+                        )
+                    }
+                    CardType.WIFI_STATUS -> {
+                        WifiStatusCard(
+                            uiState = uiState,
+                            onClick = onNavigateToWifi
+                        )
+                    }
+                    CardType.PLUGINS -> {
+                        PluginsCard(
+                            onClick = onNavigateToPlugins
+                        )
+                    }
+                    CardType.FIREWALL -> {
+                        FirewallCard(
+                            onClick = { /* 跳转到防火墙 */ }
+                        )
+                    }
+                    CardType.DDNS -> {
+                        DdnsCard(
+                            onClick = { /* 跳转到DDNS */ }
+                        )
+                    }
+                }
+            }
+        }
         
-        // 系统状态卡片
-        SystemStatusCard(
-            uiState = uiState,
-            onClick = onNavigateToSystem
-        )
+        // 编辑模式下的添加卡片按钮
+        if (isEditMode) {
+            AddCardButton(
+                hiddenCards = cards.filter { !it.visible },
+                onAddCard = { cardType ->
+                    dashboardConfig.toggleCardVisibility(cardType)
+                }
+            )
+        }
         
-        // 更多功能
-        MoreFunctionsSection(
-            onNavigateToSystem = onNavigateToSystem,
-            onNavigateToAdvanced = onNavigateToAdvanced
-        )
+        // 预设布局对话框
+        if (showPresetDialog) {
+            PresetLayoutDialog(
+                onDismiss = { showPresetDialog = false },
+                onSelect = { layout ->
+                    dashboardConfig.applyPresetLayout(layout)
+                }
+            )
+        }
         
         Spacer(modifier = Modifier.height(8.dp))
     }
@@ -444,7 +564,7 @@ fun DemoModeBanner() {
             Text(
                 text = "当前为演示数据，非真实路由器信息",
                 fontSize = 12.sp,
-                color = MiColors.TextSecondary
+                color = MiTheme.TextSecondary
             )
         }
     }
@@ -679,7 +799,7 @@ fun NetworkSpeedCard(
                     text = "网络状态",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -710,7 +830,7 @@ fun NetworkSpeedCard(
                         Text(
                             text = "下载速度",
                             fontSize = 12.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -725,7 +845,7 @@ fun NetworkSpeedCard(
                         Text(
                             text = "/s",
                             fontSize = 12.sp,
-                            color = MiColors.TextTertiary,
+                            color = MiTheme.TextTertiary,
                             modifier = Modifier.padding(bottom = 3.dp)
                         )
                     }
@@ -736,7 +856,7 @@ fun NetworkSpeedCard(
                     modifier = Modifier
                         .width(1.dp)
                         .height(50.dp)
-                        .background(MiColors.Divider)
+                        .background(MiTheme.Divider)
                 )
                 
                 // 上传速度
@@ -752,7 +872,7 @@ fun NetworkSpeedCard(
                         Text(
                             text = "上传速度",
                             fontSize = 12.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -767,14 +887,27 @@ fun NetworkSpeedCard(
                         Text(
                             text = "/s",
                             fontSize = 12.sp,
-                            color = MiColors.TextTertiary,
+                            color = MiTheme.TextTertiary,
                             modifier = Modifier.padding(bottom = 3.dp)
                         )
                     }
                 }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // 流量曲线图
+            if (uiState.trafficHistory.size > 1) {
+                DualLineChart(
+                    data1 = uiState.trafficHistory.map { it.rx / 1024f / 1024f },
+                    data2 = uiState.trafficHistory.map { it.tx / 1024f / 1024f },
+                    label1 = "下载",
+                    label2 = "上传",
+                    unit = "MB",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             
             // 总流量
             Row(
@@ -786,13 +919,13 @@ fun NetworkSpeedCard(
                     Text(
                         text = "总下载",
                         fontSize = 11.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = viewModel.formatBytes(wan?.rxBytes ?: 0),
                         fontSize = 13.sp,
-                        color = MiColors.TextSecondary,
+                        color = MiTheme.TextSecondary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -802,13 +935,13 @@ fun NetworkSpeedCard(
                     Text(
                         text = "总上传",
                         fontSize = 11.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = viewModel.formatBytes(wan?.txBytes ?: 0),
                         fontSize = 13.sp,
-                        color = MiColors.TextSecondary,
+                        color = MiTheme.TextSecondary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -821,20 +954,20 @@ fun NetworkSpeedCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MiColors.Background)
+                        .background(MiTheme.Background)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "WAN IP",
                             fontSize = 12.sp,
-                            color = MiColors.TextTertiary
+                            color = MiTheme.TextTertiary
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Text(
                             text = wan?.ipaddr ?: "",
                             fontSize = 13.sp,
-                            color = MiColors.TextPrimary,
+                            color = MiTheme.TextPrimary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -866,7 +999,7 @@ fun QuickFunctionsGrid(
                 text = "常用功能",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MiColors.TextPrimary
+                color = MiTheme.TextPrimary
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -935,7 +1068,7 @@ fun QuickFunctionItem(
         Text(
             text = label,
             fontSize = 13.sp,
-            color = MiColors.TextSecondary,
+            color = MiTheme.TextSecondary,
             fontWeight = FontWeight.Medium
         )
     }
@@ -983,12 +1116,46 @@ fun SystemStatusCard(
                     text = "系统状态",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
+            // CPU使用率
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "CPU使用率",
+                    fontSize = 14.sp,
+                    color = MiTheme.TextSecondary
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "${((status?.cpuUsage ?: 0f) * 100).toInt()}%",
+                    fontSize = 14.sp,
+                    color = MiTheme.TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // CPU历史曲线图
+            if (uiState.cpuHistory.isNotEmpty()) {
+                LineChart(
+                    data = uiState.cpuHistory.map { it.usage * 100 },
+                    color = MiColors.Success,
+                    unit = "%",
+                    showGrid = false,
+                    modifier = Modifier.height(40.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(14.dp))
+
             // 内存使用
             StatusProgressItem(
                 label = "内存使用",
@@ -1023,13 +1190,13 @@ fun SystemStatusCard(
                 Text(
                     text = "运行时间",
                     fontSize = 14.sp,
-                    color = MiColors.TextSecondary
+                    color = MiTheme.TextSecondary
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = formatUptime(status?.uptime ?: 0),
                     fontSize = 14.sp,
-                    color = MiColors.TextPrimary,
+                    color = MiTheme.TextPrimary,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -1056,13 +1223,13 @@ fun StatusProgressItem(
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = MiColors.TextSecondary
+                color = MiTheme.TextSecondary
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "${formatBytes(used)} / ${formatBytes(total)}",
                 fontSize = 13.sp,
-                color = MiColors.TextPrimary,
+                color = MiTheme.TextPrimary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -1095,7 +1262,7 @@ fun MoreFunctionsSection(
                     text = "更多功能",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
             }
             
@@ -1171,6 +1338,6 @@ private fun MiDivider(indent: Dp = 0.dp) {
             .fillMaxWidth()
             .padding(start = indent)
             .height(0.5.dp)
-            .background(MiColors.Divider)
+            .background(MiTheme.Divider)
     )
 }

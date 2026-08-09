@@ -46,6 +46,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiTag
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 在线设备页面 - 小米路由器风格
@@ -67,7 +68,7 @@ fun OnlineDevicesScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -76,19 +77,22 @@ fun OnlineDevicesScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             // 统计卡片
             MiCard(
                 modifier = Modifier
@@ -132,7 +136,7 @@ fun OnlineDevicesScreen(
                         Icon(
                             imageVector = Icons.Default.Devices,
                             contentDescription = null,
-                            tint = MiColors.TextTertiary,
+                            tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(40.dp)
                         )
                     },
@@ -169,7 +173,7 @@ fun StatItem(
         Text(
             text = title,
             fontSize = 13.sp,
-            color = MiColors.TextTertiary
+            color = MiTheme.TextTertiary
         )
     }
 }
@@ -189,6 +193,7 @@ fun DeviceCard(device: DeviceInfo) {
                 icon = {
                     Icon(
                         imageVector = Icons.Default.PhoneAndroid,
+                        imageVector = Icons.Default.ArrowDownward,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
@@ -204,13 +209,13 @@ fun DeviceCard(device: DeviceInfo) {
                     text = device.hostname.ifEmpty { device.ip },
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = device.ip,
                     fontSize = 12.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -224,7 +229,7 @@ fun DeviceCard(device: DeviceInfo) {
                     Text(
                         text = device.mac,
                         fontSize = 11.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             }

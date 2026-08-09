@@ -55,6 +55,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiDivider
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiListItem
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 高级功能页面 - 小米路由器风格
@@ -78,13 +79,13 @@ fun AdvancedScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -93,6 +94,9 @@ fun AdvancedScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 24.dp)
         ) {
+                        // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             Spacer(modifier = Modifier.height(8.dp))
             
             // 系统操作
@@ -267,7 +271,7 @@ fun AdvancedScreen(
                 TextButton(onClick = { showRebootDialog = false }) {
                     Text(
                         "取消",
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             },
@@ -313,7 +317,7 @@ fun AdvancedScreen(
                 TextButton(onClick = { showShutdownDialog = false }) {
                     Text(
                         "取消",
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             },
@@ -328,7 +332,7 @@ fun SectionTitle(title: String) {
         text = title,
         fontSize = 15.sp,
         fontWeight = FontWeight.Medium,
-        color = MiColors.TextSecondary,
+        color = MiTheme.TextSecondary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }

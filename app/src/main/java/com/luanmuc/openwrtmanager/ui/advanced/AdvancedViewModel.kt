@@ -1,6 +1,8 @@
 package com.luanmuc.openwrtmanager.ui.advanced
 
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
+import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.util.DebugMode
@@ -17,11 +19,11 @@ data class AdvancedUiState(
     val actionSuccess: Boolean = false
 )
 
-class AdvancedViewModel : ViewModel() {
+class AdvancedViewModel(application: Application) : BaseViewModel(application) {
     private val _uiState = MutableStateFlow(AdvancedUiState())
     val uiState: StateFlow<AdvancedUiState> = _uiState.asStateFlow()
 
-    private val repository = LuciRepository()
+    private val repository = LuciRepository.getInstance(getApplication())
 
     fun reboot() {
         viewModelScope.launch {
@@ -67,5 +69,9 @@ class AdvancedViewModel : ViewModel() {
 
     fun clearSuccess() {
         _uiState.value = _uiState.value.copy(actionSuccess = false)
+    }
+    
+    override fun refreshData() {
+        // 高级功能页面不需要自动刷新
     }
 }

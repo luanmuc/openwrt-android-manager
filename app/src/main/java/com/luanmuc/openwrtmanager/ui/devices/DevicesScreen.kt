@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Router
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -82,7 +83,7 @@ fun DevicesScreen(
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.devices_add))
             }
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         if (uiState.routers.isEmpty() && !uiState.isLoading) {
             EmptyDevicesView(
@@ -102,7 +103,7 @@ fun DevicesScreen(
                         text = "我的路由器",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MiColors.TextSecondary,
+                        color = MiTheme.TextSecondary,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -148,7 +149,7 @@ fun DevicesScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("取消", color = MiColors.TextSecondary)
+                    Text("取消", color = MiTheme.TextSecondary)
                 }
             },
             shape = RoundedCornerShape(16.dp)
@@ -187,13 +188,13 @@ fun EmptyDevicesView(
             text = "暂无设备",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = MiColors.TextPrimary
+            color = MiTheme.TextPrimary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "添加你的 OpenWrt 路由器设备",
             fontSize = 14.sp,
-            color = MiColors.TextTertiary
+            color = MiTheme.TextTertiary
         )
         Spacer(modifier = Modifier.height(32.dp))
         MiPrimaryButton(
@@ -208,6 +209,7 @@ fun RouterItem(
     router: Router,
     isActive: Boolean,
     onSelect: () -> Unit,
+    onEdit: () -> Unit = {},
     onDelete: () -> Unit
 ) {
     Box(
@@ -230,7 +232,7 @@ fun RouterItem(
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                gradient = if (isActive) MiColors.GradientBlue else Brush.linearGradient(listOf(MiColors.TextTertiary, MiColors.TextSecondary)),
+                gradient = if (isActive) MiColors.GradientBlue else Brush.linearGradient(listOf(MiTheme.TextTertiary, MiTheme.TextSecondary)),
                 size = 48.dp,
                 iconSize = 24.dp
             )
@@ -240,13 +242,13 @@ fun RouterItem(
                     text = router.name.ifEmpty { "OpenWrt路由器" },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${router.username}@${router.address}",
                     fontSize = 13.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
             }
             if (isActive) {
@@ -256,6 +258,14 @@ fun RouterItem(
                     textColor = Color.White
                 )
                 Spacer(modifier = Modifier.width(8.dp))
+            }
+            IconButton(onClick = onEdit) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "编辑",
+                    tint = MiTheme.TextSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
             IconButton(onClick = onDelete) {
                 Icon(

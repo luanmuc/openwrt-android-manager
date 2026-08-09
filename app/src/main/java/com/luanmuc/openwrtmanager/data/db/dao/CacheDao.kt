@@ -26,4 +26,13 @@ interface CacheDao {
 
     @Query("DELETE FROM cache WHERE timestamp < :expireTime")
     suspend fun clearExpiredCache(expireTime: Long)
+    
+    @Query("SELECT COUNT(*) FROM cache WHERE routerId = :routerId")
+    suspend fun getCacheCount(routerId: String): Int
+    
+    @Query("SELECT * FROM cache WHERE routerId = :routerId ORDER BY createdAt ASC LIMIT 1")
+    suspend fun getOldestCache(routerId: String): CacheEntity?
+    
+    @Query("DELETE FROM cache")
+    suspend fun clearAllCache()
 }

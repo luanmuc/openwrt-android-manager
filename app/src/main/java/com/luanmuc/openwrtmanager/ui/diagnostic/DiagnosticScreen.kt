@@ -73,7 +73,7 @@ fun DiagnosticScreen(
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -104,13 +104,13 @@ fun DiagnosticScreen(
                             text = "正在诊断...",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = uiState.currentStep,
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                     } else if (uiState.result != null) {
                         // 诊断结果
@@ -148,13 +148,13 @@ fun DiagnosticScreen(
                             text = if (result.isHealthy) "系统健康" else "发现问题",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "共检测 ${result.issues.size} 项",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                     } else {
                         // 未开始诊断
@@ -175,13 +175,13 @@ fun DiagnosticScreen(
                             text = "一键智能诊断",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "全面检测系统状态，快速发现并解决问题",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                     }
                 }
@@ -207,7 +207,7 @@ fun DiagnosticScreen(
                     text = "检测详情",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary,
+                    color = MiTheme.TextPrimary,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -226,7 +226,7 @@ fun DiagnosticScreen(
                         text = "优化建议",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MiColors.TextPrimary,
+                        color = MiTheme.TextPrimary,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -253,7 +253,7 @@ fun DiagnosticScreen(
                                     Text(
                                         text = suggestion,
                                         fontSize = 14.sp,
-                                        color = MiColors.TextSecondary
+                                        color = MiTheme.TextSecondary
                                     )
                                 }
                                 if (index < result.suggestions.size - 1) {
@@ -313,13 +313,13 @@ fun DiagnosticIssueItem(issue: NetworkDiagnostic.DiagnosticIssue) {
                     text = issue.description,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = issue.suggestion,
                     fontSize = 12.sp,
-                    color = MiColors.TextSecondary
+                    color = MiTheme.TextSecondary
                 )
             }
         }

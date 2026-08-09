@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,27 +70,35 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 fun AddRouterScreen(
     onBack: () -> Unit,
     onSuccess: () -> Unit,
+    routerId: String? = null,
     viewModel: AddRouterViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var passwordVisible by remember { mutableStateOf(false) }
     
+    // 编辑模式：加载路由器信息
+    LaunchedEffect(routerId) {
+        if (routerId != null) {
+            viewModel.loadRouter(routerId)
+        }
+    }
+    
     Scaffold(
         topBar = {
             MiTopAppBar(
-                title = stringResource(R.string.add_router_title),
+                title = if (uiState.isEditMode) "编辑路由器" else stringResource(R.string.add_router_title),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -124,13 +133,13 @@ fun AddRouterScreen(
                     text = "连接你的 OpenWrt 路由器",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "通过 LuCI API 安全连接",
                     fontSize = 14.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
             }
             
@@ -145,7 +154,7 @@ fun AddRouterScreen(
                     Icon(
                         Icons.Default.Label,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -163,7 +172,7 @@ fun AddRouterScreen(
                     Icon(
                         Icons.Default.Link,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -180,7 +189,7 @@ fun AddRouterScreen(
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -200,7 +209,7 @@ fun AddRouterScreen(
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(20.dp)
                     )
                 },
@@ -210,7 +219,7 @@ fun AddRouterScreen(
                             imageVector = if (passwordVisible) Icons.Default.Visibility
                             else Icons.Default.VisibilityOff,
                             contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
-                            tint = MiColors.TextTertiary,
+                            tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -291,13 +300,13 @@ fun AddRouterScreen(
                             text = "安全连接",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "密码加密存储，仅用于本地认证",
                             fontSize = 12.sp,
-                            color = MiColors.TextTertiary
+                            color = MiTheme.TextTertiary
                         )
                     }
                 }

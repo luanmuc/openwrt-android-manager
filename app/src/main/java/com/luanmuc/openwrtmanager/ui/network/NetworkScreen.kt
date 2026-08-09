@@ -48,6 +48,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiPrimaryButton
 import com.luanmuc.openwrtmanager.ui.components.MiSwitch
 import com.luanmuc.openwrtmanager.ui.components.MiTextField
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 网络设置页面 - 小米路由器风格
@@ -71,7 +72,7 @@ fun NetworkScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -80,19 +81,22 @@ fun NetworkScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+                        // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             // Tab 切换
             Row(
                 modifier = Modifier
@@ -120,7 +124,7 @@ fun NetworkScreen(
                         } else {
                             androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                 containerColor = Color.White,
-                                labelColor = MiColors.TextTertiary
+                                labelColor = MiTheme.TextTertiary
                             )
                         },
                         shape = RoundedCornerShape(10.dp)
@@ -242,7 +246,7 @@ fun LanSettings(viewModel: NetworkViewModel) {
                     text = "LAN 口设置",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
             }
             
@@ -294,7 +298,7 @@ fun WanSettings(viewModel: NetworkViewModel) {
                     text = "WAN 口设置",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
             }
             
@@ -303,7 +307,7 @@ fun WanSettings(viewModel: NetworkViewModel) {
                 text = "连接协议",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = MiColors.TextSecondary
+                color = MiTheme.TextSecondary
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -325,7 +329,7 @@ fun WanSettings(viewModel: NetworkViewModel) {
                         } else {
                             androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                 containerColor = Color(0xFFF2F3F5),
-                                labelColor = MiColors.TextTertiary
+                                labelColor = MiTheme.TextTertiary
                             )
                         },
                         shape = RoundedCornerShape(8.dp)
@@ -407,12 +411,12 @@ fun DhcpSettings(viewModel: NetworkViewModel) {
                         text = "DHCP 服务器",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MiColors.TextPrimary
+                        color = MiTheme.TextPrimary
                     )
                     Text(
                         text = "自动分配IP地址",
                         fontSize = 12.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
                 MiSwitch(

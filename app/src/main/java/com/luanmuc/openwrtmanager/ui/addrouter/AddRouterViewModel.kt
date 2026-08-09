@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.addrouter
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,9 +17,13 @@ import com.luanmuc.openwrtmanager.util.EncryptionUtil
 /**
  * 添加路由器 ViewModel
  */
-class AddRouterViewModel(application: Application) : AndroidViewModel(application) {
+class AddRouterViewModel(application: Application) : BaseViewModel(application) {
+    
+    init {
+        initNetworkMonitor()
+    }
     private val routerRepository = RouterRepository.getInstance(application)
-    private val luciRepository = LuciRepository()
+    private val luciRepository = LuciRepository.getInstance(getApplication())
 
     private val _uiState = MutableStateFlow(AddRouterUiState())
     val uiState: StateFlow<AddRouterUiState> = _uiState.asStateFlow()
@@ -31,7 +36,9 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
         val isConnecting: Boolean = false,
         val isSuccess: Boolean = false,
         val error: String? = null,
-        val errorType: ErrorType? = null
+        val errorType: ErrorType? = null,
+        val isEditMode: Boolean = false,
+        val editingRouterId: String? = null
     )
 
     enum class ErrorType {
@@ -160,5 +167,97 @@ class AddRouterViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
         return addr
+    }
+    
+    override fun refreshData() {
+        // 添加路由器页面不需要自动刷新
+    }
+    
+    /**
+     * 加载要编辑的路由器
+     */
+    fun loadRouter(routerId: String) {
+        viewModelScope.launch {
+            val router = routerRepository.getRouterById(routerId)
+            if (router != null) {
+                _uiState.value = _uiState.value.copy(
+                    name = router.name,
+                    address = router.address,
+                    username = router.username,
+                    password = "",  // 密码不预填，需要重新输入
+                    isEditMode = true,
+                    editingRouterId = routerId
+                )
+            }
+        }
+    }
+    
+    /**
+     * 更新路由器
+     */
+    fun updateRouter(onSuccess: () -> Unit) {
+        val state = _uiState.value
+        val routerId = state.editingRouterId ?: return
+
+        if (state.address.isBlank()) {
+            _uiState.value = state.copy(error = "请输入路由器地址")
+            return
+        }
+        if (state.username.isBlank()) {
+            _uiState.value = state.copy(error = "请输入用户名")
+            return
+        }
+
+        val normalizedAddress = normalizeAddress(state.address)
+
+        viewModelScope.launch {
+            _uiState.value = state.copy(
+                isConnecting = true,
+                error = null,
+                address = normalizedAddress
+            )
+            try {
+                // 如果密码不为空，尝试重新连接验证
+                if (state.password.isNotBlank()) {
+                    luciRepository.login(
+                        address = normalizedAddress,
+                        username = state.username,
+                        password = state.password
+                    )
+                }
+
+                // 获取现有路由器
+                val existingRouter = routerRepository.getRouterById(routerId)
+                if (existingRouter != null) {
+                    // 加密密码（如果有新密码）
+                    val encryptedPassword = if (state.password.isNotBlank()) {
+                        EncryptionUtil.encrypt(state.password)
+                    } else {
+                        existingRouter.encryptedPassword
+                    }
+                    
+                    val updatedRouter = existingRouter.copy(
+                        name = state.name.ifBlank { normalizedAddress },
+                        address = normalizedAddress,
+                        username = state.username,
+                        encryptedPassword = encryptedPassword
+                    )
+                    
+                    routerRepository.updateRouter(updatedRouter)
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    isConnecting = false,
+                    isSuccess = true
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isConnecting = false,
+                    error = e.message ?: "更新失败",
+                    errorType = ErrorType.UNKNOWN
+                )
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.luanmuc.openwrtmanager.data.model.Router
+import com.luanmuc.openwrtmanager.util.EncryptionUtil
 
 private val Context.dataStore by preferencesDataStore(name = "routers")
 
@@ -47,8 +48,10 @@ class RouterRepository(private val context: Context) {
      * 添加路由器
      */
     suspend fun addRouter(router: Router) {
+        // 加密密码
+        val encryptedRouter = router.copy(encryptedPassword = EncryptionUtil.encrypt(router.encryptedPassword))
         val currentList = getRoutersList().toMutableList()
-        currentList.add(router)
+        currentList.add(encryptedRouter)
         saveRoutersList(currentList)
     }
 
@@ -68,10 +71,12 @@ class RouterRepository(private val context: Context) {
      * 更新路由器信息
      */
     suspend fun updateRouter(router: Router) {
+        // 加密密码
+        val encryptedRouter = router.copy(encryptedPassword = EncryptionUtil.encrypt(router.encryptedPassword))
         val currentList = getRoutersList().toMutableList()
         val index = currentList.indexOfFirst { it.id == router.id }
         if (index != -1) {
-            currentList[index] = router
+            currentList[index] = encryptedRouter
             saveRoutersList(currentList)
         }
     }
@@ -93,7 +98,10 @@ class RouterRepository(private val context: Context) {
      * 根据ID获取路由器
      */
     suspend fun getRouterById(routerId: String): Router? {
-        return getRoutersList().find { it.id == routerId }
+        return getRoutersList().find { it.id == routerId }?.let { router ->
+            // 解密密码
+            router.copy(encryptedPassword = EncryptionUtil.decrypt(router.encryptedPassword))
+        }
     }
 
     /**
@@ -116,7 +124,11 @@ class RouterRepository(private val context: Context) {
             val preferences = context.dataStore.data.first()
             val json = preferences[routersKey] ?: "[]"
             val type = object : TypeToken<List<Router>>() {}.type
-            gson.fromJson(json, type) ?: emptyList()
+            val list: List<Router> = (gson.fromJson(json, type) as? List<Router>) ?: emptyList()
+            // 解密所有密码
+            list.map { router ->
+                router.copy(encryptedPassword = EncryptionUtil.decrypt(router.encryptedPassword))
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()

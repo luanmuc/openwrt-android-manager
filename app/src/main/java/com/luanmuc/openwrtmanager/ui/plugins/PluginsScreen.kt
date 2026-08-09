@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.plugins
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,6 +54,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiTextField
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 插件页 - 小米路由器风格
@@ -60,7 +62,8 @@ import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PluginsScreen(
-    viewModel: PluginsViewModel = viewModel()
+    viewModel: PluginsViewModel = viewModel(),
+    onPluginClick: ((String, String) -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -75,19 +78,22 @@ fun PluginsScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             // 搜索框
             Box(modifier = Modifier.padding(16.dp)) {
                 MiTextField(
@@ -98,7 +104,7 @@ fun PluginsScreen(
                         Icon(
                             Icons.Default.Search,
                             contentDescription = null,
-                            tint = MiColors.TextTertiary,
+                            tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -108,13 +114,13 @@ fun PluginsScreen(
             // Tab栏
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = MiColors.Background,
+                containerColor = MiTheme.Background,
                 divider = {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(0.5.dp)
-                            .background(MiColors.Divider)
+                            .background(MiTheme.Divider)
                     )
                 }
             ) {
@@ -130,7 +136,7 @@ fun PluginsScreen(
                             )
                         },
                         selectedContentColor = MiColors.Primary,
-                        unselectedContentColor = MiColors.TextTertiary
+                        unselectedContentColor = MiTheme.TextTertiary
                     )
                 }
             }
@@ -149,7 +155,7 @@ fun PluginsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "加载中...",
-                        color = MiColors.TextTertiary,
+                        color = MiTheme.TextTertiary,
                         fontSize = 14.sp
                     )
                 }
@@ -172,7 +178,7 @@ fun PluginsScreen(
                             Icon(
                                 imageVector = Icons.Default.Extension,
                                 contentDescription = null,
-                                tint = MiColors.TextTertiary,
+                                tint = MiTheme.TextTertiary,
                                 modifier = Modifier.size(40.dp)
                             )
                         },
@@ -189,7 +195,15 @@ fun PluginsScreen(
                                 isInstalled = selectedTab == 0,
                                 isLoading = uiState.actionLoading == plugin.name,
                                 onInstall = { viewModel.installPackage(plugin.name) },
-                                onRemove = { viewModel.removePackage(plugin.name) }
+                                onRemove = { viewModel.removePackage(plugin.name) },
+                                onClick = {
+                                    if (selectedTab == 0 && onPluginClick != null) {
+                                        // 构造插件的LuCI页面URL
+                                        val pluginName = plugin.name.removePrefix("luci-app-")
+                                        val url = "/cgi-bin/luci/admin/" + pluginName.replace("-", "/")
+                                        onPluginClick(url, plugin.description.ifEmpty { plugin.name })
+                                    }
+                                }
                             )
                         }
                     }
@@ -205,10 +219,19 @@ fun PluginCard(
     isInstalled: Boolean,
     isLoading: Boolean,
     onInstall: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onClick: (() -> Unit)? = null
 ) {
     MiCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null && isInstalled) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            )
     ) {
         Row(
             modifier = Modifier
@@ -235,20 +258,20 @@ fun PluginCard(
                     text = plugin.description.ifEmpty { plugin.name },
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = plugin.name + if (plugin.version.isNotEmpty()) " v${plugin.version}" else "",
                     fontSize = 12.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
                 if (plugin.size > 0) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = formatSize(plugin.size),
                         fontSize = 12.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             }

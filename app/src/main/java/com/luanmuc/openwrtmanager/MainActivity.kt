@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager
 
 import android.os.Bundle
+import com.luanmuc.openwrtmanager.ui.theme.ThemeManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,7 @@ import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
 import com.luanmuc.openwrtmanager.ui.theme.OpenWrtManagerTheme
 import com.luanmuc.openwrtmanager.ui.wifi.WifiScreen
+import com.luanmuc.openwrtmanager.ui.webview.WebViewPluginScreen
 
 /**
  * 底部导航项
@@ -60,6 +62,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Firewall : Screen("firewall", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
 val bottomNavItems = listOf(
@@ -78,6 +81,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // 系统主题变化时更新
+        ThemeManager.getInstance(this).updateSystemTheme()
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,7 +150,11 @@ fun MainScreen() {
                 )
             }
             composable(Screen.Plugins.route) {
-                PluginsScreen()
+                PluginsScreen(
+                    onPluginClick = { url, title ->
+                        navController.navigate(Screen.WebViewPlugin.route + "?url=$url&title=$title")
+                    }
+                )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(
@@ -194,6 +207,15 @@ fun MainScreen() {
             }
             composable(Screen.Advanced.route) {
                 AdvancedScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.WebViewPlugin.route + "?url={url}&title={title}") { backStackEntry ->
+                val url = backStackEntry.arguments?.getString("url") ?: ""
+                val title = backStackEntry.arguments?.getString("title") ?: "插件"
+                WebViewPluginScreen(
+                    url = url,
+                    title = title,
                     onBack = { navController.popBackStack() }
                 )
             }

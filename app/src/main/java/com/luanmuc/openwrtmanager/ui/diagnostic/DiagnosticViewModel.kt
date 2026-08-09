@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.diagnostic
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +19,9 @@ import com.luanmuc.openwrtmanager.util.NetworkDiagnostic
 /**
  * 智能诊断 ViewModel
  */
-class DiagnosticViewModel(application: Application) : AndroidViewModel(application) {
+class DiagnosticViewModel(application: Application) : BaseViewModel(application) {
     private val routerRepository = RouterRepository.getInstance(application)
-    private val luciRepository = LuciRepository()
+    private val luciRepository = LuciRepository.getInstance(getApplication())
 
     private val _uiState = MutableStateFlow(DiagnosticUiState())
     val uiState: StateFlow<DiagnosticUiState> = _uiState.asStateFlow()
@@ -34,6 +35,7 @@ class DiagnosticViewModel(application: Application) : AndroidViewModel(applicati
     )
 
     init {
+        initNetworkMonitor()
         observeRouters()
     }
 
@@ -154,4 +156,9 @@ class DiagnosticViewModel(application: Application) : AndroidViewModel(applicati
             routers.firstOrNull()
         }
     }
+    
+    override fun refreshData() {
+        // 诊断页面不需要自动刷新
+    }
 }
+

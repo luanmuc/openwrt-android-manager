@@ -3,7 +3,9 @@ package com.luanmuc.openwrtmanager
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.util.NetworkMonitor
 
 /**
  * Application 类
@@ -16,6 +18,10 @@ class OpenWrtApp : Application() {
         initGlobalExceptionHandler()
         // 初始化仓库
         RouterRepository.getInstance(this)
+        // 初始化LuCI仓库，加载持久化的session
+        LuciRepository.getInstance(this)
+        // 初始化网络状态监控
+        NetworkMonitor.init(this)
     }
 
     /**

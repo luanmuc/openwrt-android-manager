@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.devices
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +14,7 @@ import com.luanmuc.openwrtmanager.data.repository.RouterRepository
 /**
  * 设备页 ViewModel
  */
-class DevicesViewModel(application: Application) : AndroidViewModel(application) {
+class DevicesViewModel(application: Application) : BaseViewModel(application) {
 
     private val repository = RouterRepository.getInstance(application)
 
@@ -27,6 +28,7 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
     )
 
     init {
+        initNetworkMonitor()
         loadRouters()
     }
 
@@ -59,5 +61,9 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
                 repository.setActiveRouter(null)
             }
         }
+    }
+    
+    override fun refreshData() {
+        loadRouters()
     }
 }

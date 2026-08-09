@@ -54,6 +54,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiTag
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * 防火墙页面 - 小米路由器风格
@@ -76,7 +77,7 @@ fun FirewallScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -85,26 +86,29 @@ fun FirewallScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                     IconButton(onClick = { showAddDialog = true }) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "添加",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             if (uiState.isLoading) {
                 MiLoadingState()
             } else if (uiState.error != null && uiState.portForwards.isEmpty()) {
@@ -118,7 +122,7 @@ fun FirewallScreen(
                         Icon(
                             imageVector = Icons.Default.Security,
                             contentDescription = null,
-                            tint = MiColors.TextTertiary,
+                            tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(40.dp)
                         )
                     },
@@ -194,7 +198,7 @@ fun PortForwardCard(
                     text = rule.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -207,7 +211,7 @@ fun PortForwardCard(
                     Text(
                         text = "${rule.srcPort} → ${rule.destIp}:${rule.destPort}",
                         fontSize = 12.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             }
@@ -259,7 +263,7 @@ fun PortForwardCard(
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text(
                         "取消",
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             },
@@ -289,7 +293,7 @@ fun AddPortForwardDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("规则名称", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Text("规则名称", fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -298,10 +302,10 @@ fun AddPortForwardDialog(
                     shape = RoundedCornerShape(10.dp),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MiColors.Primary,
-                        unfocusedBorderColor = MiColors.Divider
+                        unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("协议", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Text("协议", fontSize = 14.sp, color = MiTheme.TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("tcp", "udp", "tcpudp").forEach { p ->
                         androidx.compose.material3.FilterChip(
@@ -316,14 +320,14 @@ fun AddPortForwardDialog(
                             } else {
                                 androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                     containerColor = Color(0xFFF2F3F5),
-                                    labelColor = MiColors.TextTertiary
+                                    labelColor = MiTheme.TextTertiary
                                 )
                             },
                             shape = RoundedCornerShape(8.dp)
                         )
                     }
                 }
-                Text("外部端口", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Text("外部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = srcPort,
                     onValueChange = { srcPort = it },
@@ -332,10 +336,10 @@ fun AddPortForwardDialog(
                     shape = RoundedCornerShape(10.dp),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MiColors.Primary,
-                        unfocusedBorderColor = MiColors.Divider
+                        unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部IP", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Text("内部IP", fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destIp,
                     onValueChange = { destIp = it },
@@ -344,10 +348,10 @@ fun AddPortForwardDialog(
                     shape = RoundedCornerShape(10.dp),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MiColors.Primary,
-                        unfocusedBorderColor = MiColors.Divider
+                        unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部端口", fontSize = 14.sp, color = MiColors.TextSecondary)
+                Text("内部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destPort,
                     onValueChange = { destPort = it },
@@ -356,7 +360,7 @@ fun AddPortForwardDialog(
                     shape = RoundedCornerShape(10.dp),
                     colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MiColors.Primary,
-                        unfocusedBorderColor = MiColors.Divider
+                        unfocusedBorderColor = MiTheme.Divider
                     )
                 )
             }
@@ -380,7 +384,7 @@ fun AddPortForwardDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     "取消",
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
             }
         },

@@ -45,6 +45,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiTag
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * DDNS页面 - 小米路由器风格
@@ -66,7 +67,7 @@ fun DdnsScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -75,19 +76,22 @@ fun DdnsScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+            // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             if (uiState.isLoading) {
                 MiLoadingState()
             } else if (uiState.error != null && uiState.ddnsConfigs.isEmpty()) {
@@ -101,7 +105,7 @@ fun DdnsScreen(
                         Icon(
                             imageVector = Icons.Default.Dns,
                             contentDescription = null,
-                            tint = MiColors.TextTertiary,
+                            tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(40.dp)
                         )
                     },
@@ -151,13 +155,13 @@ fun DdnsCard(config: DdnsConfig) {
                     text = config.name,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MiColors.TextPrimary
+                    color = MiTheme.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = config.domain,
                     fontSize = 12.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -176,8 +180,8 @@ fun DdnsCard(config: DdnsConfig) {
                     } else {
                         MiTag(
                             text = "已禁用",
-                            backgroundColor = MiColors.TextTertiary.copy(alpha = 0.1f),
-                            textColor = MiColors.TextTertiary
+                            backgroundColor = MiTheme.TextTertiary.copy(alpha = 0.1f),
+                            textColor = MiTheme.TextTertiary
                         )
                     }
                 }

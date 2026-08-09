@@ -1,7 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.wifi
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,17 +9,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.model.WifiInterface
+import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.util.EncryptionUtil
 
 /**
  * WiFi设置 ViewModel
+ * 实现缓存优先策略：先显示缓存数据，同时后台发起网络请求
  */
-class WifiViewModel(application: Application) : AndroidViewModel(application) {
+class WifiViewModel(application: Application) : BaseViewModel(application) {
     private val routerRepository = RouterRepository.getInstance(application)
-    private val luciRepository = LuciRepository()
+    private val luciRepository = LuciRepository.getInstance(getApplication())
+    private val cacheRepository = CacheRepository.getInstance(application)
 
     private val _uiState = MutableStateFlow(WifiUiState())
     val uiState: StateFlow<WifiUiState> = _uiState.asStateFlow()
@@ -33,7 +37,10 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
         val error: String? = null,
         val success: String? = null,
         val hasRouter: Boolean = false,
-        val has5g: Boolean = false
+        val has5g: Boolean = false,
+        val isFromCache: Boolean = false,
+        val cacheTimestamp: Long? = null,
+        val isOfflineMode: Boolean = false
     )
 
     data class WifiConfig(
@@ -46,28 +53,90 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
         val encryption: String = "psk2"
     )
 
+    /**
+     * WiFi配置缓存数据类
+     */
+    data class WifiConfigCache(
+        val wifi2g: WifiConfig = WifiConfig(),
+        val wifi5g: WifiConfig = WifiConfig(),
+        val guestWifi: WifiConfig = WifiConfig(),
+        val has5g: Boolean = false
+    )
+
     init {
-        observeRouters()
+        initNetworkMonitor()
+    }
+
+    override fun refreshData() {
+        loadWifiConfig()
     }
 
     private fun observeRouters() {
+
         viewModelScope.launch {
             routerRepository.routers.collect { routers ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 if (routers.isNotEmpty()) {
+                    // 先加载缓存
+                    loadFromCache()
+                    // 然后从网络加载
                     loadWifiConfig()
                 }
             }
         }
     }
 
+    /**
+     * 从缓存加载数据
+     */
+    private fun loadFromCache() {
+        viewModelScope.launch {
+            try {
+                // 调试模式不使用缓存
+                if (DebugMode.isDebugMode) {
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter() ?: return@launch
+
+                val cachedConfig = cacheRepository.getCacheEvenExpired(
+                    CacheRepository.KEY_WIFI_DEVICES,
+                    activeRouter.id,
+                    WifiConfigCache::class.java
+                )
+
+                if (cachedConfig != null) {
+                    val cacheTime = cacheRepository.getCacheTimestamp(
+                        CacheRepository.KEY_WIFI_DEVICES,
+                        activeRouter.id
+                    )
+
+                    _uiState.value = _uiState.value.copy(
+                        wifi2g = cachedConfig.wifi2g,
+                        wifi5g = cachedConfig.wifi5g,
+                        guestWifi = cachedConfig.guestWifi,
+                        has5g = cachedConfig.has5g,
+                        isFromCache = true,
+                        cacheTimestamp = cacheTime,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun loadWifiConfig() {
         viewModelScope.launch {
+            val isFirstLoad = _uiState.value.wifi2g.ssid.isEmpty()
             _uiState.value = _uiState.value.copy(
-                isLoading = true,
+                isLoading = isFirstLoad,
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：使用假数据
                 if (DebugMode.isDebugMode) {
@@ -105,6 +174,8 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                         guestWifi = guestWifi,
                         has5g = true,
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
                         error = null
                     )
                     return@launch
@@ -116,8 +187,10 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
+
                     val wifiDevices = luciRepository.getWifiDevices()
                     val has5g = wifiDevices.size > 1
+
                     // 加载2.4G配置
                     val iface2g = luciRepository.getWifiDeviceInfo("radio0")
                     val wifi2g = WifiConfig(
@@ -126,6 +199,7 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                         channel = iface2g.channel.toString(),
                         txpower = iface2g.txpower.toString()
                     )
+
                     // 加载5G配置
                     val wifi5g = if (has5g) {
                         val iface5g = luciRepository.getWifiDeviceInfo("radio1")
@@ -138,18 +212,75 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         WifiConfig()
                     }
+
+                    // 访客网络（简化处理，使用默认配置）
+                    val guestWifi = WifiConfig(
+                        enabled = false,
+                        ssid = "",
+                        channel = "auto",
+                        txpower = "10"
+                    )
+
+                    val now = System.currentTimeMillis()
+
+                    // 保存到缓存
+                    val configCache = WifiConfigCache(
+                        wifi2g = wifi2g,
+                        wifi5g = wifi5g,
+                        guestWifi = guestWifi,
+                        has5g = has5g
+                    )
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_WIFI_DEVICES,
+                        activeRouter.id,
+                        "WifiConfigCache",
+                        configCache
+                    )
+
                     _uiState.value = _uiState.value.copy(
                         wifi2g = wifi2g,
                         wifi5g = wifi5g,
+                        guestWifi = guestWifi,
                         has5g = has5g,
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
+                        cacheTimestamp = now,
                         error = null
                     )
                 }
             } catch (e: Exception) {
+                handleLoadError(e.message ?: "加载失败")
+            }
+        }
+    }
+
+    /**
+     * 处理加载错误
+     */
+    private fun handleLoadError(errorMsg: String) {
+        viewModelScope.launch {
+            // 检查是否有缓存
+            val activeRouter = getActiveRouter()
+            val hasCache = activeRouter?.let {
+                cacheRepository.hasCache(
+                    CacheRepository.KEY_WIFI_DEVICES,
+                    it.id
+                )
+            } ?: false
+
+            if (hasCache && _uiState.value.wifi2g.ssid.isNotEmpty()) {
+                // 有缓存，显示离线模式
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "加载失败"
+                    isOfflineMode = true,
+                    error = null
+                )
+            } else {
+                // 没有缓存，显示错误
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = errorMsg
                 )
             }
         }
@@ -162,6 +293,7 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：模拟保存
                 if (DebugMode.isDebugMode) {
@@ -178,26 +310,49 @@ class WifiViewModel(application: Application) : AndroidViewModel(application) {
                     "5g" -> _uiState.value.wifi5g
                     else -> _uiState.value.guestWifi
                 }
+
                 val radio = when (band) {
                     "2g" -> "radio0"
                     "5g" -> "radio1"
                     else -> "radio0"
                 }
+
                 // 保存WiFi配置
                 luciRepository.setUciConfig("wireless", radio, "channel", config.channel)
                 luciRepository.setUciConfig("wireless", radio, "txpower", config.txpower)
+
                 // 保存接口配置
                 val iface = if (band == "guest") "guest" else "default_radio${band.last()}"
                 luciRepository.setUciConfig("wireless", "default_$radio", "ssid", config.ssid)
                 luciRepository.setUciConfig("wireless", "default_$radio", "disabled", if (config.enabled) "0" else "1")
+
                 if (config.password.isNotEmpty()) {
                     luciRepository.setUciConfig("wireless", "default_$radio", "key", config.password)
                     luciRepository.setUciConfig("wireless", "default_$radio", "encryption", config.encryption)
                 }
+
                 // 提交配置
                 luciRepository.commitUci("wireless")
                 // 重启WiFi
                 luciRepository.restartWifi()
+
+                // 保存成功后更新缓存
+                val activeRouter = getActiveRouter()
+                activeRouter?.let {
+                    val configCache = WifiConfigCache(
+                        wifi2g = _uiState.value.wifi2g,
+                        wifi5g = _uiState.value.wifi5g,
+                        guestWifi = _uiState.value.guestWifi,
+                        has5g = _uiState.value.has5g
+                    )
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_WIFI_DEVICES,
+                        it.id,
+                        "WifiConfigCache",
+                        configCache
+                    )
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
                     success = "WiFi配置保存成功"

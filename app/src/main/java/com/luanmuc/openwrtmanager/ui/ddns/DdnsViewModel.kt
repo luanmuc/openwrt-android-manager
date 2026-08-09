@@ -1,7 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.ddns
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,17 +9,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.DdnsConfig
 import com.luanmuc.openwrtmanager.data.model.Router
+import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.util.EncryptionUtil
 
 /**
  * DDNS ViewModel
+ * 实现缓存优先策略：先显示缓存数据，同时后台发起网络请求
  */
-class DdnsViewModel(application: Application) : AndroidViewModel(application) {
+class DdnsViewModel(application: Application) : BaseViewModel(application) {
     private val routerRepository = RouterRepository.getInstance(application)
-    private val luciRepository = LuciRepository()
+    private val luciRepository = LuciRepository.getInstance(getApplication())
+    private val cacheRepository = CacheRepository.getInstance(application)
 
     private val _uiState = MutableStateFlow(DdnsUiState())
     val uiState: StateFlow<DdnsUiState> = _uiState.asStateFlow()
@@ -29,11 +33,18 @@ class DdnsViewModel(application: Application) : AndroidViewModel(application) {
         val isLoading: Boolean = false,
         val error: String? = null,
         val success: String? = null,
-        val hasRouter: Boolean = false
+        val hasRouter: Boolean = false,
+        val isFromCache: Boolean = false,
+        val cacheTimestamp: Long? = null,
+        val isOfflineMode: Boolean = false
     )
 
     init {
-        observeRouters()
+        initNetworkMonitor()
+    }
+
+    override fun refreshData() {
+        loadDdnsConfig()
     }
 
     private fun observeRouters() {
@@ -41,19 +52,63 @@ class DdnsViewModel(application: Application) : AndroidViewModel(application) {
             routerRepository.routers.collect { routers ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 if (routers.isNotEmpty()) {
+                    // 先加载缓存
+                    loadFromCache()
+                    // 然后从网络加载
                     loadDdnsConfig()
                 }
             }
         }
     }
 
+    /**
+     * 从缓存加载数据
+     */
+    private fun loadFromCache() {
+        viewModelScope.launch {
+            try {
+                // 调试模式不使用缓存
+                if (DebugMode.isDebugMode) {
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter() ?: return@launch
+
+                val cachedConfigs = cacheRepository.getCacheEvenExpired(
+                    CacheRepository.KEY_DDNS_CONFIGS,
+                    activeRouter.id,
+                    Array<DdnsConfig>::class.java
+                )?.toList()
+
+                if (!cachedConfigs.isNullOrEmpty()) {
+                    val cacheTime = cacheRepository.getCacheTimestamp(
+                        CacheRepository.KEY_DDNS_CONFIGS,
+                        activeRouter.id
+                    )
+
+                    _uiState.value = _uiState.value.copy(
+                        ddnsConfigs = cachedConfigs,
+                        isFromCache = true,
+                        cacheTimestamp = cacheTime,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun loadDdnsConfig() {
         viewModelScope.launch {
+            val isFirstLoad = _uiState.value.ddnsConfigs.isEmpty()
             _uiState.value = _uiState.value.copy(
-                isLoading = true,
+                isLoading = isFirstLoad,
                 error = null,
                 success = null
             )
+
             try {
                 // 调试模式：使用假数据
                 if (DebugMode.isDebugMode) {
@@ -62,6 +117,8 @@ class DdnsViewModel(application: Application) : AndroidViewModel(application) {
                     _uiState.value = _uiState.value.copy(
                         ddnsConfigs = configs,
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
                         error = null
                     )
                     return@launch
@@ -73,18 +130,60 @@ class DdnsViewModel(application: Application) : AndroidViewModel(application) {
                     if (!luciRepository.isLoggedIn()) {
                         luciRepository.login(activeRouter.address, activeRouter.username, password)
                     }
+
                     // 加载DDNS配置
                     val configs = luciRepository.getDdnsConfigs()
+                    val now = System.currentTimeMillis()
+
+                    // 保存到缓存
+                    cacheRepository.saveCache(
+                        CacheRepository.KEY_DDNS_CONFIGS,
+                        activeRouter.id,
+                        "List<DdnsConfig>",
+                        configs.toTypedArray()
+                    )
+
                     _uiState.value = _uiState.value.copy(
                         ddnsConfigs = configs,
                         isLoading = false,
+                        isFromCache = false,
+                        isOfflineMode = false,
+                        cacheTimestamp = now,
                         error = null
                     )
                 }
             } catch (e: Exception) {
+                handleLoadError(e.message ?: "加载失败")
+            }
+        }
+    }
+
+    /**
+     * 处理加载错误
+     */
+    private fun handleLoadError(errorMsg: String) {
+        viewModelScope.launch {
+            // 检查是否有缓存
+            val activeRouter = getActiveRouter()
+            val hasCache = activeRouter?.let {
+                cacheRepository.hasCache(
+                    CacheRepository.KEY_DDNS_CONFIGS,
+                    it.id
+                )
+            } ?: false
+
+            if (hasCache && _uiState.value.ddnsConfigs.isNotEmpty()) {
+                // 有缓存，显示离线模式
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "加载失败"
+                    isOfflineMode = true,
+                    error = null
+                )
+            } else {
+                // 没有缓存，显示错误
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = errorMsg
                 )
             }
         }

@@ -48,6 +48,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiPrimaryButton
 import com.luanmuc.openwrtmanager.ui.components.MiSwitch
 import com.luanmuc.openwrtmanager.ui.components.MiTextField
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
  * WiFi设置页面 - 小米路由器风格
@@ -75,7 +76,7 @@ fun WifiScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回",
-                            tint = MiColors.TextPrimary
+                            tint = MiTheme.TextPrimary
                         )
                     }
                 },
@@ -84,19 +85,22 @@ fun WifiScreen(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "刷新",
-                            tint = MiColors.TextSecondary
+                            tint = MiTheme.TextSecondary
                         )
                     }
                 }
             )
         },
-        containerColor = MiColors.Background
+        containerColor = MiTheme.Background
     ) { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+                        // 离线提示条
+            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            
             // Tab 切换
             Row(
                 modifier = Modifier
@@ -124,7 +128,7 @@ fun WifiScreen(
                         } else {
                             androidx.compose.material3.FilterChipDefaults.filterChipColors(
                                 containerColor = Color.White,
-                                labelColor = MiColors.TextTertiary
+                                labelColor = MiTheme.TextTertiary
                             )
                         },
                         shape = RoundedCornerShape(10.dp)
@@ -246,12 +250,12 @@ fun WifiSettingsCard(
                         text = title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MiColors.TextPrimary
+                        color = MiTheme.TextPrimary
                     )
                     Text(
                         text = if (config.enabled) "已开启" else "已关闭",
                         fontSize = 12.sp,
-                        color = if (config.enabled) MiColors.Success else MiColors.TextTertiary
+                        color = if (config.enabled) MiColors.Success else MiTheme.TextTertiary
                     )
                 }
                 MiSwitch(
