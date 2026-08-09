@@ -12,13 +12,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 骨架屏组件
  */
 object Skeleton {
-    private val ShimmerColor = Color(0xFFE0E0E0)
-    private val ShimmerHighlight = Color(0xFFF5F5F5)
+    // 骨架屏颜色在shimmerBrush函数中动态获取，支持深色模式
 
     @Composable
     fun shimmerBrush(): Brush {
@@ -34,7 +34,7 @@ object Skeleton {
         )
 
         return Brush.linearGradient(
-            colors = listOf(ShimmerColor, ShimmerHighlight, ShimmerColor),
+            colors = listOf(MiTheme.Divider, MiTheme.CardBackground, MiTheme.Divider),
             start = Offset.Zero,
             end = Offset(x = translateAnim, y = translateAnim)
         )
