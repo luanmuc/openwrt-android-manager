@@ -113,8 +113,7 @@ fun RepoScreen(
                             modifier = Modifier.size(40.dp)
                         )
                     },
-                    text = "暂无软件源
-点击右上角添加软件源"
+                    text = "暂无软件源\n点击右上角添加软件源"
                 )
             } else {
                 LazyColumn(
