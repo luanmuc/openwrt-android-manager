@@ -198,7 +198,6 @@ fun DeviceCard(device: DeviceInfo) {
                 icon = {
                     Icon(
                         imageVector = Icons.Default.PhoneAndroid,
-                        imageVector = Icons.Default.ArrowDownward,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
