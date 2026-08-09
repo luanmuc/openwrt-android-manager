@@ -105,9 +105,16 @@ fun RepoScreen(
         ) {
             if (uiState.repos.isEmpty()) {
                 MiEmptyState(
-                    icon = Icons.Default.Storage,
-                    title = "暂无软件源",
-                    description = "点击右上角添加软件源"
+                    icon = {
+                        Icon(
+                            Icons.Default.Extension,
+                            contentDescription = null,
+                            tint = MiTheme.TextTertiary,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    },
+                    text = "暂无软件源
+点击右上角添加软件源"
                 )
             } else {
                 LazyColumn(
@@ -208,7 +215,7 @@ private fun RepoItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    Icons.Default.Storage,
+                    Icons.Default.Extension,
                     contentDescription = null,
                     tint = MiTheme.Primary,
                     modifier = Modifier.size(24.dp)

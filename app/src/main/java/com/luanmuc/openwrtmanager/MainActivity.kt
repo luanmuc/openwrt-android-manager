@@ -65,7 +65,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
-    data object Repos : Screen("repos", 0, Icons.Filled.Storage, Icons.Filled.Storage)
+    data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
@@ -156,9 +156,14 @@ fun MainScreen() {
             }
             composable(Screen.Plugins.route) {
                 PluginsScreen(
-                    onPluginClick = { url, title ->
-                        navController.navigate(Screen.WebViewPlugin.route + "?url=$url&title=$title")
-                    }
+                    onPluginClick = { pkg ->
+                        if (pkg.installed) {
+                            val pluginName = pkg.name.removePrefix("luci-app-")
+                            val url = "/cgi-bin/luci/admin/" + pluginName.replace("-", "/")
+                            navController.navigate(Screen.WebViewPlugin.route + "?url=$url&title=${pkg.name}")
+                        }
+                    },
+                    onNavigateToRepos = { navController.navigate(Screen.Repos.route) }
                 )
             }
             composable(Screen.Profile.route) {

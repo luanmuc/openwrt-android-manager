@@ -82,7 +82,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun PluginsScreen(
     viewModel: PluginsViewModel = viewModel(),
-    onPluginClick: ((String, String) -> Unit)? = null
+    onPluginClick: (PackageInfo) -> Unit = {},
+    onNavigateToRepos: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -98,7 +99,7 @@ fun PluginsScreen(
                 actions = {
                     IconButton(onClick = { viewModel.updateRepo() }) {
                         Icon(
-                            Icons.Default.SystemUpdate,
+                            Icons.Default.Refresh,
                             contentDescription = "更新软件源",
                             tint = if (uiState.isUpdatingRepo) MiTheme.Primary else MiTheme.TextSecondary
                         )
@@ -157,10 +158,10 @@ fun PluginsScreen(
             // 更新软件源进度条
             if (uiState.isUpdatingRepo) {
                 MiLinearProgress(
+                    progress = 0.5f,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    indeterminate = true
+                        .padding(horizontal = 16.dp)
                 )
                 Text(
                     text = "正在更新软件源...",
@@ -801,7 +802,7 @@ private fun QuickActionsSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    Icons.Default.Storage,
+                    Icons.Default.Extension,
                     contentDescription = null,
                     tint = MiTheme.Primary,
                     modifier = Modifier.size(32.dp)
@@ -828,7 +829,7 @@ private fun QuickActionsSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    Icons.Default.InstallMobile,
+                    Icons.Default.Extension,
                     contentDescription = null,
                     tint = MiTheme.Primary,
                     modifier = Modifier.size(32.dp)
