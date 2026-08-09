@@ -39,6 +39,14 @@ class LuciRepository {
     private var currentRefreshRetryCount = 0  // 当前重试次数
     private val baseRetryDelay = 2000L  // 基础重试延迟（毫秒）
     
+    // 续期失败状态
+    private var isRefreshFailed = false  // 续期是否失败
+    private var lastRefreshError: String? = null  // 最后一次续期错误
+    
+    // 回调
+    var onSessionExpired: (() -> Unit)? = null  // session过期回调
+    var onRefreshFailed: ((String) -> Unit)? = null  // 续期失败回调
+    
     // 自动续期相关
     private var autoRefreshJob: Job? = null
     private var isAutoRefreshRunning = false

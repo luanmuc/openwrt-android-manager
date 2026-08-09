@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -222,7 +223,7 @@ fun WebViewPluginScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ErrorOutline,
+                                imageVector = Icons.Default.Error,
                                 contentDescription = null,
                                 tint = MiColors.Error,
                                 modifier = Modifier.size(64.dp)
