@@ -1546,16 +1546,6 @@ class LuciRepository {
         }
     }
 
-/**
- * LuCI 异常类
- */
-class LuciException(
-    val code: Int = -1,
-    override val message: String,
-    val type: ErrorType = ErrorType.UNKNOWN
-) : Exception(message)
-
-
     // ==================== 固件升级 ====================
 
     /**
@@ -1672,6 +1662,16 @@ enum class ErrorType {
     AUTH_FAILED,
     NOT_FOUND,
     FORBIDDEN,
+/**
+ * LuCI 异常类
+ */
+class LuciException(
+    val code: Int = -1,
+    override val message: String,
+    val type: ErrorType = ErrorType.UNKNOWN
+) : Exception(message)
+
+
     HTTP_ERROR,
     UNKNOWN
 }
