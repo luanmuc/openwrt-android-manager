@@ -442,11 +442,9 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                 // 从缓存加载
                 val cachedInfo = cacheRepository.getCacheEvenExpired(
                     CacheRepository.KEY_SYSTEM_INFO,
-                    activeRouter.id
-                )?.let {
-                    // 这里简化处理，实际应该反序列化
-                    null
-                }
+                    activeRouter.id,
+                    FullSystemInfo::class.java
+                )
 
                 // 从网络加载
                 val systemInfo = luciRepository.getFullSystemInfo()
@@ -470,7 +468,8 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                 cacheRepository.saveCache(
                     CacheRepository.KEY_SYSTEM_INFO,
                     activeRouter.id,
-                    systemInfo.toString() // 简化处理
+                    "FullSystemInfo",
+                    systemInfo
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
