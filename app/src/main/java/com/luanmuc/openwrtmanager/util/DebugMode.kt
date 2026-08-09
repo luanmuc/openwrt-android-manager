@@ -1112,6 +1112,7 @@ object DebugMode {
     fun simulateArchitectureValidation(packageName: String, architecture: String): Boolean {
         // 演示模式下默认验证通过
         return true
+    }
 
     /**
      * 获取假的固件信息
@@ -1142,5 +1143,4 @@ object DebugMode {
             isNewer = true
         )
     }
-}
 }

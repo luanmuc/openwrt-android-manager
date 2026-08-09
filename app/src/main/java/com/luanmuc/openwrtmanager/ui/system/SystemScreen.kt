@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -95,7 +96,7 @@ fun SystemScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "返回",
                             tint = MiTheme.TextPrimary
                         )
@@ -112,7 +113,7 @@ fun SystemScreen(
                         }
                     ) {
                         Icon(
-                            Icons.Default.Refresh,
+                            Icons.Filled.Refresh,
                             contentDescription = "刷新",
                             tint = MiTheme.TextSecondary
                         )
@@ -367,7 +368,7 @@ private fun SystemInfoContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Default.Info,
+                                Icons.Filled.Info,
                                 contentDescription = null,
                                 tint = MiColors.Primary,
                                 modifier = Modifier.size(20.dp)
@@ -399,7 +400,7 @@ private fun SystemInfoContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Refresh,
+                                imageVector = Icons.Filled.Refresh,
                                 contentDescription = null,
                                 tint = MiTheme.Primary,
                                 modifier = Modifier.size(24.dp)
@@ -420,7 +421,7 @@ private fun SystemInfoContent(
                                 )
                             }
                             Icon(
-                                imageVector = Icons.Default.ArrowForward,
+                                imageVector = Icons.Filled.ArrowForward,
                                 contentDescription = null,
                                 tint = MiTheme.TextTertiary
                             )
@@ -493,7 +494,7 @@ private fun RepoPresetItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                Icons.Default.Info,
+                Icons.Filled.Info,
                 contentDescription = null,
                 tint = MiColors.Primary,
                 modifier = Modifier.size(20.dp)
@@ -523,7 +524,7 @@ private fun RepoPresetItem(
             )
         } else {
             Icon(
-                Icons.Default.ArrowBack,
+                Icons.Filled.ArrowBack,
                 contentDescription = null,
                 tint = MiTheme.TextTertiary,
                 modifier = Modifier.size(16.dp)
@@ -550,7 +551,7 @@ fun ProcessesContent(
         MiEmptyState(
             icon = {
                 Icon(
-                    imageVector = Icons.Default.BugReport,
+                    imageVector = Icons.Filled.BugReport,
                     contentDescription = null,
                     tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(40.dp)
@@ -577,7 +578,7 @@ fun ProcessesContent(
             onDismissRequest = { showKillDialog = null },
             icon = {
                 Icon(
-                    Icons.Default.Stop,
+                    Icons.Filled.Stop,
                     contentDescription = null,
                     tint = MiColors.Error
                 )
@@ -635,7 +636,7 @@ fun ProcessCard(
             MiFeatureIcon(
                 icon = {
                     Icon(
-                        imageVector = Icons.Default.BugReport,
+                        imageVector = Icons.Filled.BugReport,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
@@ -739,7 +740,7 @@ fun SystemStatusOverview(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Memory,
+                            imageVector = Icons.Filled.Memory,
                             contentDescription = null,
                             tint = MiColors.Primary,
                             modifier = Modifier.size(18.dp)
@@ -785,7 +786,7 @@ fun SystemStatusOverview(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Info,
+                            imageVector = Icons.Filled.Info,
                             contentDescription = null,
                             tint = MiColors.Success,
                             modifier = Modifier.size(18.dp)
