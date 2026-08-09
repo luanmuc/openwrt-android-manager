@@ -87,6 +87,8 @@ fun HomeScreen(
     onNavigateToWifi: () -> Unit,
     onNavigateToNetwork: () -> Unit,
     onNavigateToSystem: () -> Unit,
+    onNavigateToFirewall: () -> Unit,
+    onNavigateToDdns: () -> Unit,
     onNavigateToAdvanced: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -141,6 +143,8 @@ fun HomeScreen(
                 onNavigateToWifi = onNavigateToWifi,
                 onNavigateToNetwork = onNavigateToNetwork,
                 onNavigateToSystem = onNavigateToSystem,
+                onNavigateToFirewall = onNavigateToFirewall,
+                onNavigateToDdns = onNavigateToDdns,
                 onNavigateToAdvanced = onNavigateToAdvanced,
                 modifier = Modifier.padding(padding)
             )
@@ -364,6 +368,8 @@ fun HomeContent(
     onNavigateToWifi: () -> Unit,
     onNavigateToNetwork: () -> Unit,
     onNavigateToSystem: () -> Unit,
+    onNavigateToFirewall: () -> Unit,
+    onNavigateToDdns: () -> Unit,
     onNavigateToAdvanced: () -> Unit,
     isOffline: Boolean = false,
     modifier: Modifier = Modifier
@@ -453,7 +459,9 @@ fun HomeContent(
                         RouterStatusCard(
                             uiState = uiState,
                             onRefresh = { viewModel.refresh() },
-                            onClick = onNavigateToSystem
+                            onViewDevices = onNavigateToDevices,
+                            onViewWifi = onNavigateToWifi,
+                            onViewSystem = onNavigateToSystem
                         )
                     }
                     CardType.NETWORK_SPEED -> {
@@ -496,12 +504,12 @@ fun HomeContent(
                     }
                     CardType.FIREWALL -> {
                         FirewallCard(
-                            onClick = { /* 跳转到防火墙 */ }
+                            onClick = onNavigateToFirewall
                         )
                     }
                     CardType.DDNS -> {
                         DdnsCard(
-                            onClick = { /* 跳转到DDNS */ }
+                            onClick = onNavigateToDdns
                         )
                     }
                 }
@@ -577,7 +585,9 @@ fun DemoModeBanner() {
 fun RouterStatusCard(
     uiState: HomeViewModel.HomeUiState,
     onRefresh: () -> Unit,
-    onClick: () -> Unit = {}
+    onViewDevices: () -> Unit = {},
+    onViewWifi: () -> Unit = {},
+    onViewSystem: () -> Unit = {}
 ) {
     val status = uiState.routerStatus
     val isOnline = status != null
@@ -586,7 +596,6 @@ fun RouterStatusCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick)
             .background(
                 brush = Brush.verticalGradient(
                     colors = if (isOnline) {
@@ -671,19 +680,22 @@ fun RouterStatusCard(
                     icon = Icons.Default.Devices,
                     label = "在线设备",
                     value = "${status?.onlineDevices ?: 0}",
-                    unit = "台"
+                    unit = "台",
+                    onClick = onViewDevices
                 )
                 StatusItem(
                     icon = Icons.Default.Wifi,
                     label = "WiFi",
                     value = if (isOnline) "正常" else "关闭",
-                    unit = ""
+                    unit = "",
+                    onClick = onViewWifi
                 )
                 StatusItem(
                     icon = Icons.Default.Speed,
                     label = "CPU",
                     value = "${((status?.cpuUsage ?: 0f) * 100).toInt()}",
-                    unit = "%"
+                    unit = "%",
+                    onClick = onViewSystem
                 )
             }
         }
@@ -714,10 +726,15 @@ fun StatusItem(
     icon: ImageVector,
     label: String,
     value: String,
-    unit: String
+    unit: String,
+    onClick: () -> Unit = {}
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Icon(
             imageVector = icon,

@@ -140,6 +140,8 @@ fun MainScreen() {
                     onNavigateToWifi = { navController.navigate(Screen.Wifi.route) },
                     onNavigateToNetwork = { navController.navigate(Screen.Network.route) },
                     onNavigateToSystem = { navController.navigate(Screen.System.route) },
+                    onNavigateToFirewall = { navController.navigate(Screen.Firewall.route) },
+                    onNavigateToDdns = { navController.navigate(Screen.Ddns.route) },
                     onNavigateToAdvanced = { navController.navigate(Screen.Advanced.route) }
                 )
             }
