@@ -1556,12 +1556,15 @@ class LuciRepository {
             val sysInfo = callUbus("system", "info", emptyMap())
             val boardInfo = callUbus("system", "board", emptyMap())
             
-            val hostname = sysInfo?.getAsJsonObject("info")?.get("hostname")?.asString ?: ""
-            val model = boardInfo?.getAsJsonObject("board")?.get("model")?.asString ?: ""
-            val release = sysInfo?.getAsJsonObject("info")?.get("release")?.asString ?: ""
-            val kernel = sysInfo?.getAsJsonObject("info")?.get("kernel")?.asString ?: ""
-            val boardName = boardInfo?.getAsJsonObject("board")?.get("board_name")?.asString ?: ""
-            val architecture = boardInfo?.getAsJsonObject("board")?.get("system")?.asString ?: ""
+            val infoMap = sysInfo["info"] as? Map<String, Any> ?: emptyMap()
+            val boardMap = boardInfo["board"] as? Map<String, Any> ?: emptyMap()
+            
+            val hostname = infoMap["hostname"] as? String ?: ""
+            val model = boardMap["model"] as? String ?: ""
+            val release = infoMap["release"] as? String ?: ""
+            val kernel = infoMap["kernel"] as? String ?: ""
+            val boardName = boardMap["board_name"] as? String ?: ""
+            val architecture = boardMap["system"] as? String ?: ""
             
             FirmwareInfo(
                 currentVersion = release,

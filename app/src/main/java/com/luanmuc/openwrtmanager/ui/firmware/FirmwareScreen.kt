@@ -19,9 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.luanmuc.openwrtmanager.ui.components.*
 import com.luanmuc.openwrtmanager.ui.components.MiButtonType
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
 import com.luanmuc.openwrtmanager.data.model.FirmwareUpgradeState
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
 
 /**
  * 固件升级页面

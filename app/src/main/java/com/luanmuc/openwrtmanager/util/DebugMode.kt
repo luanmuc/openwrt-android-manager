@@ -1142,5 +1142,4 @@ object DebugMode {
             isNewer = true
         )
     }
-    }
 }

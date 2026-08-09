@@ -390,8 +390,6 @@ private fun SystemInfoContent(
                     }
                 }
             }
-        }
-    }
             // 固件升级入口卡片
             item {
                 MiCard {
@@ -401,7 +399,7 @@ private fun SystemInfoContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.SystemUpdate,
+                                imageVector = Icons.Filled.Extension,
                                 contentDescription = null,
                                 tint = MiTheme.Primary,
                                 modifier = Modifier.size(24.dp)
@@ -432,12 +430,14 @@ private fun SystemInfoContent(
                             text = "进入固件升级",
                             onClick = onNavigateToFirmware,
                             modifier = Modifier.fillMaxWidth(),
-                            type = "Secondary"
+                            type = MiButtonType.Secondary
                         )
                     }
                 }
             }
 
+        }
+    }
 }
 
 /**
