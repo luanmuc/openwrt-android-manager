@@ -301,7 +301,8 @@ private fun SystemInfoContent(
                             )
                             MiTag(
                                 text = systemInfo.packageManager.displayName,
-                                color = MiColors.Primary
+                                backgroundColor = MiTheme.Primary.copy(alpha = 0.1f),
+                                textColor = MiTheme.Primary
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -773,34 +774,6 @@ fun SystemStatusOverview(
 /**
  * 系统信息内容
  */
-
-/**
- * 信息项
- */
-@Composable
-private fun InfoItem(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = MiTheme.TextSecondary
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = MiTheme.TextPrimary
-        )
-    }
-}
 
 /**
  * 软件源预设项

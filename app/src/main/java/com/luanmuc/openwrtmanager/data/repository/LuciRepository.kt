@@ -1202,7 +1202,7 @@ class LuciRepository {
             // 检测包管理器
             val packageManager = detectPackageManager()
 
-            SystemInfo(
+            FullSystemInfo(
                 hostname = hostname,
                 model = model,
                 firmwareVersion = version,
@@ -1219,7 +1219,7 @@ class LuciRepository {
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            SystemInfo()
+            FullSystemInfo()
         }
     }
 
