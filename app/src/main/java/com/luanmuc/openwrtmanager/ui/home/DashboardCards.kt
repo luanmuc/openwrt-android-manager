@@ -296,7 +296,7 @@ fun PortStatusCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.SettingsEthernet,
+                            imageVector = Icons.Default.Settings,
                             contentDescription = null,
                             tint = MiColors.Primary,
                             modifier = Modifier.size(22.dp)

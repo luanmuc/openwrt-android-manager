@@ -486,7 +486,7 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSwitchingRepo = true)
             try {
-                val success = luciRepository.switchRepo(preset, _uiState.value.systemInfo)
+                val success = luciRepository.switchMirrorRepo(preset, _uiState.value.systemInfo)
                 if (success) {
                     // 切换成功，重新加载软件源列表
                     loadSystemInfo()
