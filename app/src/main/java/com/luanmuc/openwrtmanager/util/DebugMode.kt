@@ -1209,15 +1209,39 @@ object DebugMode {
      */
     fun getFakeDeviceCapabilities(): com.luanmuc.openwrtmanager.data.model.DeviceCapabilities {
         return com.luanmuc.openwrtmanager.data.model.DeviceCapabilities(
-            hasWifi = false,
+            hasWifi = simulateWifiEnabled,
             hasUsb = true,
             hasSfp = false,
-            wifiInterfaceCount = 0,
+            wifiInterfaceCount = if (simulateWifiEnabled) 2 else 0,
             lanPortCount = 3,
             wanPortCount = 1,
-            totalPortCount = 4,
+            totalPortCount = if (simulateWifiEnabled) 6 else 4,
             packageManager = com.luanmuc.openwrtmanager.data.model.PackageManagerType.OPKG,
             architecture = "x86_64"
         )
+    }
+
+    // 演示模式WiFi开关
+    private var simulateWifiEnabled = false
+    
+    /**
+     * 设置演示模式是否模拟有WiFi
+     */
+    fun setSimulateWifiEnabled(enabled: Boolean) {
+        simulateWifiEnabled = enabled
+    }
+    
+    /**
+     * 获取演示模式是否模拟有WiFi
+     */
+    fun isSimulateWifiEnabled(): Boolean {
+        return simulateWifiEnabled
+    }
+    
+    /**
+     * 切换演示模式WiFi开关
+     */
+    fun toggleSimulateWifi() {
+        simulateWifiEnabled = !simulateWifiEnabled
     }
 }
