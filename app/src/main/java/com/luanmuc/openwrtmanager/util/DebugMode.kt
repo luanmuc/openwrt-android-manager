@@ -1143,4 +1143,81 @@ object DebugMode {
             isNewer = true
         )
     }
+
+    /**
+     * 获取假的网口状态
+     */
+    fun getFakePortStatus(): List<com.luanmuc.openwrtmanager.data.model.PortStatus> {
+        return listOf(
+            com.luanmuc.openwrtmanager.data.model.PortStatus(
+                name = "eth0",
+                displayName = "WAN",
+                type = com.luanmuc.openwrtmanager.data.model.PortType.WAN,
+                isConnected = true,
+                speed = 1000,
+                duplex = "Full",
+                rxBytes = 1572864000,
+                txBytes = 1048576000,
+                rxPackets = 1250000,
+                txPackets = 980000,
+                macAddress = "00:11:22:33:44:55"
+            ),
+            com.luanmuc.openwrtmanager.data.model.PortStatus(
+                name = "eth1",
+                displayName = "LAN1",
+                type = com.luanmuc.openwrtmanager.data.model.PortType.LAN,
+                isConnected = true,
+                speed = 1000,
+                duplex = "Full",
+                rxBytes = 524288000,
+                txBytes = 786432000,
+                rxPackets = 450000,
+                txPackets = 620000,
+                macAddress = "00:11:22:33:44:56"
+            ),
+            com.luanmuc.openwrtmanager.data.model.PortStatus(
+                name = "eth2",
+                displayName = "LAN2",
+                type = com.luanmuc.openwrtmanager.data.model.PortType.LAN,
+                isConnected = true,
+                speed = 100,
+                duplex = "Full",
+                rxBytes = 104857600,
+                txBytes = 52428800,
+                rxPackets = 120000,
+                txPackets = 80000,
+                macAddress = "00:11:22:33:44:57"
+            ),
+            com.luanmuc.openwrtmanager.data.model.PortStatus(
+                name = "eth3",
+                displayName = "LAN3",
+                type = com.luanmuc.openwrtmanager.data.model.PortType.LAN,
+                isConnected = false,
+                speed = 0,
+                duplex = "Unknown",
+                rxBytes = 0,
+                txBytes = 0,
+                rxPackets = 0,
+                txPackets = 0,
+                macAddress = "00:11:22:33:44:58"
+            )
+        )
+    }
+
+    /**
+     * 获取假的设备能力
+     */
+    fun getFakeDeviceCapabilities(): com.luanmuc.openwrtmanager.data.model.DeviceCapabilities {
+        return com.luanmuc.openwrtmanager.data.model.DeviceCapabilities(
+            hasWifi = false,
+            hasUsb = true,
+            hasSfp = false,
+            wifiInterfaceCount = 0,
+            lanPortCount = 3,
+            wanPortCount = 1,
+            totalPortCount = 4,
+            packageManager = com.luanmuc.openwrtmanager.data.model.PackageManagerType.OPKG,
+            architecture = "x86_64"
+        )
+    }
 }
