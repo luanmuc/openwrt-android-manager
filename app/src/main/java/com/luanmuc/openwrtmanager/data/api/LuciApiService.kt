@@ -22,8 +22,8 @@ interface LuciApiService {
     ): LuciRpcResponse<List<Any>>
 
     companion object {
-        // ubus RPC 端点（新版 LuCI / ImmortalWrt）
-        const val UBUS_PATH = "/cgi-bin/luci/admin/ubus"
+        // 标准 ubus over JSON-RPC 端点（uhttpd-mod-ubus）
+        const val UBUS_PATH = "/ubus/"
 
         // 旧版 LuCI RPC 端点（兼容 Lua 版 LuCI）
         const val RPC_AUTH_PATH = "/cgi-bin/luci/rpc/auth"

@@ -1655,6 +1655,174 @@ class LuciRepository {
             apply()
         }
     }
+
+    // ==================== 预加载功能 ====================
+
+    /**
+     * 预加载进度
+     */
+    data class PreloadProgress(
+        val current: Int,
+        val total: Int,
+        val currentItem: String,
+        val percentage: Float
+    )
+
+    /**
+     * 预加载项目
+     */
+    data class PreloadItem(
+        val key: String,
+        val name: String,
+        val loader: suspend () -> Any?
+    )
+
+    /**
+     * 预加载所有常用数据
+     * @param onProgress 进度回调
+     * @return 成功加载的项目数
+     */
+    suspend fun preloadAllData(
+        routerId: String,
+        onProgress: ((PreloadProgress) -> Unit)? = null
+    ): Int {
+        val cacheRepository = CacheRepository.getInstance(context)
+        
+        val preloadItems = listOf(
+            PreloadItem(
+                key = CacheRepository.KEY_SYSTEM_INFO,
+                name = "系统信息",
+                loader = { 
+                    try { getFullSystemInfo() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_ROUTER_STATUS,
+                name = "路由器状态",
+                loader = { 
+                    try { getRouterStatus() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_WAN_STATUS,
+                name = "网络状态",
+                loader = { 
+                    try { getWanStatus() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_NETWORK_INTERFACES,
+                name = "网络接口",
+                loader = { 
+                    try { getNetworkInterfaces() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_INSTALLED_PACKAGES,
+                name = "已安装插件",
+                loader = { 
+                    try { getInstalledPackages() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_AVAILABLE_PACKAGES,
+                name = "可用插件",
+                loader = { 
+                    try { getAvailablePackages() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_ONLINE_DEVICES,
+                name = "在线设备",
+                loader = { 
+                    try { getDhcpLeases() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_WIFI_DEVICES,
+                name = "WiFi设备",
+                loader = { 
+                    try { getWifiDevices() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_PORT_FORWARDS,
+                name = "端口转发",
+                loader = { 
+                    try { getPortForwards() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_DDNS_CONFIGS,
+                name = "DDNS配置",
+                loader = { 
+                    try { getDdnsConfigs() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = "package_repos",
+                name = "软件源列表",
+                loader = { 
+                    try { getPackageRepos() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_SYSTEM_LOG,
+                name = "系统日志",
+                loader = { 
+                    try { getSystemLog() } catch (e: Exception) { null }
+                }
+            ),
+            PreloadItem(
+                key = CacheRepository.KEY_PROCESS_LIST,
+                name = "进程列表",
+                loader = { 
+                    try { getProcessList() } catch (e: Exception) { null }
+                }
+            )
+        )
+
+        var successCount = 0
+        val total = preloadItems.size
+
+        for ((index, item) in preloadItems.withIndex()) {
+            onProgress?.invoke(
+                PreloadProgress(
+                    current = index,
+                    total = total,
+                    currentItem = item.name,
+                    percentage = index.toFloat() / total.toFloat()
+                )
+            )
+
+            try {
+                val data = item.loader()
+                if (data != null) {
+                    cacheRepository.saveCache(
+                        key = item.key,
+                        routerId = routerId,
+                        type = item.key,
+                        data = data
+                    )
+                    successCount++
+                }
+            } catch (e: Exception) {
+                // 忽略单个项目的错误，继续加载其他项目
+            }
+        }
+
+        // 最后更新进度为100%
+        onProgress?.invoke(
+            PreloadProgress(
+                current = total,
+                total = total,
+                currentItem = "完成",
+                percentage = 1f
+            )
+        )
+
+        return successCount
+    }
 }
 
 

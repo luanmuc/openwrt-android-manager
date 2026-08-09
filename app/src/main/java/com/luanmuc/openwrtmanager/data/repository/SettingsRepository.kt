@@ -111,6 +111,49 @@ class SettingsRepository private constructor() {
             prefs.edit().putBoolean(KEY_STATUS_BAR_ENABLED, value).apply()
         }
 
+    // 预加载设置
+    var autoPreloadEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_PRELOAD_ENABLED, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_AUTO_PRELOAD_ENABLED, value).apply()
+        }
+
+    var preloadSystemInfo: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_SYSTEM_INFO, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_SYSTEM_INFO, value).apply()
+        }
+
+    var preloadRouterStatus: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_ROUTER_STATUS, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_ROUTER_STATUS, value).apply()
+        }
+
+    var preloadNetwork: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_NETWORK, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_NETWORK, value).apply()
+        }
+
+    var preloadPlugins: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_PLUGINS, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_PLUGINS, value).apply()
+        }
+
+    var preloadDevices: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_DEVICES, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_DEVICES, value).apply()
+        }
+
+    var preloadFirewall: Boolean
+        get() = prefs.getBoolean(KEY_PRELOAD_FIREWALL, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PRELOAD_FIREWALL, value).apply()
+        }
+
     /**
      * 初始化
      */
@@ -141,6 +184,13 @@ class SettingsRepository private constructor() {
         private const val KEY_DEFAULT_HOME_PAGE = "default_home_page"
         private const val KEY_TRAFFIC_UNIT = "traffic_unit"
         private const val KEY_STATUS_BAR_ENABLED = "status_bar_enabled"
+        private const val KEY_AUTO_PRELOAD_ENABLED = "auto_preload_enabled"
+        private const val KEY_PRELOAD_SYSTEM_INFO = "preload_system_info"
+        private const val KEY_PRELOAD_ROUTER_STATUS = "preload_router_status"
+        private const val KEY_PRELOAD_NETWORK = "preload_network"
+        private const val KEY_PRELOAD_PLUGINS = "preload_plugins"
+        private const val KEY_PRELOAD_DEVICES = "preload_devices"
+        private const val KEY_PRELOAD_FIREWALL = "preload_firewall"
 
         @Volatile
         private var instance: SettingsRepository? = null

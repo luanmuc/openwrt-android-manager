@@ -1,5 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.addrouter
 
+import com.luanmuc.openwrtmanager.data.repository.SettingsRepository
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
@@ -38,7 +40,13 @@ class AddRouterViewModel(application: Application) : BaseViewModel(application) 
         val error: String? = null,
         val errorType: ErrorType? = null,
         val isEditMode: Boolean = false,
-        val editingRouterId: String? = null
+        val editingRouterId: String? = null,
+        // 预加载状态
+        val isPreloading: Boolean = false,
+        val preloadProgress: Float = 0f,
+        val preloadCurrentItem: String = "",
+        val preloadTotal: Int = 0,
+        val preloadCurrent: Int = 0
     )
 
     enum class ErrorType {
@@ -122,11 +130,45 @@ class AddRouterViewModel(application: Application) : BaseViewModel(application) 
                 routerRepository.addRouter(router)
                 routerRepository.setActiveRouter(router.id)
 
-                _uiState.value = _uiState.value.copy(
-                    isConnecting = false,
-                    isSuccess = true
-                )
-                onSuccess()
+                // 检查是否开启自动预加载
+                val settingsRepository = SettingsRepository.getInstance(getApplication())
+                if (settingsRepository.autoPreloadEnabled) {
+                    // 开始预加载
+                    _uiState.value = _uiState.value.copy(
+                        isConnecting = false,
+                        isPreloading = true,
+                        preloadProgress = 0f,
+                        preloadCurrentItem = "准备中..."
+                    )
+
+                    // 在后台进行预加载
+                    viewModelScope.launch {
+                        try {
+                            luciRepository.preloadAllData(router.id) { progress ->
+                                _uiState.value = _uiState.value.copy(
+                                    preloadProgress = progress.percentage,
+                                    preloadCurrentItem = progress.currentItem,
+                                    preloadCurrent = progress.current,
+                                    preloadTotal = progress.total
+                                )
+                            }
+                        } catch (e: Exception) {
+                            // 预加载失败不影响使用
+                        } finally {
+                            _uiState.value = _uiState.value.copy(
+                                isPreloading = false,
+                                isSuccess = true
+                            )
+                            onSuccess()
+                        }
+                    }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isConnecting = false,
+                        isSuccess = true
+                    )
+                    onSuccess()
+                }
             } catch (e: LuciException) {
                 _uiState.value = _uiState.value.copy(
                     isConnecting = false,

@@ -60,6 +60,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiPrimaryButton
+import com.luanmuc.openwrtmanager.ui.components.MiLinearProgress
 import com.luanmuc.openwrtmanager.ui.components.MiTextField
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 
@@ -255,30 +256,86 @@ fun AddRouterScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // 连接按钮
-            MiPrimaryButton(
-                text = if (uiState.isConnecting) "" else stringResource(R.string.add_router_connect),
-                onClick = { viewModel.connectAndSave(onSuccess) },
-                enabled = !uiState.isConnecting,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                leadingIcon = {
-                    if (uiState.isConnecting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
+            // 预加载进度
+            if (uiState.isPreloading) {
+                MiCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = MiColors.Primary.copy(alpha = 0.08f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MiColors.Primary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "正在同步数据...",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MiTheme.TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = uiState.preloadCurrentItem,
+                                    fontSize = 13.sp,
+                                    color = MiTheme.TextSecondary
+                                )
+                            }
+                            Text(
+                                text = "${(uiState.preloadProgress * 100).toInt()}%",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiColors.Primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        MiLinearProgress(
+                            progress = uiState.preloadProgress,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    } else {
-                        Icon(
-                            Icons.Default.Login,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "${uiState.preloadCurrent}/${uiState.preloadTotal} 项",
+                            fontSize = 12.sp,
+                            color = MiTheme.TextTertiary,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
-            )
+            } else {
+                // 连接按钮
+                MiPrimaryButton(
+                    text = if (uiState.isConnecting) "" else stringResource(R.string.add_router_connect),
+                    onClick = { viewModel.connectAndSave(onSuccess) },
+                    enabled = !uiState.isConnecting,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    leadingIcon = {
+                        if (uiState.isConnecting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Login,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                )
+            }
             
             // 安全说明
             MiCard(
