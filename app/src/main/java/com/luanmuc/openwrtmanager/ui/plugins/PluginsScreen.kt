@@ -182,7 +182,8 @@ fun PluginsScreen(
             // 快捷操作区域
             QuickActionsSection(
                 onManageRepos = { onNavigateToRepos() },
-                onInstallIpk = { /* 打开文件选择器 */ }
+                onInstallIpk = { /* 打开文件选择器 */ },
+                packageManager = uiState.systemInfo.packageManager
             )
 
             // Tab栏
@@ -780,7 +781,8 @@ private fun RecommendedPluginsSection(
 @Composable
 private fun QuickActionsSection(
     onManageRepos: () -> Unit,
-    onInstallIpk: () -> Unit
+    onInstallIpk: () -> Unit,
+    packageManager: com.luanmuc.openwrtmanager.data.model.PackageManagerType = com.luanmuc.openwrtmanager.data.model.PackageManagerType.OPKG
 ) {
     Row(
         modifier = Modifier
@@ -834,7 +836,7 @@ private fun QuickActionsSection(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "安装本地IPK",
+                    text = if (packageManager == com.luanmuc.openwrtmanager.data.model.PackageManagerType.APK) "安装本地APK" else "安装本地IPK",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MiTheme.TextPrimary
