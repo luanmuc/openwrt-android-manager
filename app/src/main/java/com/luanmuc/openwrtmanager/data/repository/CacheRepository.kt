@@ -243,6 +243,33 @@ class CacheRepository private constructor(
     }
 
     /**
+     * 缓存统计信息
+     */
+    data class CacheStats(
+        val count: Int = 0,
+        val totalSizeBytes: Long = 0L
+    )
+
+    /**
+     * 获取缓存统计信息
+     */
+    suspend fun getCacheStats(routerId: String = ""): CacheStats {
+        return try {
+            val caches = cacheDao.getAllCaches(routerId)
+            var totalSize = 0L
+            for (cache in caches) {
+                totalSize += cache.value.toByteArray().size
+            }
+            CacheStats(
+                count = caches.size,
+                totalSizeBytes = totalSize
+            )
+        } catch (e: Exception) {
+            CacheStats()
+        }
+    }
+
+    /**
      * 缓存优先策略：先读缓存，再读网络，更新缓存
      * 注意：这是同步版本，只返回一个结果
      */

@@ -116,8 +116,8 @@ class ThemeManager(private val context: Context) {
 /**
  * 主题模式枚举
  */
-enum class ThemeMode {
-    LIGHT,      // 浅色模式
-    DARK,       // 深色模式
-    SYSTEM      // 跟随系统
+enum class ThemeMode(val displayName: String) {
+    LIGHT("浅色模式"),
+    DARK("深色模式"),
+    SYSTEM("跟随系统")
 }
