@@ -27,6 +27,25 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
     private val _uiState = MutableStateFlow(PluginsUiState())
     val uiState: StateFlow<PluginsUiState> = _uiState.asStateFlow()
 
+    // 插件分类
+    enum class PluginCategory(val displayName: String, val filter: String) {
+        ALL("全部", ""),
+        SYSTEM("系统", "system"),
+        NETWORK("网络", "network"),
+        SERVICE("服务", "service"),
+        UTILITIES("工具", "utilities"),
+        MULTIMEDIA("多媒体", "multimedia"),
+        ADMINISTRATION("管理", "admin"),
+        OTHER("其他", "other")
+    }
+    
+    // 排序方式
+    enum class SortType(val displayName: String) {
+        NAME("按名称"),
+        SIZE("按大小"),
+        INSTALLED("按安装状态")
+    }
+    
     data class PluginsUiState(
         val installedPackages: List<PackageInfo> = emptyList(),
         val availablePackages: List<PackageInfo> = emptyList(),
@@ -37,7 +56,12 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         val actionLoading: String? = null,
         val isFromCache: Boolean = false,
         val cacheTimestamp: Long? = null,
-        val isOfflineMode: Boolean = false
+        val isOfflineMode: Boolean = false,
+        val selectedCategory: PluginCategory = PluginCategory.ALL,
+        val sortType: SortType = SortType.NAME,
+        val selectedPackage: PackageInfo? = null,
+        val showDetail: Boolean = false,
+        val installProgress: Map<String, Int> = emptyMap()
     )
 
     init {
@@ -302,6 +326,99 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
 
     fun setSearchQuery(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
+    }
+
+    fun setCategory(category: PluginCategory) {
+        _uiState.value = _uiState.value.copy(selectedCategory = category)
+    }
+
+    fun setSortType(sortType: SortType) {
+        _uiState.value = _uiState.value.copy(sortType = sortType)
+    }
+
+    fun showPackageDetail(pkg: PackageInfo) {
+        _uiState.value = _uiState.value.copy(
+            selectedPackage = pkg,
+            showDetail = true
+        )
+    }
+
+    fun hidePackageDetail() {
+        _uiState.value = _uiState.value.copy(
+            selectedPackage = null,
+            showDetail = false
+        )
+    }
+
+    /**
+     * 获取过滤和排序后的已安装插件列表
+     */
+    fun getFilteredInstalled(): List<PackageInfo> {
+        val state = _uiState.value
+        var list = state.installedPackages
+
+        // 搜索过滤
+        if (state.searchQuery.isNotEmpty()) {
+            list = list.filter {
+                it.name.contains(state.searchQuery, ignoreCase = true) ||
+                it.description.contains(state.searchQuery, ignoreCase = true)
+            }
+        }
+
+        // 分类过滤
+        if (state.selectedCategory != PluginCategory.ALL) {
+            list = list.filter {
+                it.category.contains(state.selectedCategory.filter, ignoreCase = true)
+            }
+        }
+
+        // 排序
+        list = when (state.sortType) {
+            SortType.NAME -> list.sortedBy { it.name.lowercase() }
+            SortType.SIZE -> list.sortedByDescending { it.size }
+            SortType.INSTALLED -> list.sortedBy { it.name.lowercase() }
+        }
+
+        return list
+    }
+
+    /**
+     * 获取过滤和排序后的可用插件列表
+     */
+    fun getFilteredAvailable(): List<PackageInfo> {
+        val state = _uiState.value
+        var list = state.availablePackages
+
+        // 搜索过滤
+        if (state.searchQuery.isNotEmpty()) {
+            list = list.filter {
+                it.name.contains(state.searchQuery, ignoreCase = true) ||
+                it.description.contains(state.searchQuery, ignoreCase = true)
+            }
+        }
+
+        // 分类过滤
+        if (state.selectedCategory != PluginCategory.ALL) {
+            list = list.filter {
+                it.category.contains(state.selectedCategory.filter, ignoreCase = true)
+            }
+        }
+
+        // 排序
+        list = when (state.sortType) {
+            SortType.NAME -> list.sortedBy { it.name.lowercase() }
+            SortType.SIZE -> list.sortedByDescending { it.size }
+            SortType.INSTALLED -> list.sortedBy { it.name.lowercase() }
+        }
+
+        return list
+    }
+
+    /**
+     * 获取所有可用分类
+     */
+    fun getAvailableCategories(): List<PluginCategory> {
+        return PluginCategory.values().toList()
     }
 
     private suspend fun getActiveRouter(): Router? {

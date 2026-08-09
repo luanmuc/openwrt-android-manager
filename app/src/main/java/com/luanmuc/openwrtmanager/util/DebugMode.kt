@@ -750,29 +750,261 @@ object DebugMode {
             )
 
             installedPackages = listOf(
-                PackageInfo(name = "luci-i18n-base-zh-cn", version = "23.05.0", description = "LuCI Chinese (Simplified) Translation - Base", size = 262144L, installed = true),
-                PackageInfo(name = "luci-app-opkg", version = "23.05.0", description = "LuCI OPKG Package Manager", size = 65536L, installed = true),
-                PackageInfo(name = "luci-app-firewall", version = "23.05.0", description = "LuCI Firewall Configuration", size = 131072L, installed = true),
-                PackageInfo(name = "luci-app-ddns", version = "2.4.0", description = "LuCI Dynamic DNS Configuration", size = 98304L, installed = true),
-                PackageInfo(name = "luci-app-upnp", version = "23.05.0", description = "LuCI UPnP Configuration", size = 49152L, installed = true),
-                PackageInfo(name = "luci-app-wol", version = "23.05.0", description = "LuCI Wake-on-LAN", size = 32768L, installed = true),
-                PackageInfo(name = "luci-app-sqm", version = "1.6.0", description = "LuCI SQM QoS", size = 81920L, installed = true),
-                PackageInfo(name = "luci-app-statistics", version = "23.05.0", description = "LuCI Statistics", size = 163840L, installed = true)
+                PackageInfo(
+                    name = "luci-i18n-base-zh-cn",
+                    version = "23.05.0",
+                    description = "LuCI 简体中文语言包 - 基础包",
+                    size = 262144L,
+                    installed = true,
+                    category = "system",
+                    depends = listOf("luci-base")
+                ),
+                PackageInfo(
+                    name = "luci-app-opkg",
+                    version = "23.05.0",
+                    description = "软件包管理器 - 管理路由器上的所有软件包，支持安装、卸载、更新等操作",
+                    size = 65536L,
+                    installed = true,
+                    category = "system",
+                    depends = listOf("luci-base", "opkg")
+                ),
+                PackageInfo(
+                    name = "luci-app-firewall",
+                    version = "23.05.0",
+                    description = "防火墙配置 - 管理端口转发、流量规则、区域设置等防火墙功能",
+                    size = 131072L,
+                    installed = true,
+                    category = "network",
+                    depends = listOf("luci-base", "firewall4")
+                ),
+                PackageInfo(
+                    name = "luci-app-ddns",
+                    version = "2.4.0",
+                    description = "动态DNS配置 - 支持多种DDNS服务提供商，自动更新域名解析",
+                    size = 98304L,
+                    installed = true,
+                    category = "network",
+                    depends = listOf("luci-base", "ddns-scripts")
+                ),
+                PackageInfo(
+                    name = "luci-app-upnp",
+                    version = "23.05.0",
+                    description = "UPnP配置 - 通用即插即用，让内网设备自动配置端口映射",
+                    size = 49152L,
+                    installed = true,
+                    category = "network",
+                    depends = listOf("luci-base", "miniupnpd")
+                ),
+                PackageInfo(
+                    name = "luci-app-wol",
+                    version = "23.05.0",
+                    description = "网络唤醒 - 通过网络发送魔术包唤醒局域网内的电脑",
+                    size = 32768L,
+                    installed = true,
+                    category = "network",
+                    depends = listOf("luci-base", "etherwake")
+                ),
+                PackageInfo(
+                    name = "luci-app-sqm",
+                    version = "1.6.0",
+                    description = "智能队列管理 - SQM QoS流量控制，优化网络延迟和带宽分配",
+                    size = 81920L,
+                    installed = true,
+                    category = "network",
+                    depends = listOf("luci-base", "sqm-scripts")
+                ),
+                PackageInfo(
+                    name = "luci-app-statistics",
+                    version = "23.05.0",
+                    description = "流量统计 - 收集并展示网络流量、CPU、内存等系统统计数据",
+                    size = 163840L,
+                    installed = true,
+                    category = "admin",
+                    depends = listOf("luci-base", "collectd")
+                )
             )
 
             availablePackages = listOf(
-                PackageInfo(name = "luci-app-aria2", version = "1.36.0", description = "LuCI Aria2 Download Manager", size = 131072L, installed = false),
-                PackageInfo(name = "luci-app-transmission", version = "4.0.0", description = "LuCI Transmission BitTorrent Client", size = 163840L, installed = false),
-                PackageInfo(name = "luci-app-samba4", version = "4.18.0", description = "LuCI Samba4 Network Shares", size = 98304L, installed = false),
-                PackageInfo(name = "luci-app-minidlna", version = "1.3.0", description = "LuCI MiniDLNA Media Server", size = 65536L, installed = false),
-                PackageInfo(name = "luci-app-openvpn", version = "2.5.0", description = "LuCI OpenVPN Configuration", size = 196608L, installed = false),
-                PackageInfo(name = "luci-app-wireguard", version = "1.0.0", description = "LuCI WireGuard VPN", size = 81920L, installed = false),
-                PackageInfo(name = "luci-app-mwan3", version = "2.11.0", description = "LuCI Multi-WAN Load Balancing", size = 147456L, installed = false),
-                PackageInfo(name = "luci-app-snmpd", version = "5.9.0", description = "LuCI SNMP Daemon", size = 73728L, installed = false),
-                PackageInfo(name = "luci-app-nlbwmon", version = "2023.09.12", description = "LuCI Network Bandwidth Monitor", size = 57344L, installed = false),
-                PackageInfo(name = "luci-app-ntpc", version = "23.05.0", description = "LuCI NTP Time Synchronization", size = 40960L, installed = false),
-                PackageInfo(name = "luci-app-uhttpd", version = "2023.06.25", description = "LuCI uHTTPd Web Server", size = 49152L, installed = false),
-                PackageInfo(name = "luci-app-acl", version = "23.05.0", description = "LuCI Access Control Lists", size = 65536L, installed = false)
+                PackageInfo(
+                    name = "luci-app-aria2",
+                    version = "1.36.0",
+                    description = "Aria2下载管理器 - 支持HTTP/FTP/BitTorrent的多线程下载工具",
+                    size = 131072L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "aria2")
+                ),
+                PackageInfo(
+                    name = "luci-app-transmission",
+                    version = "4.0.0",
+                    description = "Transmission BT客户端 - 轻量级BitTorrent下载客户端",
+                    size = 163840L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "transmission-daemon")
+                ),
+                PackageInfo(
+                    name = "luci-app-samba4",
+                    version = "4.18.0",
+                    description = "Samba4网络共享 - 文件和打印机共享服务，兼容Windows网络邻居",
+                    size = 98304L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "samba4-server")
+                ),
+                PackageInfo(
+                    name = "luci-app-minidlna",
+                    version = "1.3.0",
+                    description = "MiniDLNA媒体服务器 - DLNA/UPnP媒体服务器，让电视、手机播放路由器上的视频音乐",
+                    size = 65536L,
+                    installed = false,
+                    category = "multimedia",
+                    depends = listOf("luci-base", "minidlna")
+                ),
+                PackageInfo(
+                    name = "luci-app-openvpn",
+                    version = "2.5.0",
+                    description = "OpenVPN配置 - 开源VPN解决方案，支持服务端和客户端模式",
+                    size = 196608L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "openvpn-openssl")
+                ),
+                PackageInfo(
+                    name = "luci-app-wireguard",
+                    version = "1.0.0",
+                    description = "WireGuard VPN - 现代、快速、安全的VPN隧道技术",
+                    size = 81920L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "wireguard-tools")
+                ),
+                PackageInfo(
+                    name = "luci-app-mwan3",
+                    version = "2.11.0",
+                    description = "多WAN负载均衡 - 多条宽带线路负载均衡和故障转移",
+                    size = 147456L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "mwan3")
+                ),
+                PackageInfo(
+                    name = "luci-app-snmpd",
+                    version = "5.9.0",
+                    description = "SNMP服务 - 简单网络管理协议，用于网络监控系统",
+                    size = 73728L,
+                    installed = false,
+                    category = "admin",
+                    depends = listOf("luci-base", "snmpd")
+                ),
+                PackageInfo(
+                    name = "luci-app-nlbwmon",
+                    version = "2023.09.12",
+                    description = "网络带宽监控 - 按设备统计带宽使用情况，支持按日/月查看",
+                    size = 57344L,
+                    installed = false,
+                    category = "admin",
+                    depends = listOf("luci-base", "nlbwmon")
+                ),
+                PackageInfo(
+                    name = "luci-app-ntpc",
+                    version = "23.05.0",
+                    description = "NTP时间同步 - 网络时间协议客户端，自动同步系统时间",
+                    size = 40960L,
+                    installed = false,
+                    category = "system",
+                    depends = listOf("luci-base", "ntpclient")
+                ),
+                PackageInfo(
+                    name = "luci-app-uhttpd",
+                    version = "2023.06.25",
+                    description = "uHTTPd Web服务器 - OpenWrt内置的轻量级Web服务器配置",
+                    size = 49152L,
+                    installed = false,
+                    category = "system",
+                    depends = listOf("luci-base", "uhttpd")
+                ),
+                PackageInfo(
+                    name = "luci-app-acl",
+                    version = "23.05.0",
+                    description = "访问控制列表 - 管理LuCI的用户权限和访问控制",
+                    size = 65536L,
+                    installed = false,
+                    category = "system",
+                    depends = listOf("luci-base")
+                ),
+                PackageInfo(
+                    name = "luci-app-adblock",
+                    version = "4.1.5",
+                    description = "广告过滤 - 自动屏蔽广告域名，支持多种广告源列表",
+                    size = 114688L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "adblock")
+                ),
+                PackageInfo(
+                    name = "luci-app-ttyd",
+                    version = "1.7.3",
+                    description = "Web终端 - 在浏览器中使用命令行终端",
+                    size = 45056L,
+                    installed = false,
+                    category = "utilities",
+                    depends = listOf("luci-base", "ttyd")
+                ),
+                PackageInfo(
+                    name = "luci-app-hd-idle",
+                    version = "23.05.0",
+                    description = "硬盘休眠 - 硬盘空闲时自动进入休眠模式，节省电量",
+                    size = 36864L,
+                    installed = false,
+                    category = "system",
+                    depends = listOf("luci-base", "hd-idle")
+                ),
+                PackageInfo(
+                    name = "luci-app-vsftpd",
+                    version = "23.05.0",
+                    description = "FTP服务器 - 轻量级FTP服务器，支持虚拟用户和权限控制",
+                    size = 53248L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "vsftpd")
+                ),
+                PackageInfo(
+                    name = "luci-app-udpxy",
+                    version = "2023.02.06",
+                    description = "UDPXY组播转单播 - 将IPTV组播流转换为单播，方便各种设备观看",
+                    size = 40960L,
+                    installed = false,
+                    category = "multimedia",
+                    depends = listOf("luci-base", "udpxy")
+                ),
+                PackageInfo(
+                    name = "luci-app-frps",
+                    version = "0.52.0",
+                    description = "Frp服务端 - 内网穿透服务端，让外网访问内网服务",
+                    size = 90112L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "frps")
+                ),
+                PackageInfo(
+                    name = "luci-app-frpc",
+                    version = "0.52.0",
+                    description = "Frp客户端 - 内网穿透客户端，连接到Frp服务器实现内网穿透",
+                    size = 86016L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "frpc")
+                ),
+                PackageInfo(
+                    name = "luci-app-zerotier",
+                    version = "1.12.2",
+                    description = "ZeroTier虚拟网络 - 全球范围的虚拟局域网，轻松组建异地虚拟内网",
+                    size = 73728L,
+                    installed = false,
+                    category = "network",
+                    depends = listOf("luci-base", "zerotier")
+                )
             )
 
             portForwards = listOf(
