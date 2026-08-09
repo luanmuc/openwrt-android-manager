@@ -30,7 +30,7 @@ interface CacheDao {
     @Query("SELECT COUNT(*) FROM cache WHERE routerId = :routerId")
     suspend fun getCacheCount(routerId: String): Int
     
-    @Query("SELECT * FROM cache WHERE routerId = :routerId ORDER BY createdAt ASC LIMIT 1")
+    @Query("SELECT * FROM cache WHERE routerId = :routerId ORDER BY timestamp ASC LIMIT 1")
     suspend fun getOldestCache(routerId: String): CacheEntity?
     
     @Query("DELETE FROM cache")
