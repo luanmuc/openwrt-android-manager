@@ -1672,8 +1672,6 @@ enum class ErrorType {
     NOT_FOUND,
     FORBIDDEN,
     HTTP_ERROR,
-
-}
     UNKNOWN
 }
 
