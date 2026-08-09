@@ -208,7 +208,12 @@ fun MainScreen() {
             }
             composable(Screen.Advanced.route) {
                 AdvancedScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSystem = { navController.navigate(Screen.System.route) },
+                    onNavigateToDiagnostic = { navController.navigate(Screen.Diagnostic.route) },
+                    onOpenWebView = { url, title ->
+                        navController.navigate(Screen.WebViewPlugin.route + "?url=$url&title=$title")
+                    }
                 )
             }
             composable(Screen.WebViewPlugin.route + "?url={url}&title={title}") { backStackEntry ->

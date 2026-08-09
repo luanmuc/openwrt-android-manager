@@ -65,6 +65,9 @@ import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 @Composable
 fun AdvancedScreen(
     onBack: () -> Unit = {},
+    onNavigateToSystem: () -> Unit = {},
+    onNavigateToDiagnostic: () -> Unit = {},
+    onOpenWebView: (String, String) -> Unit = { _, _ -> },
     viewModel: AdvancedViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -159,7 +162,7 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = {}
+                        onClick = onNavigateToSystem
                     )
                     MiDivider(indent = 60.dp)
                     MiListItem(
@@ -173,7 +176,7 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = {}
+                        onClick = onNavigateToSystem
                     )
                     MiDivider(indent = 60.dp)
                     MiListItem(
@@ -187,7 +190,9 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = {}
+                        onClick = {
+                            onOpenWebView("/cgi-bin/luci/admin/status/processes", "进程管理")
+                        }
                     )
                 }
             }
@@ -213,12 +218,12 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = {}
+                        onClick = onNavigateToDiagnostic
                     )
                     MiDivider(indent = 60.dp)
                     MiListItem(
                         title = "终端命令",
-                        subtitle = "执行Shell命令",
+                        subtitle = "在浏览器中使用命令行（需安装ttyd插件）",
                         icon = {
                             Icon(
                                 imageVector = Icons.Default.Code,
@@ -227,7 +232,9 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = {}
+                        onClick = {
+                            onOpenWebView("/cgi-bin/luci/admin/services/ttyd", "终端命令")
+                        }
                     )
                 }
             }
