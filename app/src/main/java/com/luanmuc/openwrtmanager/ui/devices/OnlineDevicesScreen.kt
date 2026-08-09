@@ -128,6 +128,7 @@ fun OnlineDevicesScreen(
                                 title = when (sortBy) {
                                     OnlineDevicesViewModel.SortBy.IP -> "按IP地址"
                                     OnlineDevicesViewModel.SortBy.NAME -> "按名称"
+                                    OnlineDevicesViewModel.SortBy.CONNECTED_TIME -> "按连接时间"
                                     OnlineDevicesViewModel.SortBy.TRAFFIC -> "按流量"
                                 },
                                 onClick = {
