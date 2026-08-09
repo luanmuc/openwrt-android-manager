@@ -432,7 +432,14 @@ fun HomeContent(
         }
         
         // 动态渲染卡片（根据DashboardConfig配置）
-        cards.filter { it.visible }.forEach { card ->
+        // 根据设备能力过滤卡片
+        val hasWifi = uiState.deviceCapabilities.hasWifi
+        cards.filter { it.visible }.filter { card ->
+            when (card.id) {
+                CardType.WIFI_STATUS -> hasWifi // 没有WiFi就隐藏WiFi卡片
+                else -> true
+            }
+        }.forEach { card ->
             DashboardCardWrapper(
                 card = card,
                 isEditMode = isEditMode,
@@ -510,6 +517,12 @@ fun HomeContent(
                     CardType.DDNS -> {
                         DdnsCard(
                             onClick = onNavigateToDdns
+                        )
+                    }
+                    CardType.PORT_STATUS -> {
+                        PortStatusCard(
+                            uiState = uiState,
+                            onClick = onNavigateToNetwork
                         )
                     }
                 }

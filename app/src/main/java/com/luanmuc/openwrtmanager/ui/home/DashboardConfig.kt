@@ -200,6 +200,12 @@ class DashboardConfig(private val context: Context) {
                 visible = true,
                 size = CardSize.MEDIUM,
                 order = 5
+            ),
+            DashboardCard(
+                id = CardType.PORT_STATUS,
+                visible = true,
+                size = CardSize.MEDIUM,
+                order = 6
             )
         )
     }
@@ -273,7 +279,8 @@ enum class CardType(val displayName: String) {
     WIFI_STATUS("WiFi状态"),
     PLUGINS("插件管理"),
     FIREWALL("防火墙"),
-    DDNS("DDNS")
+    DDNS("DDNS"),
+    PORT_STATUS("网口状态")
 }
 
 /**

@@ -361,10 +361,15 @@ class HomeViewModel(application: Application) : BaseViewModel(application) {
                         )
                     )
 
+                    val portStatus = DebugMode.getFakePortStatus()
+                    val deviceCapabilities = DebugMode.getFakeDeviceCapabilities()
+                    
                     _uiState.value = _uiState.value.copy(
                         routerStatus = status,
                         wanStatus = wan,
                         onlineDevices = devices,
+                        portStatus = portStatus,
+                        deviceCapabilities = deviceCapabilities,
                         isLoading = false,
                         isRefreshing = false,
                         cpuHistory = cpuHistory,
@@ -414,6 +419,18 @@ class HomeViewModel(application: Application) : BaseViewModel(application) {
                     "List<DeviceInfo>",
                     devices.toTypedArray()
                 )
+
+                // 加载网口状态和设备能力
+                val portStatus = try {
+                    luciRepository.getPortStatus()
+                } catch (e: Exception) {
+                    emptyList()
+                }
+                val deviceCapabilities = try {
+                    luciRepository.detectDeviceCapabilities()
+                } catch (e: Exception) {
+                    DeviceCapabilities()
+                }
 
                 _uiState.value = _uiState.value.copy(
                     routerStatus = status.copy(
