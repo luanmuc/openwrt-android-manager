@@ -36,14 +36,8 @@ class DevicesViewModel(application: Application) : BaseViewModel(application) {
     private fun loadRouters() {
         viewModelScope.launch {
             repository.routers.collect { routers ->
-                // 如果是演示模式，添加演示路由器
-                val allRouters = if (DebugMode.isDebugMode) {
-                    listOf(DebugMode.getDemoRouter()) + routers
-                } else {
-                    routers
-                }
                 _uiState.value = _uiState.value.copy(
-                    routers = allRouters,
+                    routers = routers,
                     isLoading = false,
                     isDemoMode = DebugMode.isDebugMode
                 )

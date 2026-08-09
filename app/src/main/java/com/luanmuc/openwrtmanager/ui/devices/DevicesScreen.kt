@@ -89,6 +89,7 @@ fun DevicesScreen(
         if (uiState.routers.isEmpty() && !uiState.isLoading) {
             EmptyDevicesView(
                 onAddRouter = onAddRouter,
+                onDemoMode = { viewModel.addDemoRouter() },
                 modifier = Modifier.padding(padding)
             )
         } else {
@@ -161,6 +162,7 @@ fun DevicesScreen(
 @Composable
 fun EmptyDevicesView(
     onAddRouter: () -> Unit,
+    onDemoMode: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -201,6 +203,20 @@ fun EmptyDevicesView(
         MiPrimaryButton(
             text = stringResource(R.string.devices_add),
             onClick = onAddRouter
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(onClick = onDemoMode) {
+            Text(
+                text = "🎮 体验演示模式（无需路由器）",
+                fontSize = 14.sp,
+                color = MiTheme.Primary
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "内置模拟数据，可体验所有功能",
+            fontSize = 12.sp,
+            color = MiTheme.TextTertiary
         )
     }
 }

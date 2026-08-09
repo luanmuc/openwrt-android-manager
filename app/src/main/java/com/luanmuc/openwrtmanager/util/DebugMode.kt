@@ -2,6 +2,9 @@ package com.luanmuc.openwrtmanager.util
 
 import com.luanmuc.openwrtmanager.data.model.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlin.random.Random
 
 /**
@@ -12,9 +15,16 @@ import kotlin.random.Random
  * 或者在添加路由器页面选择"添加演示路由器"
  */
 object DebugMode {
-    // 调试模式开关
-    var isDebugMode = false
-        private set
+    // 调试模式开关（StateFlow，可监听变化）
+    private val _isDebugModeFlow = MutableStateFlow(false)
+    val isDebugModeFlow: StateFlow<Boolean> = _isDebugModeFlow.asStateFlow()
+    
+    // 调试模式开关（便捷访问）
+    var isDebugMode: Boolean
+        get() = _isDebugModeFlow.value
+        private set(value) {
+            _isDebugModeFlow.value = value
+        }
 
     // 版本号点击计数（用于隐藏入口）
     var versionClickCount = 0
