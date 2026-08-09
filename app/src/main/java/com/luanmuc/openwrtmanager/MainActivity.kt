@@ -30,6 +30,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.luanmuc.openwrtmanager.ui.addrouter.AddRouterScreen
 import com.luanmuc.openwrtmanager.ui.advanced.AdvancedScreen
+import com.luanmuc.openwrtmanager.ui.diagnostic.DiagnosticScreen
 import com.luanmuc.openwrtmanager.ui.components.MiBottomNavigation
 import com.luanmuc.openwrtmanager.ui.components.MiNavItem
 import com.luanmuc.openwrtmanager.ui.devices.DevicesScreen
@@ -62,6 +63,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Firewall : Screen("firewall", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Security, Icons.Filled.Security)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
@@ -214,6 +216,11 @@ fun MainScreen() {
                     onOpenWebView = { url, title ->
                         navController.navigate(Screen.WebViewPlugin.route + "?url=$url&title=$title")
                     }
+                )
+            }
+            composable(Screen.Diagnostic.route) {
+                DiagnosticScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.WebViewPlugin.route + "?url={url}&title={title}") { backStackEntry ->
