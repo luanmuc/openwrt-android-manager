@@ -121,16 +121,83 @@ fun RepoScreen(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.repos) { repo ->
-                        RepoItem(
-                            repo = repo,
-                            onToggle = { enabled ->
-                                viewModel.toggleRepo(repo.name, enabled)
-                            },
-                            onDelete = {
-                                viewModel.removeRepo(repo.name)
-                            }
-                        )
+                    // 按类型分组
+                    val officialRepos = uiState.repos.filter { it.repoType == com.luanmuc.openwrtmanager.data.model.RepoType.OFFICIAL_MIRROR }
+                    val thirdPartyRepos = uiState.repos.filter { it.repoType == com.luanmuc.openwrtmanager.data.model.RepoType.THIRD_PARTY }
+                    val customRepos = uiState.repos.filter { it.repoType == com.luanmuc.openwrtmanager.data.model.RepoType.CUSTOM }
+                    
+                    // 官方镜像源
+                    if (officialRepos.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "官方镜像源",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiTheme.TextSecondary,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                        items(officialRepos) { repo ->
+                            RepoItem(
+                                repo = repo,
+                                onToggle = { enabled ->
+                                    viewModel.toggleRepo(repo.name, enabled)
+                                },
+                                onDelete = {
+                                    viewModel.removeRepo(repo.name)
+                                }
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                    }
+                    
+                    // 第三方插件源
+                    if (thirdPartyRepos.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "第三方插件源",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiTheme.TextSecondary,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                        items(thirdPartyRepos) { repo ->
+                            RepoItem(
+                                repo = repo,
+                                onToggle = { enabled ->
+                                    viewModel.toggleRepo(repo.name, enabled)
+                                },
+                                onDelete = {
+                                    viewModel.removeRepo(repo.name)
+                                }
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                    }
+                    
+                    // 自定义源
+                    if (customRepos.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "自定义源",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MiTheme.TextSecondary,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
+                        items(customRepos) { repo ->
+                            RepoItem(
+                                repo = repo,
+                                onToggle = { enabled ->
+                                    viewModel.toggleRepo(repo.name, enabled)
+                                },
+                                onDelete = {
+                                    viewModel.removeRepo(repo.name)
+                                }
+                            )
+                        }
                     }
                 }
             }
