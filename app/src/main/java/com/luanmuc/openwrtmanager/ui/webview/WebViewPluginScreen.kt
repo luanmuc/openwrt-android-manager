@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.luanmuc.openwrtmanager.ui.components.MiButton
+import com.luanmuc.openwrtmanager.ui.components.MiButtonType
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiTheme
