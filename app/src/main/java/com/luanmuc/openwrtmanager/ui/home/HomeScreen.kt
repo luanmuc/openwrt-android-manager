@@ -521,7 +521,7 @@ fun HomeContent(
                     }
                     CardType.PORT_STATUS -> {
                         PortStatusCard(
-                            uiState = uiState,
+                            ports = uiState.portStatus,
                             onClick = onNavigateToNetwork
                         )
                     }

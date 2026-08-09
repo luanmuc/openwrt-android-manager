@@ -332,6 +332,7 @@ fun getCardIcon(cardType: CardType): androidx.compose.ui.graphics.vector.ImageVe
         CardType.PLUGINS -> Icons.Default.Extension
         CardType.FIREWALL -> Icons.Default.Security
         CardType.DDNS -> Icons.Default.Dns
+        CardType.PORT_STATUS -> Icons.Default.Settings
     }
 }
 
