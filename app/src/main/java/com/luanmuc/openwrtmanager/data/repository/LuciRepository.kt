@@ -1650,6 +1650,7 @@ class LuciRepository {
             apply()
         }
     }
+}
 
 
 /**
