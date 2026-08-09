@@ -181,7 +181,8 @@ data class PackageInfo(
     val size: Long = 0,
     val installed: Boolean = false,
     val category: String = "",
-    val depends: List<String> = emptyList()
+    val depends: List<String> = emptyList(),
+    val architecture: String = ""
 )
 
 /**

@@ -467,7 +467,7 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                 )
 
                 // 保存到缓存
-                cacheRepository.putCache(
+                cacheRepository.saveCache(
                     CacheRepository.KEY_SYSTEM_INFO,
                     activeRouter.id,
                     systemInfo.toString() // 简化处理
