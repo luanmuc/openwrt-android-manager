@@ -1167,31 +1167,6 @@ class LuciRepository {
      * 获取session总有效期（毫秒）
      */
     fun getSessionExpiresIn(): Long = sessionExpiresIn
-}
-
-/**
- * LuCI 异常类
- */
-class LuciException(
-    val code: Int = -1,
-    override val message: String,
-    val type: ErrorType = ErrorType.UNKNOWN
-) : Exception(message)
-
-/**
- * 错误类型枚举
- */
-enum class ErrorType {
-    NETWORK_ERROR,
-    TIMEOUT,
-    AUTH_FAILED,
-    NOT_FOUND,
-    FORBIDDEN,
-    HTTP_ERROR,
-    UNKNOWN
-}
-
-
 
     // ==================== 系统信息检测 ====================
 
@@ -1531,3 +1506,31 @@ enum class ErrorType {
             pkg.architecture.split(" ").filter { it.isNotEmpty() }
         }
     }
+
+}
+}
+
+/**
+ * LuCI 异常类
+ */
+class LuciException(
+    val code: Int = -1,
+    override val message: String,
+    val type: ErrorType = ErrorType.UNKNOWN
+) : Exception(message)
+
+/**
+ * 错误类型枚举
+ */
+enum class ErrorType {
+    NETWORK_ERROR,
+    TIMEOUT,
+    AUTH_FAILED,
+    NOT_FOUND,
+    FORBIDDEN,
+    HTTP_ERROR,
+    UNKNOWN
+}
+
+
+
