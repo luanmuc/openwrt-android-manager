@@ -426,7 +426,7 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
 
                 if (DebugMode.isDebugMode) {
                     // 调试模式：使用假数据
-                    val fakeInfo = DebugMode.getFakeSystemInfo()
+                    val fakeInfo = DebugMode.getFakeFullSystemInfo()
                     val presetRepos = luciRepository.getPresetRepos(fakeInfo)
                     _uiState.value = _uiState.value.copy(
                         systemInfo = fakeInfo,

@@ -766,7 +766,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
             try {
                 if (DebugMode.isDebugMode) {
                     _uiState.value = _uiState.value.copy(
-                        systemInfo = DebugMode.getFakeSystemInfo(),
+                        systemInfo = DebugMode.getFakeFullSystemInfo(),
                         isLoadingSystemInfo = false
                     )
                     return@launch

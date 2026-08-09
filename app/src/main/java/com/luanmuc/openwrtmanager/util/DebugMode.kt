@@ -100,8 +100,8 @@ object DebugMode {
     /**
      * 生成假的系统信息
      */
-    fun getFakeSystemInfo(): FullSystemInfo {
-        return FullSystemInfo(
+    fun getFakeSystemInfo(): SystemInfo {
+        return SystemInfo(
             hostname = "OpenWrt-Router",
             model = "Generic x86/64",
             release = "23.05.0",
@@ -1080,7 +1080,7 @@ object DebugMode {
     /**
      * 获取假的系统信息
      */
-    fun getFakeSystemInfo(): FullSystemInfo {
+    fun getFakeFullSystemInfo(): FullSystemInfo {
         return FullSystemInfo(
             hostname = "OpenWrt-Router",
             model = "Generic x86/64",
