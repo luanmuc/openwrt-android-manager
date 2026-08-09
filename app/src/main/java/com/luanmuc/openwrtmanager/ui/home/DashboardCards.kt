@@ -20,6 +20,7 @@ import com.luanmuc.openwrtmanager.data.model.PortStatus
 import com.luanmuc.openwrtmanager.data.model.RouterStatus
 import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiDimens
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 在线设备卡片
@@ -72,20 +73,20 @@ fun OnlineDevicesCard(
                         Text(
                             text = "在线设备",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "${uiState.onlineDevices.size} 台设备",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -103,21 +104,21 @@ fun OnlineDevicesCard(
                     Icon(
                         imageVector = Icons.Default.PhoneAndroid,
                         contentDescription = null,
-                        tint = MiColors.TextTertiary,
+                        tint = MiTheme.TextTertiary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = device.hostname.ifEmpty { device.ip },
                         fontSize = 13.sp,
-                        color = MiColors.TextPrimary,
+                        color = MiTheme.TextPrimary,
                         modifier = Modifier.weight(1f),
                         maxLines = 1
                     )
                     Text(
                         text = device.ip,
                         fontSize = 12.sp,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             }
@@ -127,7 +128,7 @@ fun OnlineDevicesCard(
                 Text(
                     text = "还有 ${uiState.onlineDevices.size - 3} 台设备...",
                     fontSize = 12.sp,
-                    color = MiColors.TextTertiary
+                    color = MiTheme.TextTertiary
                 )
             }
         }
@@ -185,20 +186,20 @@ fun WifiStatusCard(
                         Text(
                             text = "WiFi 状态",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "2.4G + 5G",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -213,7 +214,7 @@ fun WifiStatusCard(
                     Text(
                         text = "2.4G",
                         fontSize = 12.sp,
-                        color = MiColors.TextSecondary
+                        color = MiTheme.TextSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -227,7 +228,7 @@ fun WifiStatusCard(
                     Text(
                         text = "5G",
                         fontSize = 12.sp,
-                        color = MiColors.TextSecondary
+                        color = MiTheme.TextSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -241,14 +242,14 @@ fun WifiStatusCard(
                     Text(
                         text = "访客网络",
                         fontSize = 12.sp,
-                        color = MiColors.TextSecondary
+                        color = MiTheme.TextSecondary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "已关闭",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MiColors.TextTertiary
+                        color = MiTheme.TextTertiary
                     )
                 }
             }
@@ -307,20 +308,20 @@ fun PortStatusCard(
                         Text(
                             text = "网口状态",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "${ports.count { it.isConnected }}/${ports.size} 个已连接",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -339,7 +340,7 @@ fun PortStatusCard(
                     Text(
                         text = "还有 ${ports.size - 4} 个网口...",
                         fontSize = 12.sp,
-                        color = MiColors.TextTertiary,
+                        color = MiTheme.TextTertiary,
                         modifier = Modifier.padding(start = 4.dp)
                     )
                 }
@@ -365,7 +366,7 @@ private fun PortItem(
                 .size(8.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .background(
-                    if (port.isConnected) MiColors.Success else MiColors.TextTertiary
+                    if (port.isConnected) MiColors.Success else MiTheme.TextTertiary
                 )
         )
         Spacer(modifier = Modifier.width(10.dp))
@@ -375,7 +376,7 @@ private fun PortItem(
             text = port.displayName,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = MiColors.TextPrimary,
+            color = MiTheme.TextPrimary,
             modifier = Modifier.width(60.dp)
         )
         
@@ -389,7 +390,7 @@ private fun PortItem(
                 "未连接"
             },
             fontSize = 13.sp,
-            color = if (port.isConnected) MiColors.Success else MiColors.TextTertiary,
+            color = if (port.isConnected) MiColors.Success else MiTheme.TextTertiary,
             modifier = Modifier.weight(1f)
         )
         
@@ -398,7 +399,7 @@ private fun PortItem(
             Text(
                 text = formatPortBytes(port.rxBytes + port.txBytes),
                 fontSize = 12.sp,
-                color = MiColors.TextSecondary
+                color = MiTheme.TextSecondary
             )
         }
     }
@@ -466,20 +467,20 @@ fun PluginsCard(
                         Text(
                             text = "插件管理",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "已安装 8 个",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -537,20 +538,20 @@ fun FirewallCard(
                         Text(
                             text = "防火墙",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "3 条端口转发",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -608,20 +609,20 @@ fun DdnsCard(
                         Text(
                             text = "DDNS",
                             fontSize = 14.sp,
-                            color = MiColors.TextSecondary
+                            color = MiTheme.TextSecondary
                         )
                         Text(
                             text = "2 个配置",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MiColors.TextPrimary
+                            color = MiTheme.TextPrimary
                         )
                     }
                 }
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = null,
-                    tint = MiColors.TextTertiary,
+                    tint = MiTheme.TextTertiary,
                     modifier = Modifier.size(20.dp)
                 )
             }
