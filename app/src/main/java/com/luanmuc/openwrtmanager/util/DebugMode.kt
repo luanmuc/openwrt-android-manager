@@ -1112,5 +1112,38 @@ object DebugMode {
     fun simulateArchitectureValidation(packageName: String, architecture: String): Boolean {
         // 演示模式下默认验证通过
         return true
+
+    /**
+     * 获取假的固件信息
+     */
+    fun getFakeFirmwareInfo(): com.luanmuc.openwrtmanager.data.model.FirmwareInfo {
+        return com.luanmuc.openwrtmanager.data.model.FirmwareInfo(
+            currentVersion = "23.05.0",
+            currentBuildTime = "2024-01-15 10:30:00",
+            deviceModel = "Generic x86/64",
+            architecture = "x86_64",
+            kernelVersion = "5.15.120",
+            boardName = "x86_64"
+        )
+    }
+
+    /**
+     * 获取假的最新固件版本
+     */
+    fun getFakeLatestFirmware(): com.luanmuc.openwrtmanager.data.model.FirmwareRelease {
+        return com.luanmuc.openwrtmanager.data.model.FirmwareRelease(
+            version = "23.05.2",
+            releaseDate = "2024-03-20",
+            size = 1024 * 1024 * 16, // 16MB
+            md5 = "abc123def456",
+            sha256 = "sha256hash123456",
+            downloadUrl = "https://example.com/firmware.bin",
+            changelog = "• 修复了若干已知问题
+• 提升了系统稳定性
+• 更新了部分插件版本
+• 优化了网络性能",
+            isNewer = true
+        )
+    }
     }
 }

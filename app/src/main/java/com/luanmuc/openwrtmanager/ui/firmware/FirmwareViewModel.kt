@@ -1,0 +1,326 @@
+package com.luanmuc.openwrtmanager.ui.firmware
+
+import android.app.Application
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import com.luanmuc.openwrtmanager.data.model.FirmwareInfo
+import com.luanmuc.openwrtmanager.data.model.FirmwareRelease
+import com.luanmuc.openwrtmanager.data.model.FirmwareUpgradeState
+import com.luanmuc.openwrtmanager.data.model.FirmwareUpgradeConfig
+import com.luanmuc.openwrtmanager.util.DebugMode
+import com.luanmuc.openwrtmanager.data.model.Router
+import com.luanmuc.openwrtmanager.data.repository.LuciRepository
+import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
+
+/**
+ * 固件升级 ViewModel
+ */
+class FirmwareViewModel(application: Application) : BaseViewModel(application) {
+    private val routerRepository = RouterRepository.getInstance(application)
+    private val luciRepository = LuciRepository.getInstance(getApplication())
+
+    private val _uiState = MutableStateFlow(FirmwareUiState())
+    val uiState: StateFlow<FirmwareUiState> = _uiState.asStateFlow()
+
+    data class FirmwareUiState(
+        val firmwareInfo: FirmwareInfo = FirmwareInfo(),
+        val latestRelease: FirmwareRelease? = null,
+        val upgradeState: FirmwareUpgradeState = FirmwareUpgradeState.IDLE,
+        val downloadProgress: Int = 0,
+        val downloadSpeed: Long = 0,
+        val flashProgress: Int = 0,
+        val error: String? = null,
+        val hasRouter: Boolean = false,
+        val isChecking: Boolean = false,
+        val isDownloading: Boolean = false,
+        val isFlashing: Boolean = false,
+        val keepConfig: Boolean = true,
+        val config: FirmwareUpgradeConfig = FirmwareUpgradeConfig(),
+        val showConfirmDialog: Boolean = false
+    )
+
+    init {
+        initNetworkMonitor()
+        observeRouters()
+        loadConfig()
+    }
+
+    /**
+     * 监听路由器变化
+     */
+    private fun observeRouters() {
+        viewModelScope.launch {
+            routerRepository.activeRouterFlow.collect { router ->
+                _uiState.value = _uiState.value.copy(
+                    hasRouter = router != null
+                )
+                if (router != null) {
+                    loadFirmwareInfo()
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载升级配置
+     */
+    private fun loadConfig() {
+        val config = luciRepository.getFirmwareUpgradeConfig()
+        _uiState.value = _uiState.value.copy(
+            config = config,
+            keepConfig = config.keepConfig
+        )
+    }
+
+    /**
+     * 加载固件信息
+     */
+    fun loadFirmwareInfo() {
+        viewModelScope.launch {
+            if (DebugMode.isDebugMode) {
+                // 调试模式：使用假数据
+                val fakeInfo = DebugMode.getFakeFirmwareInfo()
+                _uiState.value = _uiState.value.copy(
+                    firmwareInfo = fakeInfo
+                )
+                return@launch
+            }
+
+            try {
+                val info = luciRepository.getFirmwareInfo()
+                _uiState.value = _uiState.value.copy(
+                    firmwareInfo = info
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "加载固件信息失败"
+                )
+            }
+        }
+    }
+
+    /**
+     * 检测最新版本
+     */
+    fun checkLatestVersion() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isChecking = true,
+                upgradeState = FirmwareUpgradeState.CHECKING,
+                error = null
+            )
+
+            if (DebugMode.isDebugMode) {
+                // 调试模式：模拟检测
+                delay(2000)
+                val fakeRelease = DebugMode.getFakeLatestFirmware()
+                _uiState.value = _uiState.value.copy(
+                    isChecking = false,
+                    latestRelease = fakeRelease,
+                    upgradeState = FirmwareUpgradeState.IDLE
+                )
+                return@launch
+            }
+
+            try {
+                val release = luciRepository.checkLatestFirmware(_uiState.value.config.repoUrl)
+                _uiState.value = _uiState.value.copy(
+                    isChecking = false,
+                    latestRelease = release,
+                    upgradeState = FirmwareUpgradeState.IDLE
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isChecking = false,
+                    error = e.message ?: "检测新版本失败",
+                    upgradeState = FirmwareUpgradeState.IDLE
+                )
+            }
+        }
+    }
+
+    /**
+     * 下载固件
+     */
+    fun downloadFirmware() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isDownloading = true,
+                upgradeState = FirmwareUpgradeState.DOWNLOADING,
+                downloadProgress = 0,
+                error = null
+            )
+
+            if (DebugMode.isDebugMode) {
+                // 调试模式：模拟下载
+                for (i in 1..100) {
+                    delay(50)
+                    _uiState.value = _uiState.value.copy(
+                        downloadProgress = i,
+                        downloadSpeed = (1024 * 1024 + Math.random() * 1024 * 1024).toLong()
+                    )
+                }
+                _uiState.value = _uiState.value.copy(
+                    isDownloading = false,
+                    upgradeState = FirmwareUpgradeState.VERIFYING
+                )
+                delay(1000)
+                _uiState.value = _uiState.value.copy(
+                    upgradeState = FirmwareUpgradeState.IDLE
+                )
+                return@launch
+            }
+
+            try {
+                val release = _uiState.value.latestRelease
+                if (release != null) {
+                    val success = luciRepository.downloadFirmware(release.downloadUrl) { progress, speed ->
+                        _uiState.value = _uiState.value.copy(
+                            downloadProgress = progress,
+                            downloadSpeed = speed
+                        )
+                    }
+                    if (success) {
+                        _uiState.value = _uiState.value.copy(
+                            isDownloading = false,
+                            upgradeState = FirmwareUpgradeState.IDLE
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isDownloading = false,
+                            error = "下载固件失败",
+                            upgradeState = FirmwareUpgradeState.FAILED
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isDownloading = false,
+                    error = e.message ?: "下载固件失败",
+                    upgradeState = FirmwareUpgradeState.FAILED
+                )
+            }
+        }
+    }
+
+    /**
+     * 开始刷写固件
+     */
+    fun startFlash() {
+        _uiState.value = _uiState.value.copy(
+            showConfirmDialog = true
+        )
+    }
+
+    /**
+     * 确认刷写固件
+     */
+    fun confirmFlash() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                showConfirmDialog = false,
+                isFlashing = true,
+                upgradeState = FirmwareUpgradeState.FLASHING,
+                flashProgress = 0,
+                error = null
+            )
+
+            if (DebugMode.isDebugMode) {
+                // 调试模式：模拟刷写
+                for (i in 1..100) {
+                    delay(100)
+                    _uiState.value = _uiState.value.copy(
+                        flashProgress = i
+                    )
+                }
+                _uiState.value = _uiState.value.copy(
+                    isFlashing = false,
+                    upgradeState = FirmwareUpgradeState.REBOOTING
+                )
+                delay(3000)
+                _uiState.value = _uiState.value.copy(
+                    upgradeState = FirmwareUpgradeState.SUCCESS
+                )
+                return@launch
+            }
+
+            try {
+                val success = luciRepository.flashFirmware(
+                    firmwarePath = "",
+                    keepConfig = _uiState.value.keepConfig
+                ) { progress ->
+                    _uiState.value = _uiState.value.copy(
+                        flashProgress = progress
+                    )
+                }
+                if (success) {
+                    _uiState.value = _uiState.value.copy(
+                        isFlashing = false,
+                        upgradeState = FirmwareUpgradeState.REBOOTING
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isFlashing = false,
+                        error = "刷写固件失败",
+                        upgradeState = FirmwareUpgradeState.FAILED
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isFlashing = false,
+                    error = e.message ?: "刷写固件失败",
+                    upgradeState = FirmwareUpgradeState.FAILED
+                )
+            }
+        }
+    }
+
+    /**
+     * 取消确认对话框
+     */
+    fun dismissConfirmDialog() {
+        _uiState.value = _uiState.value.copy(
+            showConfirmDialog = false
+        )
+    }
+
+    /**
+     * 切换保留配置
+     */
+    fun toggleKeepConfig(keep: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            keepConfig = keep
+        )
+    }
+
+    /**
+     * 更新升级配置
+     */
+    fun updateConfig(config: FirmwareUpgradeConfig) {
+        luciRepository.setFirmwareUpgradeConfig(config)
+        _uiState.value = _uiState.value.copy(
+            config = config
+        )
+    }
+
+    /**
+     * 重置状态
+     */
+    fun resetState() {
+        _uiState.value = _uiState.value.copy(
+            upgradeState = FirmwareUpgradeState.IDLE,
+            downloadProgress = 0,
+            flashProgress = 0,
+            error = null
+        )
+    }
+
+    override fun refreshData() {
+        loadFirmwareInfo()
+    }
+}

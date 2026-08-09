@@ -41,6 +41,8 @@ import com.luanmuc.openwrtmanager.ui.home.HomeScreen
 import com.luanmuc.openwrtmanager.ui.network.NetworkScreen
 import com.luanmuc.openwrtmanager.ui.plugins.PluginsScreen
 import com.luanmuc.openwrtmanager.ui.plugins.RepoScreen
+import com.luanmuc.openwrtmanager.ui.firmware.FirmwareScreen
+import com.luanmuc.openwrtmanager.ui.firmware.FirmwareViewModel
 import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
 import com.luanmuc.openwrtmanager.ui.theme.OpenWrtManagerTheme
@@ -67,6 +69,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
+    data object Firmware : Screen("firmware", 0, Icons.Filled.SystemUpdate, Icons.Filled.SystemUpdate)
 }
 
 val bottomNavItems = listOf(
@@ -192,7 +195,8 @@ fun MainScreen() {
             }
             composable(Screen.System.route) {
                 SystemScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onNavigateToFirmware = { navController.navigate(Screen.Firmware.route) }
                 )
             }
             composable(Screen.Network.route) {
@@ -232,6 +236,13 @@ fun MainScreen() {
             }
             composable(Screen.Repos.route) {
                 RepoScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Firmware.route) {
+                val viewModel: FirmwareViewModel = viewModel()
+                FirmwareScreen(
+                    viewModel = viewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

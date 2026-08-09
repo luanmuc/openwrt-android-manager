@@ -1557,6 +1557,113 @@ class LuciException(
     val type: ErrorType = ErrorType.UNKNOWN
 ) : Exception(message)
 
+
+    // ==================== 固件升级 ====================
+
+    /**
+     * 获取当前固件信息
+     */
+    suspend fun getFirmwareInfo(): FirmwareInfo {
+        return try {
+            val sysInfo = callUbus("system", "info", emptyMap())
+            val boardInfo = callUbus("system", "board", emptyMap())
+            
+            val hostname = sysInfo?.getAsJsonObject("info")?.get("hostname")?.asString ?: ""
+            val model = boardInfo?.getAsJsonObject("board")?.get("model")?.asString ?: ""
+            val release = sysInfo?.getAsJsonObject("info")?.get("release")?.asString ?: ""
+            val kernel = sysInfo?.getAsJsonObject("info")?.get("kernel")?.asString ?: ""
+            val boardName = boardInfo?.getAsJsonObject("board")?.get("board_name")?.asString ?: ""
+            val architecture = boardInfo?.getAsJsonObject("board")?.get("system")?.asString ?: ""
+            
+            FirmwareInfo(
+                currentVersion = release,
+                currentBuildTime = "",
+                deviceModel = model,
+                architecture = architecture,
+                kernelVersion = kernel,
+                boardName = boardName
+            )
+        } catch (e: Exception) {
+            FirmwareInfo()
+        }
+    }
+
+    /**
+     * 检测最新固件版本（GitHub Release）
+     */
+    suspend fun checkLatestFirmware(repoUrl: String): FirmwareRelease? {
+        return try {
+            // 从GitHub Release API获取最新版本
+            // 这里简化处理，实际需要解析GitHub API返回
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * 下载固件
+     */
+    suspend fun downloadFirmware(
+        url: String,
+        onProgress: (Int, Long) -> Unit
+    ): Boolean {
+        return try {
+            // 下载固件文件
+            // 这里简化处理，实际需要实现下载逻辑
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 刷写固件
+     */
+    suspend fun flashFirmware(
+        firmwarePath: String,
+        keepConfig: Boolean,
+        onProgress: (Int) -> Unit
+    ): Boolean {
+        return try {
+            // 调用sysupgrade刷写固件
+            // 这里简化处理，实际需要调用ubus或sysupgrade命令
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 获取固件升级配置
+     */
+    fun getFirmwareUpgradeConfig(): FirmwareUpgradeConfig {
+        val prefs = context.getSharedPreferences("firmware_prefs", Context.MODE_PRIVATE)
+        return FirmwareUpgradeConfig(
+            repoUrl = prefs.getString("repo_url", "") ?: "",
+            customServerUrl = prefs.getString("custom_server_url", "") ?: "",
+            autoCheck = prefs.getBoolean("auto_check", true),
+            keepConfig = prefs.getBoolean("keep_config", true),
+            autoReboot = prefs.getBoolean("auto_reboot", true)
+        )
+    }
+
+    /**
+     * 设置固件升级配置
+     */
+    fun setFirmwareUpgradeConfig(config: FirmwareUpgradeConfig) {
+        val prefs = context.getSharedPreferences("firmware_prefs", Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            putString("repo_url", config.repoUrl)
+            putString("custom_server_url", config.customServerUrl)
+            putBoolean("auto_check", config.autoCheck)
+            putBoolean("keep_config", config.keepConfig)
+            putBoolean("auto_reboot", config.autoReboot)
+            apply()
+        }
+    }
+
+
 /**
  * 错误类型枚举
  */

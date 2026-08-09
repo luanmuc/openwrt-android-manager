@@ -82,6 +82,7 @@ import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 @Composable
 fun SystemScreen(
     onBack: () -> Unit = {},
+    onNavigateToFirmware: () -> Unit = {},
     viewModel: SystemViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -178,7 +179,8 @@ fun SystemScreen(
                     isSwitchingRepo = uiState.isSwitchingRepo,
                     onRefresh = { viewModel.loadSystemInfo() },
                     onSwitchRepo = { viewModel.switchRepo(it) },
-                    onAutoConfigure = { viewModel.autoConfigureOfficialRepos() }
+                    onAutoConfigure = { viewModel.autoConfigureOfficialRepos() },
+                    onNavigateToFirmware = onNavigateToFirmware
                 )
             } else if (uiState.selectedTab == 1) {
                 LogsContent(
@@ -251,7 +253,8 @@ private fun SystemInfoContent(
     isSwitchingRepo: Boolean,
     onRefresh: () -> Unit,
     onSwitchRepo: (RepoPreset) -> Unit,
-    onAutoConfigure: () -> Unit
+    onAutoConfigure: () -> Unit,
+    onNavigateToFirmware: () -> Unit
 ) {
     if (isLoading) {
         MiLoadingState(text = "正在加载系统信息...")
@@ -389,6 +392,52 @@ private fun SystemInfoContent(
             }
         }
     }
+            // 固件升级入口卡片
+            item {
+                MiCard {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.SystemUpdate,
+                                contentDescription = null,
+                                tint = MiTheme.Primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "固件升级",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MiTheme.TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "检测并升级路由器固件",
+                                    fontSize = 13.sp,
+                                    color = MiTheme.TextSecondary
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Filled.ChevronRight,
+                                contentDescription = null,
+                                tint = MiTheme.TextTertiary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        MiButton(
+                            text = "进入固件升级",
+                            onClick = onNavigateToFirmware,
+                            modifier = Modifier.fillMaxWidth(),
+                            type = "Secondary"
+                        )
+                    }
+                }
+            }
+
 }
 
 /**

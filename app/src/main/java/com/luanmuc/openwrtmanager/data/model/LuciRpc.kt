@@ -365,3 +365,55 @@ enum class RepoPresetType(val displayName: String) {
     IMMORTALWRT("ImmortalWrt源"),
     CUSTOM("自定义")
 }
+
+
+/**
+ * 固件信息
+ */
+data class FirmwareInfo(
+    val currentVersion: String = "",
+    val currentBuildTime: String = "",
+    val deviceModel: String = "",
+    val architecture: String = "",
+    val kernelVersion: String = "",
+    val boardName: String = ""
+)
+
+/**
+ * 固件版本信息
+ */
+data class FirmwareRelease(
+    val version: String = "",
+    val releaseDate: String = "",
+    val size: Long = 0,
+    val md5: String = "",
+    val sha256: String = "",
+    val downloadUrl: String = "",
+    val changelog: String = "",
+    val isNewer: Boolean = false
+)
+
+/**
+ * 固件升级状态
+ */
+enum class FirmwareUpgradeState {
+    IDLE,
+    CHECKING,
+    DOWNLOADING,
+    VERIFYING,
+    FLASHING,
+    REBOOTING,
+    SUCCESS,
+    FAILED
+}
+
+/**
+ * 固件升级配置
+ */
+data class FirmwareUpgradeConfig(
+    val repoUrl: String = "",
+    val customServerUrl: String = "",
+    val autoCheck: Boolean = true,
+    val keepConfig: Boolean = true,
+    val autoReboot: Boolean = true
+)
