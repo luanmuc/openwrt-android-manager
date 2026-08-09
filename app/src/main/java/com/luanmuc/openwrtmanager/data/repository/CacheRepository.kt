@@ -21,6 +21,7 @@ class CacheRepository private constructor(
     // 缓存大小限制
     val maxCacheSize = 50  // 最大缓存条目数
     val maxCacheAge = 24 * 60 * 60 * 1000L  // 最大缓存年龄（24小时）
+    val maxTotalSizeBytes = 10 * 1024 * 1024L  // 最大总缓存大小：10MB
 
     /**
      * 获取缓存
@@ -222,6 +223,22 @@ class CacheRepository private constructor(
             cacheDao.getCacheCount(routerId)
         } catch (e: Exception) {
             0
+        }
+    }
+    
+    /**
+     * 获取缓存总大小（字节数）
+     */
+    suspend fun getCacheSizeBytes(routerId: String): Long {
+        return try {
+            val caches = cacheDao.getAllCaches(routerId)
+            var totalSize = 0L
+            for (cache in caches) {
+                totalSize += cache.value.toByteArray().size
+            }
+            totalSize
+        } catch (e: Exception) {
+            0L
         }
     }
 

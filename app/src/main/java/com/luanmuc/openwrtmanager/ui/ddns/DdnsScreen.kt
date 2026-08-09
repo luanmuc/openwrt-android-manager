@@ -39,6 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.data.model.DdnsConfig
 import com.luanmuc.openwrtmanager.ui.components.MiCard
 import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
 import com.luanmuc.openwrtmanager.ui.components.MiErrorState
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon

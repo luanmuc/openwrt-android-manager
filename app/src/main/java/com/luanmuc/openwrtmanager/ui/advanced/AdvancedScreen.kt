@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.ui.components.MiCard
 import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import com.luanmuc.openwrtmanager.ui.components.MiDivider
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiListItem

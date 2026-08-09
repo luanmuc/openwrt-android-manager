@@ -18,9 +18,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -40,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.data.model.DeviceInfo
 import com.luanmuc.openwrtmanager.ui.components.MiCard
 import com.luanmuc.openwrtmanager.ui.components.MiColors
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import com.luanmuc.openwrtmanager.ui.components.MiEmptyState
 import com.luanmuc.openwrtmanager.ui.components.MiErrorState
 import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon

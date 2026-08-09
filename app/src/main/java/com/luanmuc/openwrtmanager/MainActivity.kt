@@ -80,12 +80,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         // 系统主题变化时更新
         ThemeManager.getInstance(this).updateSystemTheme()
+    }
     }
 
 @OptIn(ExperimentalMaterial3Api::class)

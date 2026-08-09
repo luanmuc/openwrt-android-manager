@@ -20,8 +20,8 @@ import kotlinx.coroutines.launch
 abstract class BaseViewModel(application: Application) : AndroidViewModel(application) {
     
     // 网络状态
-    protected var isNetworkAvailable: Boolean = true
-    protected var isOnlineMode: Boolean = true
+    var isNetworkAvailable: Boolean = true
+    var isOnlineMode: Boolean = true
     
     // 自动刷新相关
     private var networkMonitorJob: Job? = null
