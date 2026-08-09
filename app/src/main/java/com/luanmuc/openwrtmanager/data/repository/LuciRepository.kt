@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
  * - 前台定时自动续期
  */
 class LuciRepository {
+    private lateinit var context: Context
     private var authToken: String = ""
     private var currentAddress: String = ""
     private var currentUsername: String = ""
@@ -80,6 +81,7 @@ class LuciRepository {
      * 初始化，加载持久化的session
      */
     fun init(context: Context) {
+        this.context = context.applicationContext
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         loadSessionFromPrefs()
         // 如果恢复的session有效，启动自动续期

@@ -399,7 +399,7 @@ private fun SystemInfoContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Extension,
+                                imageVector = Icons.Default.Refresh,
                                 contentDescription = null,
                                 tint = MiTheme.Primary,
                                 modifier = Modifier.size(24.dp)
@@ -420,7 +420,7 @@ private fun SystemInfoContent(
                                 )
                             }
                             Icon(
-                                imageVector = Icons.Filled.ChevronRight,
+                                imageVector = Icons.Default.ArrowForward,
                                 contentDescription = null,
                                 tint = MiTheme.TextTertiary
                             )
