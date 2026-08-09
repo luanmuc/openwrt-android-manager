@@ -1661,6 +1661,7 @@ class LuciException(
         }
     }
 
+}
 
 /**
  * 错误类型枚举
