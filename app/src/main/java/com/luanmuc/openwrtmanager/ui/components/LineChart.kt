@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -85,7 +86,7 @@ fun LineChart(
                 for (i in 0..gridLines) {
                     val y = padding + (chartHeight / gridLines) * i
                     drawLine(
-                        color = Color(0xFFE0E0E0),
+                        color = MiTheme.Divider,
                         start = Offset(padding, y),
                         end = Offset(width - padding, y),
                         strokeWidth = 1f
@@ -241,7 +242,7 @@ fun DualLineChart(
             for (i in 0..gridLines) {
                 val y = padding + (chartHeight / gridLines) * i
                 drawLine(
-                    color = Color(0xFFE0E0E0),
+                    color = MiTheme.Divider,
                     start = Offset(padding, y),
                     end = Offset(width - padding, y),
                     strokeWidth = 1f
