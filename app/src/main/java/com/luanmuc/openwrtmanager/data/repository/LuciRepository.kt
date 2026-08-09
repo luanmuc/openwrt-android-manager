@@ -1508,7 +1508,6 @@ class LuciRepository {
     }
 
 }
-}
 
 /**
  * LuCI 异常类
