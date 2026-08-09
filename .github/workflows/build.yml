@@ -131,6 +131,8 @@ jobs:
         if: steps.android-sdk-cache.outputs.cache-hit != 'true'
         run: |
           echo "=== 安装 Android Command-line Tools ==="
+          # 先清理已存在的cmdline-tools，确保干净状态
+          rm -rf $ANDROID_HOME/cmdline-tools
           mkdir -p $ANDROID_HOME/cmdline-tools
           cd /tmp
           
