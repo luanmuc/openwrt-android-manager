@@ -29,14 +29,14 @@ class RouterRepository(private val context: Context) {
      * 获取所有路由器列表（Flow）
      * 如果开启了演示模式，会自动添加演示路由器
      */
-    val routers: Flow<List<Router>> = combine(
+    val routers: Flow<List<Router>> = kotlinx.coroutines.flow.combine(
         context.dataStore.data,
         DebugMode.isDebugModeFlow
     ) { preferences, isDebugMode ->
         try {
             val json = preferences[routersKey] ?: "[]"
             val type = object : TypeToken<List<Router>>() {}.type
-            val routerList = gson.fromJson(json, type) ?: emptyList()
+            val routerList: List<Router> = gson.fromJson(json, type) ?: emptyList()
             
             // 如果开启了演示模式，添加演示路由器到列表开头
             if (isDebugMode) {
