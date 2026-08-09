@@ -253,6 +253,63 @@ object DebugMode {
     }
 
     /**
+     * 生成假的软件源列表
+     */
+    fun getFakeRepos(): List<RepoInfo> {
+        return listOf(
+            RepoInfo(
+                name = "openwrt_core",
+                url = "https://downloads.openwrt.org/releases/23.05.0/targets/x86/64/packages",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "openwrt_base",
+                url = "https://downloads.openwrt.org/releases/23.05.0/packages/x86_64/base",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "openwrt_luci",
+                url = "https://downloads.openwrt.org/releases/23.05.0/packages/x86_64/luci",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "openwrt_packages",
+                url = "https://downloads.openwrt.org/releases/23.05.0/packages/x86_64/packages",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "openwrt_routing",
+                url = "https://downloads.openwrt.org/releases/23.05.0/packages/x86_64/routing",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "openwrt_telephony",
+                url = "https://downloads.openwrt.org/releases/23.05.0/packages/x86_64/telephony",
+                enabled = true,
+                priority = 0,
+                type = "src/gz"
+            ),
+            RepoInfo(
+                name = "kenzok8",
+                url = "https://op.dllkids.xyz/packages/x86_64",
+                enabled = false,
+                priority = 10,
+                type = "src/gz"
+            )
+        )
+    }
+
+    /**
      * 模拟安装插件
      */
     suspend fun simulateInstallPackage(packageName: String): Boolean {

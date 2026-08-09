@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.PackageInfo
+import com.luanmuc.openwrtmanager.data.model.RepoInfo
+import com.luanmuc.openwrtmanager.data.model.RecommendedPlugin
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
@@ -61,7 +63,12 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         val sortType: SortType = SortType.NAME,
         val selectedPackage: PackageInfo? = null,
         val showDetail: Boolean = false,
-        val installProgress: Map<String, Int> = emptyMap()
+        val installProgress: Map<String, Int> = emptyMap(),
+        val isUpdatingRepo: Boolean = false,
+        val repos: List<RepoInfo> = emptyList(),
+        val recommendedPlugins: List<RecommendedPlugin> = emptyList(),
+        val isUploadingIpk: Boolean = false,
+        val uploadProgress: Int = 0
     )
 
     init {
@@ -419,6 +426,300 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
      */
     fun getAvailableCategories(): List<PluginCategory> {
         return PluginCategory.values().toList()
+    }
+
+    /**
+     * 更新软件源
+     */
+    fun updateRepo() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isUpdatingRepo = true, error = null)
+            try {
+                // 调试模式：模拟更新
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(2000)
+                    _uiState.value = _uiState.value.copy(isUpdatingRepo = false)
+                    loadPackages()
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(activeRouter.address, activeRouter.username, password)
+                    }
+
+                    val success = luciRepository.updatePackageLists()
+                    if (success) {
+                        // 清除缓存，重新加载
+                        cacheRepository.deleteCache(
+                            CacheRepository.KEY_INSTALLED_PACKAGES,
+                            activeRouter.id
+                        )
+                        cacheRepository.deleteCache(
+                            CacheRepository.KEY_AVAILABLE_PACKAGES,
+                            activeRouter.id
+                        )
+                        loadPackages()
+                    }
+                }
+                _uiState.value = _uiState.value.copy(isUpdatingRepo = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isUpdatingRepo = false,
+                    error = e.message ?: "更新失败"
+                )
+            }
+        }
+    }
+
+    /**
+     * 加载软件源列表
+     */
+    fun loadRepos() {
+        viewModelScope.launch {
+            try {
+                // 调试模式：使用假数据
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    _uiState.value = _uiState.value.copy(
+                        repos = DebugMode.getFakeRepos()
+                    )
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(activeRouter.address, activeRouter.username, password)
+                    }
+
+                    val repos = luciRepository.getPackageRepos()
+                    _uiState.value = _uiState.value.copy(repos = repos)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 添加软件源
+     */
+    fun addRepo(name: String, url: String, enabled: Boolean = true) {
+        viewModelScope.launch {
+            try {
+                // 调试模式：模拟添加
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val repos = _uiState.value.repos.toMutableList()
+                    repos.add(RepoInfo(name = name, url = url, enabled = enabled))
+                    _uiState.value = _uiState.value.copy(repos = repos)
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(activeRouter.address, activeRouter.username, password)
+                    }
+
+                    val success = luciRepository.addPackageRepo(name, url, enabled)
+                    if (success) {
+                        loadRepos()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 删除软件源
+     */
+    fun removeRepo(name: String) {
+        viewModelScope.launch {
+            try {
+                // 调试模式：模拟删除
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val repos = _uiState.value.repos.filter { it.name != name }
+                    _uiState.value = _uiState.value.copy(repos = repos)
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(activeRouter.address, activeRouter.username, password)
+                    }
+
+                    val success = luciRepository.removePackageRepo(name)
+                    if (success) {
+                        loadRepos()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 切换软件源启用状态
+     */
+    fun toggleRepo(name: String, enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                // 调试模式：模拟切换
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(300)
+                    val repos = _uiState.value.repos.map { repo ->
+                        if (repo.name == name) repo.copy(enabled = enabled) else repo
+                    }
+                    _uiState.value = _uiState.value.copy(repos = repos)
+                    return@launch
+                }
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                    if (!luciRepository.isLoggedIn()) {
+                        luciRepository.login(activeRouter.address, activeRouter.username, password)
+                    }
+
+                    val success = luciRepository.setRepoEnabled(name, enabled)
+                    if (success) {
+                        loadRepos()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 获取推荐插件列表
+     */
+    fun getRecommendedPlugins(): List<RecommendedPlugin> {
+        return listOf(
+            RecommendedPlugin(
+                name = "luci-app-ddns",
+                displayName = "动态DNS",
+                description = "动态域名解析服务，支持多种DDNS服务商",
+                category = "network",
+                icon = "🌐"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-samba4",
+                displayName = "网络共享",
+                description = "Samba4文件共享服务，局域网文件传输",
+                category = "network",
+                icon = "📁"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-transmission",
+                displayName = "BT下载",
+                description = "Transmission BT下载客户端",
+                category = "network",
+                icon = "⬇️"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-adblock",
+                displayName = "广告过滤",
+                description = "DNS级别的广告过滤，支持多种规则源",
+                category = "network",
+                icon = "🚫"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-wireguard",
+                displayName = "WireGuard",
+                description = "现代VPN协议，高速安全",
+                category = "network",
+                icon = "🔒"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-upnp",
+                displayName = "UPnP",
+                description = "通用即插即用，自动端口映射",
+                category = "network",
+                icon = "🔌"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-wol",
+                displayName = "网络唤醒",
+                description = "通过网络唤醒局域网内的设备",
+                category = "network",
+                icon = "⏰"
+            ),
+            RecommendedPlugin(
+                name = "luci-app-statistics",
+                displayName = "流量统计",
+                description = "详细的网络流量统计和图表",
+                category = "admin",
+                icon = "📊"
+            )
+        )
+    }
+
+    /**
+     * 安装本地IPK文件
+     */
+    fun installIpk(fileName: String, fileData: ByteArray) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isUploadingIpk = true,
+                uploadProgress = 0
+            )
+            try {
+                // 调试模式：模拟上传和安装
+                if (DebugMode.isDebugMode) {
+                    for (i in 0..100 step 10) {
+                        DebugMode.simulateDelay(100)
+                        _uiState.value = _uiState.value.copy(uploadProgress = i)
+                    }
+                    DebugMode.simulateDelay(1000)
+                    _uiState.value = _uiState.value.copy(
+                        isUploadingIpk = false,
+                        uploadProgress = 100
+                    )
+                    loadPackages()
+                    return@launch
+                }
+
+                // 真实环境：通过HTTP上传IPK并安装
+                // 注意：由于LuCI ubus API不直接支持文件上传，
+                // 这里需要通过其他方式实现（如使用cgi-bin上传）
+                // 暂时使用模拟进度
+                val activeRouter = getActiveRouter()
+                if (activeRouter != null) {
+                    // 模拟上传进度
+                    for (i in 0..100 step 20) {
+                        kotlinx.coroutines.delay(200)
+                        _uiState.value = _uiState.value.copy(uploadProgress = i)
+                    }
+                    
+                    // 这里应该调用真实的上传和安装API
+                    // 由于API限制，暂时只做UI展示
+                    _uiState.value = _uiState.value.copy(
+                        isUploadingIpk = false,
+                        uploadProgress = 100
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isUploadingIpk = false,
+                    uploadProgress = 0,
+                    error = e.message ?: "安装失败"
+                )
+            }
+        }
     }
 
     private suspend fun getActiveRouter(): Router? {

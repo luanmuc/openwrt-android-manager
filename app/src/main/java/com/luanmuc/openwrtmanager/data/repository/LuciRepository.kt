@@ -858,6 +858,110 @@ class LuciRepository {
         }
     }
 
+    /**
+     * 更新软件源列表（opkg update）
+     */
+    suspend fun updatePackageLists(): Boolean {
+        return try {
+            callUbus("luci-rpc", "updatePackageLists")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 获取软件源列表
+     */
+    suspend fun getPackageRepos(): List<RepoInfo> {
+        return try {
+            val result = callUbus("uci", "get", mapOf("config" to "opkg"))
+            val values = result["values"] as? Map<*, *>
+            val repos = mutableListOf<RepoInfo>()
+            
+            values?.forEach { (key, value) ->
+                val map = value as? Map<*, *> ?: return@forEach
+                val type = map[".type"]?.toString() ?: ""
+                if (type == "feed") {
+                    repos.add(
+                        RepoInfo(
+                            name = key.toString(),
+                            url = map["url"]?.toString() ?: "",
+                            enabled = map["enabled"]?.toString()?.toBoolean() ?: true,
+                            priority = (map["priority"] as? Number)?.toInt() ?: 0,
+                            type = map[".type"]?.toString() ?: "src/gz"
+                        )
+                    )
+                }
+            }
+            repos
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * 添加软件源
+     */
+    suspend fun addPackageRepo(name: String, url: String, enabled: Boolean = true): Boolean {
+        return try {
+            callUbus(
+                "uci", "set", mapOf(
+                    "config" to "opkg",
+                    "section" to name,
+                    "type" to "feed",
+                    "values" to mapOf(
+                        "url" to url,
+                        "enabled" to if (enabled) "1" else "0"
+                    )
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "opkg"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 删除软件源
+     */
+    suspend fun removePackageRepo(name: String): Boolean {
+        return try {
+            callUbus(
+                "uci", "delete", mapOf(
+                    "config" to "opkg",
+                    "section" to name
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "opkg"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 启用/禁用软件源
+     */
+    suspend fun setRepoEnabled(name: String, enabled: Boolean): Boolean {
+        return try {
+            callUbus(
+                "uci", "set", mapOf(
+                    "config" to "opkg",
+                    "section" to name,
+                    "options" to mapOf(
+                        "enabled" to if (enabled) "1" else "0"
+                    )
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "opkg"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     // ========== 防火墙/端口转发 ==========
 
     /**

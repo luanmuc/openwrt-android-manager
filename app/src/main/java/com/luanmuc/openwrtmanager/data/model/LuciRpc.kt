@@ -185,6 +185,28 @@ data class PackageInfo(
 )
 
 /**
+ * 软件源信息
+ */
+data class RepoInfo(
+    val name: String = "",
+    val url: String = "",
+    val enabled: Boolean = true,
+    val priority: Int = 0,
+    val type: String = "src/gz"
+)
+
+/**
+ * 推荐插件信息
+ */
+data class RecommendedPlugin(
+    val name: String = "",
+    val displayName: String = "",
+    val description: String = "",
+    val category: String = "",
+    val icon: String = ""
+)
+
+/**
  * 端口转发规则
  */
 data class PortForwardRule(

@@ -40,6 +40,7 @@ import com.luanmuc.openwrtmanager.ui.firewall.FirewallScreen
 import com.luanmuc.openwrtmanager.ui.home.HomeScreen
 import com.luanmuc.openwrtmanager.ui.network.NetworkScreen
 import com.luanmuc.openwrtmanager.ui.plugins.PluginsScreen
+import com.luanmuc.openwrtmanager.ui.plugins.RepoScreen
 import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
 import com.luanmuc.openwrtmanager.ui.theme.OpenWrtManagerTheme
@@ -64,6 +65,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Repos : Screen("repos", 0, Icons.Filled.Storage, Icons.Filled.Storage)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
@@ -220,6 +222,11 @@ fun MainScreen() {
             }
             composable(Screen.Diagnostic.route) {
                 DiagnosticScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Repos.route) {
+                RepoScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
