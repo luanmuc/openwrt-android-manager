@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.luanmuc.openwrtmanager.data.model.LogEntry
 import com.luanmuc.openwrtmanager.data.model.ProcessInfo
-import com.luanmuc.openwrtmanager.data.model.SystemInfo
+import com.luanmuc.openwrtmanager.data.model.FullSystemInfo
 import com.luanmuc.openwrtmanager.data.model.PackageManagerType
 import com.luanmuc.openwrtmanager.data.model.RepoPreset
 import com.luanmuc.openwrtmanager.util.DebugMode
@@ -50,7 +50,7 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
         val memoryUsage: Float = 0f,
         val cpuHistory: List<Float> = emptyList(),
         val memoryHistory: List<Float> = emptyList(),
-        val systemInfo: SystemInfo = SystemInfo(),
+        val systemInfo: FullSystemInfo = FullSystemInfo(),
         val isLoadingSystemInfo: Boolean = false,
         val installedPackagesCount: Int = 0,
         val availablePackagesCount: Int = 0,

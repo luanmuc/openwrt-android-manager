@@ -1198,7 +1198,7 @@ enum class ErrorType {
     /**
      * 获取完整的系统信息
      */
-    suspend fun getFullSystemInfo(): SystemInfo {
+    suspend fun getFullSystemInfo(): FullSystemInfo {
         return try {
             val sysInfo = getSystemInfo()
             val boardInfo = getBoardInfo()
@@ -1330,7 +1330,7 @@ enum class ErrorType {
     /**
      * 获取预设软件源列表
      */
-    fun getPresetRepos(systemInfo: SystemInfo): List<RepoPreset> {
+    fun getPresetRepos(systemInfo: FullSystemInfo): List<RepoPreset> {
         val arch = when (systemInfo.architecture) {
             "x86_64" -> ArchitectureType.X86_64
             "aarch64" -> ArchitectureType.AARCH64
@@ -1398,7 +1398,7 @@ enum class ErrorType {
     /**
      * 自动配置官方软件源
      */
-    suspend fun autoConfigureOfficialRepos(systemInfo: SystemInfo): Boolean {
+    suspend fun autoConfigureOfficialRepos(systemInfo: FullSystemInfo): Boolean {
         return try {
             val arch = when (systemInfo.architecture) {
                 "x86_64" -> ArchitectureType.X86_64
@@ -1441,7 +1441,7 @@ enum class ErrorType {
     /**
      * 切换软件源
      */
-    suspend fun switchRepo(preset: RepoPreset, systemInfo: SystemInfo): Boolean {
+    suspend fun switchRepo(preset: RepoPreset, systemInfo: FullSystemInfo): Boolean {
         return try {
             // 备份原有配置
             backupOpkgConfig()
@@ -1498,7 +1498,7 @@ enum class ErrorType {
     /**
      * 验证插件架构是否匹配
      */
-    fun validatePackageArchitecture(pkg: PackageInfo, systemInfo: SystemInfo): Boolean {
+    fun validatePackageArchitecture(pkg: PackageInfo, systemInfo: FullSystemInfo): Boolean {
         return try {
             val arch = when (systemInfo.architecture) {
                 "x86_64" -> ArchitectureType.X86_64

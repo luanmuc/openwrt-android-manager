@@ -302,7 +302,7 @@ data class CpuDataPoint(
 /**
  * 系统信息
  */
-data class SystemInfo(
+data class FullSystemInfo(
     val hostname: String = "",
     val model: String = "",
     val firmwareVersion: String = "",

@@ -51,7 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.data.model.LogEntry
 import com.luanmuc.openwrtmanager.data.model.ProcessInfo
-import com.luanmuc.openwrtmanager.data.model.SystemInfo
+import com.luanmuc.openwrtmanager.data.model.FullSystemInfo
 import com.luanmuc.openwrtmanager.data.model.RepoPreset
 import com.luanmuc.openwrtmanager.ui.components.MiCard
 import com.luanmuc.openwrtmanager.ui.components.MiButton
@@ -241,7 +241,7 @@ fun LogsContent(
  */
 @Composable
 private fun SystemInfoContent(
-    systemInfo: SystemInfo,
+    systemInfo: FullSystemInfo,
     isLoading: Boolean,
     installedPackagesCount: Int,
     availablePackagesCount: Int,
@@ -774,7 +774,7 @@ fun SystemStatusOverview(
  */
 @Composable
 private fun SystemInfoContent(
-    systemInfo: SystemInfo,
+    systemInfo: FullSystemInfo,
     isLoading: Boolean,
     installedPackagesCount: Int,
     availablePackagesCount: Int,

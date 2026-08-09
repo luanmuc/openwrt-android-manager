@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.PackageInfo
 import com.luanmuc.openwrtmanager.data.model.RepoInfo
 import com.luanmuc.openwrtmanager.data.model.RecommendedPlugin
-import com.luanmuc.openwrtmanager.data.model.SystemInfo
+import com.luanmuc.openwrtmanager.data.model.FullSystemInfo
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
@@ -70,7 +70,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         val recommendedPlugins: List<RecommendedPlugin> = emptyList(),
         val isUploadingIpk: Boolean = false,
         val uploadProgress: Int = 0,
-        val systemInfo: SystemInfo = SystemInfo(),
+        val systemInfo: FullSystemInfo = FullSystemInfo(),
         val isLoadingSystemInfo: Boolean = false,
         val architectureWarning: String? = null
     )
