@@ -49,7 +49,9 @@ class HomeViewModel(application: Application) : BaseViewModel(application) {
         val uploadSpeed: Long = 0,
         val isFromCache: Boolean = false,
         val cacheTimestamp: Long? = null,
-        val isOfflineMode: Boolean = false
+        val isOfflineMode: Boolean = false,
+        val portStatus: List<PortStatus> = emptyList(),
+        val deviceCapabilities: DeviceCapabilities = DeviceCapabilities()
     )
 
     init {

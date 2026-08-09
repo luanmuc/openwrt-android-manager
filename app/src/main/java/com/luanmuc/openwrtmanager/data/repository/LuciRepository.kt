@@ -885,13 +885,15 @@ class LuciRepository {
                 val map = value as? Map<*, *> ?: return@forEach
                 val type = map[".type"]?.toString() ?: ""
                 if (type == "feed") {
+                    val name = key.toString()
                     repos.add(
                         RepoInfo(
-                            name = key.toString(),
+                            name = name,
                             url = map["url"]?.toString() ?: "",
                             enabled = map["enabled"]?.toString()?.toBoolean() ?: true,
                             priority = (map["priority"] as? Number)?.toInt() ?: 0,
-                            type = map[".type"]?.toString() ?: "src/gz"
+                            type = map[".type"]?.toString() ?: "src/gz",
+                            repoType = getRepoType(name)
                         )
                     )
                 }
@@ -1431,10 +1433,13 @@ class LuciRepository {
             // 备份原有配置
             backupOpkgConfig()
 
-            // 配置官方源
+            // 获取当前源列表
+            val currentRepos = getPackageRepos()
+
+            // 配置官方源（追加模式）
             val baseUrl = "https://downloads.openwrt.org/releases/$version/packages/${arch.opkgArch}"
 
-            // 添加各个源
+            // 添加各个源（已存在则跳过）
             val repos = listOf(
                 "base" to "$baseUrl/base",
                 "luci" to "$baseUrl/luci",
@@ -1444,7 +1449,9 @@ class LuciRepository {
             )
 
             for ((name, url) in repos) {
-                addPackageRepo(name, url, true)
+                if (currentRepos.none { it.name == name }) {
+                    addPackageRepo(name, url, true)
+                }
             }
 
             true
@@ -1455,33 +1462,50 @@ class LuciRepository {
     }
 
     /**
-     * 切换软件源
+     * 切换官方镜像源（追加模式，保留原有源）
+     * 只切换官方镜像源的URL，不删除第三方源
      */
-    suspend fun switchRepo(preset: RepoPreset, systemInfo: FullSystemInfo): Boolean {
+    suspend fun switchMirrorRepo(preset: RepoPreset, systemInfo: FullSystemInfo): Boolean {
         return try {
             // 备份原有配置
             backupOpkgConfig()
 
             // 获取当前源列表
             val currentRepos = getPackageRepos()
-
-            // 删除所有现有源
-            for (repo in currentRepos) {
-                removePackageRepo(repo.name)
-            }
-
-            // 添加新源
+            
+            // 官方源的名称列表
+            val officialRepoNames = listOf("base", "luci", "packages", "routing", "telephony")
+            
+            // 检查官方源是否存在
+            val hasOfficialRepos = currentRepos.any { it.name in officialRepoNames }
+            
             val baseUrl = preset.baseUrl
-            val repos = listOf(
-                "base" to "$baseUrl/base",
-                "luci" to "$baseUrl/luci",
-                "packages" to "$baseUrl/packages",
-                "routing" to "$baseUrl/routing",
-                "telephony" to "$baseUrl/telephony"
-            )
-
-            for ((name, url) in repos) {
-                addPackageRepo(name, url, true)
+            
+            if (hasOfficialRepos) {
+                // 如果已有官方源，更新它们的URL并启用
+                for (repoName in officialRepoNames) {
+                    val existingRepo = currentRepos.find { it.name == repoName }
+                    val url = "$baseUrl/$repoName"
+                    if (existingRepo != null) {
+                        // 更新现有源的URL和状态
+                        updatePackageRepo(repoName, url, true)
+                    } else {
+                        // 添加缺失的官方源
+                        addPackageRepo(repoName, url, true)
+                    }
+                }
+            } else {
+                // 如果没有官方源，添加全套官方源
+                val repos = listOf(
+                    "base" to "$baseUrl/base",
+                    "luci" to "$baseUrl/luci",
+                    "packages" to "$baseUrl/packages",
+                    "routing" to "$baseUrl/routing",
+                    "telephony" to "$baseUrl/telephony"
+                )
+                for ((name, url) in repos) {
+                    addPackageRepo(name, url, true)
+                }
             }
 
             // 更新软件源
@@ -1490,6 +1514,78 @@ class LuciRepository {
             true
         } catch (e: Exception) {
             e.printStackTrace()
+            false
+        }
+    }
+    
+    /**
+     * 添加第三方插件源（追加模式）
+     */
+    suspend fun addThirdPartyRepo(preset: RepoPreset, systemInfo: FullSystemInfo): Boolean {
+        return try {
+            // 备份原有配置
+            backupOpkgConfig()
+
+            // 获取当前源列表
+            val currentRepos = getPackageRepos()
+            
+            // 检查是否已存在同名源
+            if (currentRepos.any { it.name == preset.id }) {
+                // 已存在，启用它
+                setRepoEnabled(preset.id, true)
+                return true
+            }
+            
+            // 添加第三方源
+            val arch = when (systemInfo.architecture) {
+                "x86_64" -> ArchitectureType.X86_64
+                "aarch64" -> ArchitectureType.AARCH64
+                "armv7" -> ArchitectureType.ARMV7
+                "mipsel" -> ArchitectureType.MIPSEL
+                "mips" -> ArchitectureType.MIPS
+                else -> return false
+            }
+            
+            val url = "${preset.baseUrl}/${arch.opkgArch}"
+            addPackageRepo(preset.id, url, true)
+
+            // 更新软件源
+            updatePackageLists()
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+    
+    /**
+     * 移除第三方插件源
+     */
+    suspend fun removeThirdPartyRepo(presetId: String): Boolean {
+        return try {
+            // 备份原有配置
+            backupOpkgConfig()
+            
+            removePackageRepo(presetId)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+    
+    /**
+     * 更新软件源配置
+     */
+    private suspend fun updatePackageRepo(name: String, url: String, enabled: Boolean): Boolean {
+        return try {
+            // 先删除旧的
+            removePackageRepo(name)
+            // 再添加新的
+            addPackageRepo(name, url, enabled)
+            true
+        } catch (e: Exception) {
             false
         }
     }
@@ -1506,6 +1602,36 @@ class LuciRepository {
             true
         } catch (e: Exception) {
             false
+        }
+    }
+    
+    /**
+     * 恢复opkg配置
+     */
+    suspend fun restoreOpkgConfig(): Boolean {
+        return try {
+            callUbus("file", "exec", mapOf(
+                "command" to "/bin/sh",
+                "params" to listOf("-c", "cp /etc/opkg/customfeeds.conf.bak /etc/opkg/customfeeds.conf")
+            ))
+            updatePackageLists()
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    /**
+     * 获取源类型
+     */
+    fun getRepoType(repoName: String): RepoType {
+        val officialNames = listOf("base", "luci", "packages", "routing", "telephony")
+        val thirdPartyIds = listOf("kenzok8", "lienol", "immortalwrt")
+        
+        return when {
+            repoName in officialNames -> RepoType.OFFICIAL_MIRROR
+            repoName in thirdPartyIds -> RepoType.THIRD_PARTY
+            else -> RepoType.CUSTOM
         }
     }
 
@@ -1822,6 +1948,147 @@ class LuciRepository {
         )
 
         return successCount
+    }
+
+    // ==================== 网口状态 ====================
+
+    /**
+     * 获取网口状态列表
+     */
+    suspend fun getPortStatus(): List<PortStatus> {
+        return try {
+            val result = callUbus("network.device", "status")
+            val ports = mutableListOf<PortStatus>()
+            
+            // 解析所有网络设备
+            for ((key, value) in result) {
+                val deviceMap = value as? Map<*, *> ?: continue
+                val name = key
+                
+                // 跳过非物理接口
+                if (name.startsWith("br-") || name.startsWith("eth0.") || name == "lo") {
+                    continue
+                }
+                
+                val isUp = deviceMap["up"] as? Boolean ?: false
+                val speed = (deviceMap["speed"] as? Number)?.toInt() ?: 0
+                val duplex = deviceMap["duplex"]?.toString() ?: ""
+                val macAddress = deviceMap["macaddr"]?.toString() ?: ""
+                
+                val statistics = deviceMap["statistics"] as? Map<*, *>
+                val rxBytes = (statistics?.get("rx_bytes") as? Number)?.toLong() ?: 0L
+                val txBytes = (statistics?.get("tx_bytes") as? Number)?.toLong() ?: 0L
+                val rxPackets = (statistics?.get("rx_packets") as? Number)?.toLong() ?: 0L
+                val txPackets = (statistics?.get("tx_packets") as? Number)?.toLong() ?: 0L
+                
+                // 判断网口类型
+                val type = when {
+                    name == "eth0" || name == "wan" || name.contains("wan", true) -> PortType.WAN
+                    name.startsWith("eth") && name != "eth0" -> PortType.LAN
+                    name.startsWith("wlan") || name.startsWith("wifi") -> PortType.WIFI
+                    name.startsWith("sfp") -> PortType.SFP
+                    name.startsWith("usb") -> PortType.USB
+                    else -> PortType.UNKNOWN
+                }
+                
+                // 生成显示名称
+                val displayName = when (type) {
+                    PortType.WAN -> "WAN"
+                    PortType.LAN -> {
+                        val num = name.filter { it.isDigit() }.toIntOrNull() ?: 1
+                        "LAN$num"
+                    }
+                    PortType.WIFI -> name.uppercase()
+                    PortType.SFP -> "SFP"
+                    PortType.USB -> name.uppercase()
+                    PortType.UNKNOWN -> name
+                }
+                
+                ports.add(
+                    PortStatus(
+                        name = name,
+                        displayName = displayName,
+                        type = type,
+                        isConnected = isUp,
+                        speed = speed,
+                        duplex = duplex,
+                        rxBytes = rxBytes,
+                        txBytes = txBytes,
+                        rxPackets = rxPackets,
+                        txPackets = txPackets,
+                        macAddress = macAddress
+                    )
+                )
+            }
+            
+            // 按类型排序：WAN在前，然后LAN，然后其他
+            ports.sortedWith(compareBy(
+                { it.type.ordinal },
+                { it.displayName }
+            ))
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // ==================== 设备能力检测 ====================
+
+    /**
+     * 检测设备能力
+     */
+    suspend fun detectDeviceCapabilities(): DeviceCapabilities {
+        return try {
+            val wifiDevices = try {
+                getWifiDevices()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            
+            val portStatus = try {
+                getPortStatus()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            
+            val systemInfo = try {
+                getFullSystemInfo()
+            } catch (e: Exception) {
+                FullSystemInfo()
+            }
+            
+            val hasWifi = wifiDevices.isNotEmpty()
+            val hasUsb = portStatus.any { it.type == PortType.USB }
+            val hasSfp = portStatus.any { it.type == PortType.SFP }
+            
+            val wanCount = portStatus.count { it.type == PortType.WAN }
+            val lanCount = portStatus.count { it.type == PortType.LAN }
+            
+            DeviceCapabilities(
+                hasWifi = hasWifi,
+                hasUsb = hasUsb,
+                hasSfp = hasSfp,
+                wifiInterfaceCount = wifiDevices.size,
+                lanPortCount = lanCount,
+                wanPortCount = wanCount,
+                totalPortCount = portStatus.size,
+                packageManager = systemInfo.packageManager,
+                architecture = systemInfo.architecture
+            )
+        } catch (e: Exception) {
+            DeviceCapabilities()
+        }
+    }
+
+    /**
+     * 检查是否有WiFi接口
+     */
+    suspend fun hasWifiInterface(): Boolean {
+        return try {
+            val wifiDevices = getWifiDevices()
+            wifiDevices.isNotEmpty()
+        } catch (e: Exception) {
+            false
+        }
     }
 }
 

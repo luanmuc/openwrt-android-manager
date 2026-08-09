@@ -193,8 +193,18 @@ data class RepoInfo(
     val url: String = "",
     val enabled: Boolean = true,
     val priority: Int = 0,
-    val type: String = "src/gz"
+    val type: String = "src/gz",
+    val repoType: RepoType = RepoType.CUSTOM
 )
+
+/**
+ * 软件源类型
+ */
+enum class RepoType(val displayName: String) {
+    OFFICIAL_MIRROR("官方镜像源"),
+    THIRD_PARTY("第三方插件源"),
+    CUSTOM("自定义源")
+}
 
 /**
  * 推荐插件信息
@@ -416,4 +426,49 @@ data class FirmwareUpgradeConfig(
     val autoCheck: Boolean = true,
     val keepConfig: Boolean = true,
     val autoReboot: Boolean = true
+)
+
+
+/**
+ * 网口状态
+ */
+data class PortStatus(
+    val name: String = "",
+    val displayName: String = "",
+    val type: PortType = PortType.LAN,
+    val isConnected: Boolean = false,
+    val speed: Int = 0, // 速率 Mbps
+    val duplex: String = "", // 全双工/半双工
+    val rxBytes: Long = 0,
+    val txBytes: Long = 0,
+    val rxPackets: Long = 0,
+    val txPackets: Long = 0,
+    val macAddress: String = ""
+)
+
+/**
+ * 网口类型
+ */
+enum class PortType(val displayName: String) {
+    WAN("WAN"),
+    LAN("LAN"),
+    WIFI("WiFi"),
+    SFP("SFP"),
+    USB("USB"),
+    UNKNOWN("未知")
+}
+
+/**
+ * 设备能力检测
+ */
+data class DeviceCapabilities(
+    val hasWifi: Boolean = false,
+    val hasUsb: Boolean = false,
+    val hasSfp: Boolean = false,
+    val wifiInterfaceCount: Int = 0,
+    val lanPortCount: Int = 0,
+    val wanPortCount: Int = 0,
+    val totalPortCount: Int = 0,
+    val packageManager: PackageManagerType = PackageManagerType.UNKNOWN,
+    val architecture: String = ""
 )
