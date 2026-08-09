@@ -482,7 +482,6 @@ fun SettingsList() {
                             modifier = Modifier.size(22.dp)
                         )
                     },
-                    enabled = autoRefreshEnabled,
                     onClick = { if (autoRefreshEnabled) showRefreshIntervalDialog = true }
                 )
             }
