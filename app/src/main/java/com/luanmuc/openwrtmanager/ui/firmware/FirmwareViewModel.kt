@@ -55,11 +55,11 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
      */
     private fun observeRouters() {
         viewModelScope.launch {
-            routerRepository.activeRouterFlow.collect { router ->
+            routerRepository.routers.collect { routers ->
                 _uiState.value = _uiState.value.copy(
-                    hasRouter = router != null
+                    hasRouter = routers.isNotEmpty()
                 )
-                if (router != null) {
+                if (routers.isNotEmpty()) {
                     loadFirmwareInfo()
                 }
             }

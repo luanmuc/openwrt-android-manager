@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.luanmuc.openwrtmanager.ui.components.*
+import com.luanmuc.openwrtmanager.ui.components.MiButtonType
+import com.luanmuc.openwrtmanager.ui.theme.MiTheme
 import com.luanmuc.openwrtmanager.data.model.FirmwareUpgradeState
 import com.luanmuc.openwrtmanager.ui.theme.MiTheme
 
@@ -25,8 +28,8 @@ import com.luanmuc.openwrtmanager.ui.theme.MiTheme
  */
 @Composable
 fun FirmwareScreen(
-    viewModel: FirmwareViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit = {},
+    viewModel: FirmwareViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -34,7 +37,15 @@ fun FirmwareScreen(
         topBar = {
             MiTopAppBar(
                 title = "固件升级",
-                onBackClick = onBack,
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "返回",
+                            tint = MiTheme.TextPrimary
+                        )
+                    }
+                },
                 actions = {
                     IconButton(onClick = { viewModel.checkLatestVersion() }) {
                         Icon(
@@ -328,7 +339,7 @@ private fun NoUpdateCard(
             MiButton(
                 text = "检测更新",
                 onClick = onCheckClick,
-                type = "Secondary"
+                type = MiButtonType.Secondary
             )
         }
     }
@@ -576,7 +587,7 @@ private fun LocalUpgradeCard(
             MiButton(
                 text = "选择固件文件",
                 onClick = onSelectFile,
-                type = "Secondary",
+                type = MiButtonType.Secondary,
                 modifier = Modifier.fillMaxWidth()
             )
         }

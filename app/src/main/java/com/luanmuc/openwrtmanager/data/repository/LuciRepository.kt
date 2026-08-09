@@ -1546,8 +1546,6 @@ class LuciRepository {
         }
     }
 
-}
-
 /**
  * LuCI 异常类
  */
@@ -1674,6 +1672,8 @@ enum class ErrorType {
     NOT_FOUND,
     FORBIDDEN,
     HTTP_ERROR,
+
+}
     UNKNOWN
 }
 

@@ -69,7 +69,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
-    data object Firmware : Screen("firmware", 0, Icons.Filled.SystemUpdate, Icons.Filled.SystemUpdate)
+    data object Firmware : Screen("firmware", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
 val bottomNavItems = listOf(
@@ -240,9 +240,7 @@ fun MainScreen() {
                 )
             }
             composable(Screen.Firmware.route) {
-                val viewModel: FirmwareViewModel = viewModel()
                 FirmwareScreen(
-                    viewModel = viewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
