@@ -361,5 +361,7 @@ enum class RepoPresetType(val displayName: String) {
     USTC("中科大源"),
     ALIYUN("阿里云源"),
     KENZOK8("kenzok8源"),
+    LIENOL("lienol源"),
+    IMMORTALWRT("ImmortalWrt源"),
     CUSTOM("自定义")
 }

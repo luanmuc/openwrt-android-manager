@@ -1316,6 +1316,17 @@ class LuciRepository {
         }
 
         val version = systemInfo.firmwareVersion
+        val isApk = systemInfo.packageManager == PackageManagerType.APK
+        
+        // 根据包管理器选择架构字符串
+        val archStr = if (isApk) arch.apkArch else arch.opkgArch
+        
+        // 基础URL前缀（根据包管理器不同）
+        val basePath = if (isApk) {
+            "releases/$version/packages/$archStr"
+        } else {
+            "releases/$version/packages/$archStr"
+        }
 
         return listOf(
             // 官方源
@@ -1323,7 +1334,7 @@ class LuciRepository {
                 id = "official",
                 name = "官方源",
                 description = "OpenWrt官方软件源",
-                baseUrl = "https://downloads.openwrt.org/releases/$version/packages/${arch.opkgArch}",
+                baseUrl = "https://downloads.openwrt.org/$basePath",
                 type = RepoPresetType.OFFICIAL,
                 supportedArchitectures = ArchitectureType.values().toList()
             ),
@@ -1331,8 +1342,8 @@ class LuciRepository {
             RepoPreset(
                 id = "tsinghua",
                 name = "清华源",
-                description = "清华大学TUNA镜像源",
-                baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/$version/packages/${arch.opkgArch}",
+                description = "清华大学TUNA镜像源，国内访问速度快",
+                baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/openwrt/$basePath",
                 type = RepoPresetType.TSINGHUA,
                 supportedArchitectures = ArchitectureType.values().toList()
             ),
@@ -1340,8 +1351,8 @@ class LuciRepository {
             RepoPreset(
                 id = "ustc",
                 name = "中科大源",
-                description = "中国科学技术大学镜像源",
-                baseUrl = "https://mirrors.ustc.edu.cn/openwrt/releases/$version/packages/${arch.opkgArch}",
+                description = "中国科学技术大学镜像源，同步及时",
+                baseUrl = "https://mirrors.ustc.edu.cn/openwrt/$basePath",
                 type = RepoPresetType.USTC,
                 supportedArchitectures = ArchitectureType.values().toList()
             ),
@@ -1349,22 +1360,50 @@ class LuciRepository {
             RepoPreset(
                 id = "aliyun",
                 name = "阿里云源",
-                description = "阿里云镜像源",
-                baseUrl = "https://mirrors.aliyun.com/openwrt/releases/$version/packages/${arch.opkgArch}",
+                description = "阿里云镜像源，全国节点覆盖",
+                baseUrl = "https://mirrors.aliyun.com/openwrt/$basePath",
                 type = RepoPresetType.ALIYUN,
                 supportedArchitectures = ArchitectureType.values().toList()
             ),
             // kenzok8源
             RepoPreset(
                 id = "kenzok8",
-                name = "kenzok8源",
-                description = "第三方软件源，包含更多插件",
-                baseUrl = "https://op.dllkids.xyz/packages/${arch.opkgArch}",
+                name = "kenzok8插件源",
+                description = "第三方插件源，包含大量常用插件",
+                baseUrl = "https://op.dllkids.xyz/packages/$archStr",
                 type = RepoPresetType.KENZOK8,
                 supportedArchitectures = listOf(
                     ArchitectureType.X86_64,
                     ArchitectureType.AARCH64,
                     ArchitectureType.ARMV7
+                )
+            ),
+            // lienol源
+            RepoPreset(
+                id = "lienol",
+                name = "lienol插件源",
+                description = "lienol维护的第三方插件源",
+                baseUrl = "https://op.supes.top/packages/$archStr",
+                type = RepoPresetType.LIENOL,
+                supportedArchitectures = listOf(
+                    ArchitectureType.X86_64,
+                    ArchitectureType.AARCH64,
+                    ArchitectureType.ARMV7,
+                    ArchitectureType.MIPSEL
+                )
+            ),
+            // ImmortalWrt源
+            RepoPreset(
+                id = "immortalwrt",
+                name = "ImmortalWrt源",
+                description = "ImmortalWrt项目软件源",
+                baseUrl = "https://mirrors.tuna.tsinghua.edu.cn/immortalwrt/releases/$version/packages/$archStr",
+                type = RepoPresetType.IMMORTALWRT,
+                supportedArchitectures = listOf(
+                    ArchitectureType.X86_64,
+                    ArchitectureType.AARCH64,
+                    ArchitectureType.ARMV7,
+                    ArchitectureType.MIPSEL
                 )
             )
         )
