@@ -18,7 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -107,7 +107,7 @@ fun RepoScreen(
                 MiEmptyState(
                     icon = {
                         Icon(
-                            Icons.Default.Extension,
+                            Icons.Default.Info,
                             contentDescription = null,
                             tint = MiTheme.TextTertiary,
                             modifier = Modifier.size(40.dp)
@@ -214,7 +214,7 @@ private fun RepoItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    Icons.Default.Extension,
+                    Icons.Default.Info,
                     contentDescription = null,
                     tint = MiTheme.Primary,
                     modifier = Modifier.size(24.dp)

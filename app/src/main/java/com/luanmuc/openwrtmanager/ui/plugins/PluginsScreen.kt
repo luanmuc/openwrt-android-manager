@@ -336,9 +336,7 @@ fun PluginsScreen(
                     onInstall = { viewModel.installPackage(uiState.selectedPackage!!.name) },
                     onRemove = { viewModel.removePackage(uiState.selectedPackage!!.name) },
                     onOpen = {
-                        val pluginName = uiState.selectedPackage!!.name.removePrefix("luci-app-")
-                        val url = "/cgi-bin/luci/admin/" + pluginName.replace("-", "/")
-                        onPluginClick?.invoke(url, uiState.selectedPackage!!.description.ifEmpty { uiState.selectedPackage!!.name })
+                        onPluginClick(uiState.selectedPackage!!)
                         scope.launch { sheetState.hide() }
                     }
                 )
