@@ -6,7 +6,6 @@ import com.luanmuc.openwrtmanager.data.model.DeviceTraffic
 import com.luanmuc.openwrtmanager.data.model.TrafficHistoryPoint
 import com.luanmuc.openwrtmanager.data.model.TrafficStats
 import com.luanmuc.openwrtmanager.util.DebugMode
-import com.luanmuc.openwrtmanager.util.formatSize
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.max
 
