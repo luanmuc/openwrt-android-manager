@@ -24,7 +24,7 @@ fun Modifier.miCard(
     padding: androidx.compose.ui.unit.Dp = MiDimens.cardPadding
 ): Modifier = this
     .clip(shape)
-    .background(MiTheme.colors.cardBackground)
+    .background(MiTheme.CardBackground)
     .padding(padding)
 
 /**
@@ -66,7 +66,7 @@ fun Modifier.itemSpacing(
  * 小米风格分割线
  */
 fun Modifier.miDivider(): Modifier = this
-    .background(MiTheme.colors.divider)
+    .background(MiTheme.Divider)
 
 /**
  * 小米风格按钮修饰符
@@ -75,7 +75,7 @@ fun Modifier.miButton(
     shape: Shape = MiTheme.shapes.buttonShape,
 ): Modifier = this
     .clip(shape)
-    .background(MiTheme.colors.primary)
+    .background(MiTheme.Primary)
 
 /**
  * 小米风格输入框修饰符
@@ -84,4 +84,4 @@ fun Modifier.miInput(
     shape: Shape = MiTheme.shapes.inputShape,
 ): Modifier = this
     .clip(shape)
-    .background(MiTheme.colors.cardBackground)
+    .background(MiTheme.CardBackground)
