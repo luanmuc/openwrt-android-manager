@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,8 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.luanmuc.openwrtmanager.ui.theme.MiDimens
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
+import com.luanmuc.openwrtmanager.ui.components.MiDimens
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 空状态组件
@@ -174,7 +176,7 @@ fun OfflineState(
     description: String = "请检查网络连接后重试"
 ) {
     ErrorState(
-        icon = androidx.compose.material.icons.Icons.Default.WifiOff,
+        icon = Icons.Default.WifiOff,
         title = message,
         description = description,
         modifier = modifier

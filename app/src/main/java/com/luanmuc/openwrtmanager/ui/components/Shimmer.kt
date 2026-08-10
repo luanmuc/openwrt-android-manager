@@ -30,8 +30,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.luanmuc.openwrtmanager.ui.theme.MiDimens
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
+import com.luanmuc.openwrtmanager.ui.components.MiDimens
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 骨架屏动画修饰符

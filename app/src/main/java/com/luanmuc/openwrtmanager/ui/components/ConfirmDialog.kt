@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -23,8 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.luanmuc.openwrtmanager.ui.theme.MiDimens
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
+import com.luanmuc.openwrtmanager.ui.components.MiDimens
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 确认对话框组件
@@ -230,7 +233,7 @@ fun SuccessDialog(
         show = show,
         title = title,
         message = message,
-        icon = androidx.compose.material.icons.Icons.Default.CheckCircle,
+        icon = Icons.Default.CheckCircle,
         onDismiss = onDismiss
     )
 }
@@ -249,7 +252,7 @@ fun ErrorDialog(
         show = show,
         title = title,
         message = message,
-        icon = androidx.compose.material.icons.Icons.Default.Error,
+        icon = Icons.Default.Error,
         onDismiss = onDismiss
     )
 }

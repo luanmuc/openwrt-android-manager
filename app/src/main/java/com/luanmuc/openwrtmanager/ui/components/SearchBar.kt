@@ -35,8 +35,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import com.luanmuc.openwrtmanager.ui.theme.MiDimens
-import com.luanmuc.openwrtmanager.ui.theme.MiTheme
+import com.luanmuc.openwrtmanager.ui.components.MiDimens
+import com.luanmuc.openwrtmanager.ui.components.MiTheme
 
 /**
  * 搜索栏组件
