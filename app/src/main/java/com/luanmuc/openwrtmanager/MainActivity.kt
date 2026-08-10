@@ -35,6 +35,7 @@ import com.luanmuc.openwrtmanager.ui.devicemanager.DeviceManagerScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic.DiagnosticScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic_enhanced.DiagnosticEnhancedScreen
 import com.luanmuc.openwrtmanager.ui.terminal.TerminalScreen
+import com.luanmuc.openwrtmanager.ui.widget_config.WidgetConfigScreen
 import com.luanmuc.openwrtmanager.ui.wifi_enhanced.WifiEnhancedScreen
 import com.luanmuc.openwrtmanager.ui.components.MiBottomNavigation
 import com.luanmuc.openwrtmanager.ui.components.MiNavItem
@@ -86,6 +87,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object WifiEnhanced : Screen("wifi_enhanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Terminal : Screen("terminal", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object PluginDetail : Screen("plugin_detail", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object WidgetConfig : Screen("widget_config", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
@@ -299,6 +301,11 @@ fun MainScreen() {
                 val packageName = backStackEntry.arguments?.getString("packageName") ?: ""
                 PluginDetailScreen(
                     packageName = packageName,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.WidgetConfig.route) {
+                WidgetConfigScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
