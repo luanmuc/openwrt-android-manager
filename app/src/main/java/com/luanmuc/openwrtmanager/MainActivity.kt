@@ -39,6 +39,7 @@ import com.luanmuc.openwrtmanager.ui.ddns.DdnsScreen
 import com.luanmuc.openwrtmanager.ui.firewall.FirewallScreen
 import com.luanmuc.openwrtmanager.ui.home.HomeScreen
 import com.luanmuc.openwrtmanager.ui.network.NetworkScreen
+import com.luanmuc.openwrtmanager.ui.notification.NotificationScreen
 import com.luanmuc.openwrtmanager.ui.plugins.PluginsScreen
 import com.luanmuc.openwrtmanager.ui.plugins.RepoScreen
 import com.luanmuc.openwrtmanager.ui.firmware.FirmwareScreen
@@ -70,6 +71,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object Firmware : Screen("firmware", 0, Icons.Filled.Extension, Icons.Filled.Extension)
+    data object Notification : Screen("notification", 0, Icons.Filled.Notifications, Icons.Filled.Notifications)
 }
 
 val bottomNavItems = listOf(
@@ -241,6 +243,11 @@ fun MainScreen() {
             }
             composable(Screen.Firmware.route) {
                 FirmwareScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Notification.route) {
+                NotificationScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
