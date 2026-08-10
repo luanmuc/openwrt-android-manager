@@ -149,21 +149,3 @@ object HapticFeedbackUtils {
         }
     }
 }
-
-/**
- * 添加点击震动反馈的Modifier扩展
- */
-fun Modifier.clickVibration(): Modifier = composed {
-    val context = LocalContext.current
-    val interactionSource = remember { MutableInteractionSource() }
-    
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press) {
-                HapticFeedbackUtils.vibrateClick(context)
-            }
-        }
-    }
-    
-    this
-}
