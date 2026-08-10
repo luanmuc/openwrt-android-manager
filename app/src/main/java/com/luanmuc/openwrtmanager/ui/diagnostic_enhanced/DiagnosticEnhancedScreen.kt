@@ -82,7 +82,7 @@ fun DiagnosticEnhancedScreen(
             }
             
             // 诊断项分类
-            if (diagnosticResult != null) {
+            diagnosticResult?.let { result ->
                 item {
                     CategoryTabs(
                         categories = DiagnosticCategory.values().toList(),
@@ -95,9 +95,9 @@ fun DiagnosticEnhancedScreen(
                 
                 // 诊断项列表
                 val filteredItems = if (selectedCategory != null) {
-                    diagnosticResult!!.items.filter { it.category == selectedCategory }
+                    result.items.filter { it.category == selectedCategory }
                 } else {
-                    diagnosticResult!!.items
+                    result.items
                 }
                 
                 items(filteredItems) { item ->

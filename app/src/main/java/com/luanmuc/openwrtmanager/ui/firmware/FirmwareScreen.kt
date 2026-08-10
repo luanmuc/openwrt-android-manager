@@ -74,13 +74,13 @@ fun FirmwareScreen(
             )
 
             // 最新版本信息
-            if (uiState.latestRelease != null) {
+            uiState.latestRelease?.let { release ->
                 LatestVersionCard(
-                    release = uiState.latestRelease!!,
+                    release = release,
                     isChecking = uiState.isChecking,
                     onDownloadClick = { viewModel.downloadFirmware() }
                 )
-            } else if (uiState.isChecking) {
+            } ?: if (uiState.isChecking) {
                 CheckingCard()
             } else {
                 NoUpdateCard(

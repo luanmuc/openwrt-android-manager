@@ -115,7 +115,7 @@ fun DiagnosticScreen(
                         )
                     } else if (uiState.result != null) {
                         // 诊断结果
-                        val result = uiState.result!!
+                        uiState.result?.let { result ->
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -157,6 +157,7 @@ fun DiagnosticScreen(
                             fontSize = 14.sp,
                             color = MiTheme.TextSecondary
                         )
+                        } // end let
                     } else {
                         // 未开始诊断
                         MiFeatureIcon(

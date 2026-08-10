@@ -60,10 +60,10 @@ fun PluginDetailScreen(
         },
         containerColor = MiTheme.Background,
         bottomBar = {
-            if (pluginDetail != null) {
+            pluginDetail?.let { plugin ->
                 BottomActionBar(
-                    isInstalled = pluginDetail!!.isInstalled,
-                    isUpdateAvailable = pluginDetail!!.isUpdateAvailable,
+                    isInstalled = plugin.isInstalled,
+                    isUpdateAvailable = plugin.isUpdateAvailable,
                     isInstalling = isInstalling,
                     onInstall = { viewModel.installPlugin() },
                     onUninstall = { viewModel.uninstallPlugin() },
@@ -82,6 +82,7 @@ fun PluginDetailScreen(
                 CircularProgressIndicator(color = MiTheme.Primary)
             }
         } else if (pluginDetail != null) {
+            pluginDetail?.let { plugin ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -91,13 +92,13 @@ fun PluginDetailScreen(
                 // 插件基本信息
                 item {
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
-                    PluginHeaderCard(plugin = pluginDetail!!, viewModel = viewModel)
+                    PluginHeaderCard(plugin = plugin, viewModel = viewModel)
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
                 }
                 
                 // 插件信息
                 item {
-                    PluginInfoCard(plugin = pluginDetail!!, viewModel = viewModel)
+                    PluginInfoCard(plugin = plugin, viewModel = viewModel)
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
                 }
                 
@@ -105,7 +106,7 @@ fun PluginDetailScreen(
                 item {
                     SectionTitle(title = "插件介绍", icon = Icons.Default.Extension)
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
-                    PluginDescriptionCard(plugin = pluginDetail!!)
+                    PluginDescriptionCard(plugin = plugin)
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
                 }
                 
@@ -141,6 +142,7 @@ fun PluginDetailScreen(
                     Spacer(modifier = Modifier.height(80.dp))
                 }
             }
+            } // end let
         }
     }
 }

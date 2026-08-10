@@ -121,10 +121,12 @@ fun WifiEnhancedScreen(
                         CircularProgressIndicator(color = MiTheme.Primary)
                     }
                 } else if (guestConfig != null) {
+                    guestConfig?.let { config ->
                     GuestNetworkCard(
-                        config = guestConfig!!,
+                        config = config,
                         onToggle = { enabled -> viewModel.toggleGuestNetwork(enabled) }
                     )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
