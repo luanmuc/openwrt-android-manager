@@ -6,6 +6,7 @@ import android.util.Log
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
 import com.luanmuc.openwrtmanager.util.NetworkMonitor
+import com.luanmuc.openwrtmanager.util.AppNotificationManager
 
 /**
  * Application 类
@@ -22,6 +23,8 @@ class OpenWrtApp : Application() {
         LuciRepository.getInstance(this)
         // 初始化网络状态监控
         NetworkMonitor.init(this)
+        // 初始化通知管理器
+        AppNotificationManager.init(this)
     }
 
     /**

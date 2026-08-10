@@ -229,6 +229,27 @@ class LuciRepository {
     /**
      * 登录认证
      */
+    // luci-rpc是否可用（用于检测插件是否安装）
+    private var luciRpcAvailable: Boolean = true
+    private var luciRpcChecked: Boolean = false
+    
+    /**
+     * 检测luci-rpc是否可用
+     */
+    suspend fun checkLuciRpcAvailable(): Boolean {
+        if (luciRpcChecked) return luciRpcAvailable
+        
+        try {
+            callUbus("luci-rpc", "getInstalledPackages")
+            luciRpcAvailable = true
+        } catch (e: Exception) {
+            luciRpcAvailable = false
+        }
+        
+        luciRpcChecked = true
+        return luciRpcAvailable
+    }
+    
     suspend fun login(address: String, username: String, password: String): String {
         currentAddress = normalizeAddress(address)
         currentUsername = username
