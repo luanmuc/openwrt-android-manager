@@ -1,0 +1,180 @@
+package com.luanmuc.openwrtmanager.service
+
+import android.app.Notification
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.luanmuc.openwrtmanager.R
+import com.luanmuc.openwrtmanager.util.AppNotificationManager
+import com.luanmuc.openwrtmanager.util.DebugMode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+
+/**
+ * 路由器监控服务
+ * 后台监控路由器状态，离线时发送通知
+ */
+class RouterMonitorService : Service() {
+    
+    companion object {
+        private const val TAG = "RouterMonitorService"
+        private const val NOTIFICATION_ID = 1001
+        private const val CHECK_INTERVAL = 60 * 1000L // 60秒检查一次
+        
+        fun start(context: Context) {
+            try {
+                val intent = Intent(context, RouterMonitorService::class.java)
+                context.startService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "启动服务失败", e)
+            }
+        }
+        
+        fun stop(context: Context) {
+            try {
+                val intent = Intent(context, RouterMonitorService::class.java)
+                context.stopService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "停止服务失败", e)
+            }
+        }
+    }
+    
+    private val handler = Handler(Looper.getMainLooper())
+    private var monitorJob: Job? = null
+    private var lastOnlineState: Boolean = true
+    private var isFirstCheck: Boolean = true
+    
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(TAG, "服务创建")
+        
+        // 创建前台通知
+        startForeground(NOTIFICATION_ID, createForegroundNotification())
+        
+        // 开始监控
+        startMonitoring()
+    }
+    
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "服务启动")
+        return START_STICKY
+    }
+    
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "服务销毁")
+        stopMonitoring()
+    }
+    
+    /**
+     * 创建前台通知
+     */
+    private fun createForegroundNotification(): Notification {
+        val channelId = AppNotificationManager.CHANNEL_ROUTER_STATUS
+        
+        return NotificationCompat.Builder(this, channelId)
+            .setContentTitle("路由器监控中")
+            .setContentText("正在监控路由器在线状态")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+    }
+    
+    /**
+     * 开始监控
+     */
+    private fun startMonitoring() {
+        stopMonitoring()
+        
+        monitorJob = CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                try {
+                    checkRouterStatus()
+                } catch (e: Exception) {
+                    Log.e(TAG, "检查路由器状态失败", e)
+                }
+                delay(CHECK_INTERVAL)
+            }
+        }
+    }
+    
+    /**
+     * 停止监控
+     */
+    private fun stopMonitoring() {
+        monitorJob?.cancel()
+        monitorJob = null
+    }
+    
+    /**
+     * 检查路由器状态
+     */
+    private suspend fun checkRouterStatus() {
+        // 演示模式下模拟状态变化
+        val isOnline = if (DebugMode.isDebugMode) {
+            // 模拟：90%概率在线，10%概率离线
+            Math.random() > 0.1
+        } else {
+            // 真实模式：这里应该调用LuciRepository检查状态
+            // 暂时返回true，后续完善真实API对接
+            true
+        }
+        
+        // 状态变化时发送通知
+        if (!isFirstCheck && isOnline != lastOnlineState) {
+            if (isOnline) {
+                sendOnlineNotification()
+            } else {
+                sendOfflineNotification()
+            }
+        }
+        
+        lastOnlineState = isOnline
+        isFirstCheck = false
+    }
+    
+    /**
+     * 发送离线通知
+     */
+    private fun sendOfflineNotification() {
+        handler.post {
+            try {
+                AppNotificationManager.showRouterOfflineNotification(
+                    routerName = "OpenWrt 路由器"
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "发送离线通知失败", e)
+            }
+        }
+    }
+    
+    /**
+     * 发送在线通知
+     */
+    private fun sendOnlineNotification() {
+        handler.post {
+            try {
+                AppNotificationManager.showRouterOnlineNotification(
+                    routerName = "OpenWrt 路由器"
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "发送在线通知失败", e)
+            }
+        }
+    }
+}

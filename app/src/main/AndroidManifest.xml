@@ -9,6 +9,14 @@
     <!-- 通知权限（安卓13+） -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- 前台服务权限 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- 开机自启动权限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 唤醒锁权限 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:name=".OpenWrtApp"
         android:allowBackup="true"
@@ -55,6 +63,12 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/network_speed_widget_info" />
         </receiver>
+
+        <!-- 路由器监控服务 -->
+        <service
+            android:name=".service.RouterMonitorService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
 
     </application>
 
