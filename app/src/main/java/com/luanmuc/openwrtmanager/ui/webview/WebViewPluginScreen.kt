@@ -123,7 +123,7 @@ fun WebViewPluginScreen(
                                 setAcceptThirdPartyCookies(this@webView, true)
                             }
                             
-                            // WebView设置
+                            // WebView设置 - 安全加固
                             settings.apply {
                                 javaScriptEnabled = true
                                 domStorageEnabled = true
@@ -134,7 +134,20 @@ fun WebViewPluginScreen(
                                 displayZoomControls = false
                                 useWideViewPort = true
                                 loadWithOverviewMode = true
-                                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+                                
+                                // 安全加固 - 禁用危险功能
+                                allowFileAccess = false
+                                allowContentAccess = false
+                                allowFileAccessFromFileURLs = false
+                                allowUniversalAccessFromFileURLs = false
+                                
+                                // 密码保存安全
+                                savePassword = false
+                                saveFormData = false
+                                
+                                // 文本选择
+                                setTextZoom(100)
                             }
                             
                             // WebView客户端

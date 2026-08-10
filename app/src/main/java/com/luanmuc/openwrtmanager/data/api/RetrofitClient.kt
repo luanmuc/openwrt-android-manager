@@ -57,14 +57,15 @@ object RetrofitClient {
     fun getApi(baseUrl: String): LuciApiService {
         if (retrofit == null || currentBaseUrl != baseUrl) {
             currentBaseUrl = baseUrl
-            retrofit = Retrofit.Builder()
+            val newRetrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
-            apiService = retrofit!!.create(LuciApiService::class.java)
+            retrofit = newRetrofit
+            apiService = newRetrofit.create(LuciApiService::class.java)
         }
-        return apiService!!
+        return apiService ?: error("ApiService initialization failed")
     }
 
     /**

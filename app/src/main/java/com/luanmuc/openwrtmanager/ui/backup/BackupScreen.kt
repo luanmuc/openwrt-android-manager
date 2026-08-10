@@ -90,10 +90,10 @@ fun BackupScreen(
             }
             
             // 恢复进度
-            if (restoreProgress != null) {
+            restoreProgress?.let { progress ->
                 item {
                     RestoreProgressCard(
-                        progress = restoreProgress!!,
+                        progress = progress,
                         onDismiss = { viewModel.clearRestoreProgress() }
                     )
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
