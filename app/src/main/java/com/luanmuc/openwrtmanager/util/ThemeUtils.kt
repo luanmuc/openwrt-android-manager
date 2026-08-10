@@ -3,7 +3,6 @@ package com.luanmuc.openwrtmanager.util
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
-import androidx.appcompat.app.AppCompatDelegate
 
 /**
  * 主题工具类
@@ -31,42 +30,6 @@ object ThemeUtils {
      */
     fun isLightMode(context: Context): Boolean {
         return !isDarkMode(context)
-    }
-    
-    /**
-     * 设置应用主题模式
-     */
-    fun setThemeMode(mode: ThemeMode) {
-        val nightMode = when (mode) {
-            ThemeMode.LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
-            ThemeMode.DARK -> AppCompatDelegate.MODE_NIGHT_YES
-            ThemeMode.SYSTEM -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-        }
-        AppCompatDelegate.setDefaultNightMode(nightMode)
-    }
-    
-    /**
-     * 获取当前主题模式
-     */
-    fun getThemeMode(): ThemeMode {
-        return when (AppCompatDelegate.getDefaultNightMode()) {
-            AppCompatDelegate.MODE_NIGHT_NO -> ThemeMode.LIGHT
-            AppCompatDelegate.MODE_NIGHT_YES -> ThemeMode.DARK
-            else -> ThemeMode.SYSTEM
-        }
-    }
-    
-    /**
-     * 切换主题模式（浅色/深色）
-     */
-    fun toggleTheme(context: Context): ThemeMode {
-        val currentMode = if (isDarkMode(context)) {
-            ThemeMode.LIGHT
-        } else {
-            ThemeMode.DARK
-        }
-        setThemeMode(currentMode)
-        return currentMode
     }
     
     /**
