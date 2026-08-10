@@ -45,6 +45,7 @@ import com.luanmuc.openwrtmanager.ui.firewall.FirewallScreen
 import com.luanmuc.openwrtmanager.ui.home.HomeScreen
 import com.luanmuc.openwrtmanager.ui.network.NetworkScreen
 import com.luanmuc.openwrtmanager.ui.notification.NotificationScreen
+import com.luanmuc.openwrtmanager.ui.plugin_detail.PluginDetailScreen
 import com.luanmuc.openwrtmanager.ui.plugins.PluginsScreen
 import com.luanmuc.openwrtmanager.ui.plugins.RepoScreen
 import com.luanmuc.openwrtmanager.ui.firmware.FirmwareScreen
@@ -84,6 +85,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Backup : Screen("backup", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object WifiEnhanced : Screen("wifi_enhanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Terminal : Screen("terminal", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object PluginDetail : Screen("plugin_detail", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
@@ -290,6 +292,13 @@ fun MainScreen() {
             }
             composable(Screen.Terminal.route) {
                 TerminalScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.PluginDetail.route + "/{packageName}") { backStackEntry ->
+                val packageName = backStackEntry.arguments?.getString("packageName") ?: ""
+                PluginDetailScreen(
+                    packageName = packageName,
                     onBack = { navController.popBackStack() }
                 )
             }
