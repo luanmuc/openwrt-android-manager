@@ -70,6 +70,21 @@
             android:foregroundServiceType="dataSync"
             android:exported="false" />
 
+        <!-- 定时任务服务 -->
+        <service
+            android:name=".service.ScheduledTaskService"
+            android:exported="false" />
+
+        <!-- 定时任务广播接收器 -->
+        <receiver
+            android:name=".service.ScheduledTaskReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.luanmuc.openwrtmanager.SCHEDULED_TASK" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
