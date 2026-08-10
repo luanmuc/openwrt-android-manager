@@ -30,6 +30,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.luanmuc.openwrtmanager.ui.addrouter.AddRouterScreen
 import com.luanmuc.openwrtmanager.ui.advanced.AdvancedScreen
+import com.luanmuc.openwrtmanager.ui.backup.BackupScreen
 import com.luanmuc.openwrtmanager.ui.devicemanager.DeviceManagerScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic.DiagnosticScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic_enhanced.DiagnosticEnhancedScreen
@@ -78,6 +79,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Traffic : Screen("traffic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object DeviceManager : Screen("device_manager", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object DiagnosticEnhanced : Screen("diagnostic_enhanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Backup : Screen("backup", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
@@ -269,6 +271,11 @@ fun MainScreen() {
             }
             composable(Screen.DiagnosticEnhanced.route) {
                 DiagnosticEnhancedScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Backup.route) {
+                BackupScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
