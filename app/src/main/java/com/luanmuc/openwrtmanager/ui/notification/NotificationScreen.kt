@@ -61,7 +61,7 @@ fun NotificationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(MiDimens.pagePadding)
+            contentPadding = PaddingValues(MiDimens.horizontalPadding)
         ) {
             // 总开关
             item {
@@ -104,7 +104,7 @@ fun NotificationScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(MiDimens.cardSpacing))
+                Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
             }
             
             // 通知渠道设置
@@ -170,7 +170,7 @@ fun NotificationScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(MiDimens.cardSpacing))
+                Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
             }
             
             // 通知历史
