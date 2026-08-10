@@ -31,6 +31,31 @@
             </intent-filter>
         </activity>
 
+    
+        <!-- 路由器状态小部件 -->
+        <receiver
+            android:name=".widget.RouterStatusWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/router_status_widget_info" />
+        </receiver>
+
+        <!-- 网速小部件 -->
+        <receiver
+            android:name=".widget.NetworkSpeedWidget"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/network_speed_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>

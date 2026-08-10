@@ -52,4 +52,8 @@
     <string name="profile_settings">设置</string>
     <string name="profile_about">关于</string>
     <string name="profile_version">版本</string>
+
+    <string name="widget_router_status_description">显示路由器在线状态</string>
+    <string name="widget_network_speed_description">显示实时上传下载速度</string>
+
 </resources>
