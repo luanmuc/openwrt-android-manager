@@ -41,6 +41,7 @@ fun DiagnosticEnhancedScreen(
     val isScanning by viewModel.isScanning.collectAsState()
     val diagnosticResult by viewModel.diagnosticResult.collectAsState()
     val suggestions by viewModel.suggestions.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
     
     Scaffold(
         topBar = {
@@ -85,7 +86,7 @@ fun DiagnosticEnhancedScreen(
                 item {
                     CategoryTabs(
                         categories = DiagnosticCategory.values().toList(),
-                        selectedCategory = viewModel.selectedCategory.collectAsState().value,
+                        selectedCategory = selectedCategory,
                         onCategorySelected = { viewModel.setSelectedCategory(it) }
                     )
                     
@@ -93,8 +94,8 @@ fun DiagnosticEnhancedScreen(
                 }
                 
                 // 诊断项列表
-                val filteredItems = if (viewModel.selectedCategory.collectAsState().value != null) {
-                    diagnosticResult!!.items.filter { it.category == viewModel.selectedCategory.collectAsState().value }
+                val filteredItems = if (selectedCategory != null) {
+                    diagnosticResult!!.items.filter { it.category == selectedCategory }
                 } else {
                     diagnosticResult!!.items
                 }
