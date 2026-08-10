@@ -88,6 +88,10 @@ object MiTheme {
     val colors: MiColorsTheme
         get() = if (_isDarkMode.value) DarkColors else LightColors
     
+    // 统一的形状
+    val shapes: MiShapes
+        get() = DefaultShapes
+    
     // 便捷属性
     val Primary: Color get() = if (_isDarkMode.value) MiColorsDark.Primary else MiColors.Primary
     val Background: Color get() = if (_isDarkMode.value) MiColorsDark.Background else MiColors.Background
@@ -103,6 +107,23 @@ object MiTheme {
     val Cyan: Color get() = if (_isDarkMode.value) MiColorsDark.Cyan else MiColors.Cyan
     val Orange: Color get() = if (_isDarkMode.value) MiColorsDark.Orange else MiColors.Orange
 }
+
+// ========== 小米风格形状 ==========
+data class MiShapes(
+    val cardShape: Shape,
+    val buttonShape: Shape,
+    val inputShape: Shape,
+    val iconShape: Shape,
+    val smallShape: Shape
+)
+
+private val DefaultShapes = MiShapes(
+    cardShape = RoundedCornerShape(MiDimens.cardRadius),
+    buttonShape = RoundedCornerShape(MiDimens.buttonRadius),
+    inputShape = RoundedCornerShape(MiDimens.inputRadius),
+    iconShape = RoundedCornerShape(MiDimens.iconRadius),
+    smallShape = RoundedCornerShape(MiDimens.smallRadius)
+)
 
 // 主题颜色接口
 data class MiColorsTheme(
