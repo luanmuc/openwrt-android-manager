@@ -44,6 +44,11 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,6 +114,14 @@ fun ProfileScreen(
     onNavigateToFirewall: () -> Unit = {},
     onNavigateToDdns: () -> Unit = {},
     onNavigateToAdvanced: () -> Unit = {},
+    onNavigateToNotification: () -> Unit = {},
+    onNavigateToTraffic: () -> Unit = {},
+    onNavigateToDeviceManager: () -> Unit = {},
+    onNavigateToDiagnosticEnhanced: () -> Unit = {},
+    onNavigateToBackup: () -> Unit = {},
+    onNavigateToWifiEnhanced: () -> Unit = {},
+    onNavigateToTerminal: () -> Unit = {},
+    onNavigateToWidgetConfig: () -> Unit = {},
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -142,7 +155,15 @@ fun ProfileScreen(
                 onNavigateToWifi = onNavigateToWifi,
                 onNavigateToFirewall = onNavigateToFirewall,
                 onNavigateToDdns = onNavigateToDdns,
-                onNavigateToAdvanced = onNavigateToAdvanced
+                onNavigateToAdvanced = onNavigateToAdvanced,
+                onNavigateToNotification = onNavigateToNotification,
+                onNavigateToTraffic = onNavigateToTraffic,
+                onNavigateToDeviceManager = onNavigateToDeviceManager,
+                onNavigateToDiagnosticEnhanced = onNavigateToDiagnosticEnhanced,
+                onNavigateToBackup = onNavigateToBackup,
+                onNavigateToWifiEnhanced = onNavigateToWifiEnhanced,
+                onNavigateToTerminal = onNavigateToTerminal,
+                onNavigateToWidgetConfig = onNavigateToWidgetConfig
             )
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -177,7 +198,15 @@ fun ToolsGrid(
     onNavigateToWifi: () -> Unit,
     onNavigateToFirewall: () -> Unit,
     onNavigateToDdns: () -> Unit,
-    onNavigateToAdvanced: () -> Unit
+    onNavigateToAdvanced: () -> Unit,
+    onNavigateToNotification: () -> Unit,
+    onNavigateToTraffic: () -> Unit,
+    onNavigateToDeviceManager: () -> Unit,
+    onNavigateToDiagnosticEnhanced: () -> Unit,
+    onNavigateToBackup: () -> Unit,
+    onNavigateToWifiEnhanced: () -> Unit,
+    onNavigateToTerminal: () -> Unit,
+    onNavigateToWidgetConfig: () -> Unit
 ) {
     MiCard(
         modifier = Modifier
@@ -232,6 +261,84 @@ fun ToolsGrid(
                     title = "高级功能",
                     gradient = MiColors.GradientPurple,
                     onClick = onNavigateToAdvanced
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.BugReport,
+                    title = "智能诊断",
+                    gradient = MiColors.GradientBlue,
+                    onClick = onNavigateToDiagnosticEnhanced
+                )
+                ToolItem(
+                    icon = Icons.Default.Speed,
+                    title = "流量统计",
+                    gradient = MiColors.GradientGreen,
+                    onClick = onNavigateToTraffic
+                )
+                ToolItem(
+                    icon = Icons.Default.Devices,
+                    title = "设备管理",
+                    gradient = MiColors.GradientOrange,
+                    onClick = onNavigateToDeviceManager
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.Settings,
+                    title = "备份恢复",
+                    gradient = MiColors.GradientCyan,
+                    onClick = onNavigateToBackup
+                )
+                ToolItem(
+                    icon = Icons.Default.Wifi,
+                    title = "WiFi增强",
+                    gradient = MiColors.GradientGreen,
+                    onClick = onNavigateToWifiEnhanced
+                )
+                ToolItem(
+                    icon = Icons.Default.Code,
+                    title = "终端",
+                    gradient = MiColors.GradientPurple,
+                    onClick = onNavigateToTerminal
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.Notifications,
+                    title = "通知设置",
+                    gradient = MiColors.GradientOrange,
+                    onClick = onNavigateToNotification
+                )
+                ToolItem(
+                    icon = Icons.Default.Apps,
+                    title = "桌面小部件",
+                    gradient = MiColors.GradientBlue,
+                    onClick = onNavigateToWidgetConfig
+                )
+                ToolItem(
+                    icon = Icons.Default.Extension,
+                    title = "插件市场",
+                    gradient = MiColors.GradientRed,
+                    onClick = {}
                 )
             }
         }

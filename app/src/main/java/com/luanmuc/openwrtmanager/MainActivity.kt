@@ -194,7 +194,15 @@ fun MainScreen() {
                     onNavigateToWifi = { navController.navigate(Screen.Wifi.route) },
                     onNavigateToFirewall = { navController.navigate(Screen.Firewall.route) },
                     onNavigateToDdns = { navController.navigate(Screen.Ddns.route) },
-                    onNavigateToAdvanced = { navController.navigate(Screen.Advanced.route) }
+                    onNavigateToAdvanced = { navController.navigate(Screen.Advanced.route) },
+                    onNavigateToNotification = { navController.navigate(Screen.Notification.route) },
+                    onNavigateToTraffic = { navController.navigate(Screen.Traffic.route) },
+                    onNavigateToDeviceManager = { navController.navigate(Screen.DeviceManager.route) },
+                    onNavigateToDiagnosticEnhanced = { navController.navigate(Screen.DiagnosticEnhanced.route) },
+                    onNavigateToBackup = { navController.navigate(Screen.Backup.route) },
+                    onNavigateToWifiEnhanced = { navController.navigate(Screen.WifiEnhanced.route) },
+                    onNavigateToTerminal = { navController.navigate(Screen.Terminal.route) },
+                    onNavigateToWidgetConfig = { navController.navigate(Screen.WidgetConfig.route) }
                 )
             }
             composable(Screen.AddRouter.route) {
