@@ -71,7 +71,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object Firmware : Screen("firmware", 0, Icons.Filled.Extension, Icons.Filled.Extension)
-    data object Notification : Screen("notification", 0, Icons.Filled.NotificationsActive, Icons.Filled.NotificationsActive)
+    data object Notification : Screen("notification", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
