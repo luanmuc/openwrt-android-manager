@@ -75,6 +75,16 @@
             android:name=".service.ScheduledTaskService"
             android:exported="false" />
 
+        <!-- 流量统计服务 -->
+        <service
+            android:name=".service.TrafficStatsService"
+            android:exported="false" />
+
+        <!-- Widget更新服务 -->
+        <service
+            android:name=".service.WidgetUpdateService"
+            android:exported="false" />
+
         <!-- 定时任务广播接收器 -->
         <receiver
             android:name=".service.ScheduledTaskReceiver"
