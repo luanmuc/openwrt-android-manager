@@ -34,6 +34,7 @@ import com.luanmuc.openwrtmanager.ui.backup.BackupScreen
 import com.luanmuc.openwrtmanager.ui.devicemanager.DeviceManagerScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic.DiagnosticScreen
 import com.luanmuc.openwrtmanager.ui.diagnostic_enhanced.DiagnosticEnhancedScreen
+import com.luanmuc.openwrtmanager.ui.terminal.TerminalScreen
 import com.luanmuc.openwrtmanager.ui.wifi_enhanced.WifiEnhancedScreen
 import com.luanmuc.openwrtmanager.ui.components.MiBottomNavigation
 import com.luanmuc.openwrtmanager.ui.components.MiNavItem
@@ -82,6 +83,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object DiagnosticEnhanced : Screen("diagnostic_enhanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Backup : Screen("backup", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object WifiEnhanced : Screen("wifi_enhanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Terminal : Screen("terminal", 0, Icons.Filled.Devices, Icons.Filled.Devices)
 }
 
 val bottomNavItems = listOf(
@@ -283,6 +285,11 @@ fun MainScreen() {
             }
             composable(Screen.WifiEnhanced.route) {
                 WifiEnhancedScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.Terminal.route) {
+                TerminalScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
