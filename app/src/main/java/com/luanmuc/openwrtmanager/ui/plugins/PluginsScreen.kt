@@ -156,7 +156,7 @@ fun PluginsScreen(
                         DropdownMenu(
                             expanded = showMoreMenu,
                             onDismissRequest = { showMoreMenu = false },
-                            containerColor = MiTheme.CardBackground
+                            
                         ) {
                             DropdownMenuItem(
                                 text = {
@@ -429,7 +429,7 @@ fun PluginsScreen(
                 onDismissRequest = {
                     viewModel.hidePackageDetail()
                 },
-                containerColor = MiTheme.CardBackground
+                
             ) {
                 uiState.selectedPackage?.let { pkg ->
                     PluginDetailSheet(
