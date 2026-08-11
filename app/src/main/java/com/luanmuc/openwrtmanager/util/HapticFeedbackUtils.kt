@@ -20,6 +20,23 @@ import androidx.compose.ui.platform.LocalView
 object HapticFeedbackUtils {
     
     /**
+     * 获取Vibrator实例（安全转换）
+     */
+    private fun getVibrator(context: Context): Vibrator? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
      * 轻触反馈
      */
     fun vibrateLight(context: Context) {
@@ -45,14 +62,8 @@ object HapticFeedbackUtils {
      */
     fun vibrateClick(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+            val vibrator = getVibrator(context)
+            vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
         } else {
             vibrateLight(context)
         }
@@ -63,14 +74,8 @@ object HapticFeedbackUtils {
      */
     fun vibrateDoubleClick(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
+            val vibrator = getVibrator(context)
+            vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
         } else {
             vibrate(context, longArrayOf(0, 20, 50, 20))
         }
@@ -81,14 +86,8 @@ object HapticFeedbackUtils {
      */
     fun vibrateError(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+            val vibrator = getVibrator(context)
+            vibrator?.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
         } else {
             vibrate(context, longArrayOf(0, 10, 50, 10))
         }
@@ -106,13 +105,7 @@ object HapticFeedbackUtils {
      */
     private fun vibrate(context: Context, milliseconds: Long) {
         try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
+            val vibrator = getVibrator(context) ?: return
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -130,13 +123,7 @@ object HapticFeedbackUtils {
      */
     private fun vibrate(context: Context, pattern: LongArray) {
         try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
+            val vibrator = getVibrator(context) ?: return
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
