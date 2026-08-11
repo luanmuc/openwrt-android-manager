@@ -613,13 +613,13 @@ fun RouterStatusCard(
                 brush = Brush.verticalGradient(
                     colors = if (isOnline) {
                         listOf(
-                            Color(0xFF1677FF),
-                            Color(0xFF4096FF)
+                            MiTheme.Primary,
+                            MiTheme.PrimaryLight
                         )
                     } else {
                         listOf(
-                            Color(0xFF86909C),
-                            Color(0xFFC9CDD4)
+                            MiTheme.TextTertiary,
+                            MiTheme.TextSecondary
                         )
                     }
                 )
@@ -661,8 +661,8 @@ fun RouterStatusCard(
                                 .size(8.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (isOnline) Color(0xFF52C41A)
-                                    else Color(0xFFFF4D4F)
+                                    if (isOnline) MiTheme.Success
+                                    else MiTheme.Error
                                 )
                         )
                         Spacer(modifier = Modifier.width(6.dp))

@@ -219,7 +219,7 @@ fun LogsContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            backgroundColor = Color(0xFF1D2129)
+            backgroundColor = MiTheme.TextPrimary
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -231,7 +231,7 @@ fun LogsContent(
                         text = "${log.time} ${log.message}",
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
-                        color = Color(0xFFC9CDD4),
+                        color = MiTheme.TextSecondary,
                         modifier = Modifier.padding(vertical = 2.dp)
                     )
                 }

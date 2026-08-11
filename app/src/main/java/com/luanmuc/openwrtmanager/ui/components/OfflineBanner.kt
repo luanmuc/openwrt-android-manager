@@ -40,7 +40,7 @@ fun OfflineBanner(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF53F3F))
+                .background(MiTheme.Error)
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             Row(

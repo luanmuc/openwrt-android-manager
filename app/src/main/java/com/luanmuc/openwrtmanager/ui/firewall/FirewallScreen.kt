@@ -320,7 +320,7 @@ fun AddPortForwardDialog(
                                 )
                             } else {
                                 androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                                    containerColor = Color(0xFFF2F3F5),
+                                    containerColor = MiTheme.CardBackground,
                                     labelColor = MiTheme.TextTertiary
                                 )
                             },
