@@ -15,7 +15,7 @@ object AccessibilityUtils {
      */
     fun isTouchExplorationEnabled(context: Context): Boolean {
         return try {
-            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager ?: return false
             am.isTouchExplorationEnabled
         } catch (e: Exception) {
             false
@@ -27,7 +27,7 @@ object AccessibilityUtils {
      */
     fun isAccessibilityEnabled(context: Context): Boolean {
         return try {
-            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager ?: return false
             am.isEnabled
         } catch (e: Exception) {
             false

@@ -51,7 +51,7 @@ class OpenWrtApp : Application() {
          * 获取Application实例
          */
         fun get(context: Context): OpenWrtApp {
-            return context.applicationContext as OpenWrtApp
+            return context.applicationContext as? OpenWrtApp ?: error("Application class is not OpenWrtApp")
         }
     }
 }

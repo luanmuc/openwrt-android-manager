@@ -47,7 +47,7 @@ class ScheduledTaskService : Service() {
          */
         fun setAlarm(context: Context) {
             try {
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
                 val intent = Intent(context, ScheduledTaskReceiver::class.java).apply {
                     action = "com.luanmuc.openwrtmanager.SCHEDULED_TASK"
                 }
@@ -74,7 +74,7 @@ class ScheduledTaskService : Service() {
          */
         fun cancelAlarm(context: Context) {
             try {
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
                 val intent = Intent(context, ScheduledTaskReceiver::class.java).apply {
                     action = "com.luanmuc.openwrtmanager.SCHEDULED_TASK"
                 }

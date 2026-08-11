@@ -27,7 +27,7 @@ object NetworkMonitor {
     }
 
     fun init(context: Context) {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
         connectivityManager = cm
 
         val networkCallback = object : ConnectivityManager.NetworkCallback() {

@@ -132,7 +132,7 @@ fun MainScreen() {
                 MiBottomNavigation(
                     selectedIndex = selectedIndex,
                     onItemSelected = { index ->
-                        val screen = bottomNavItems[index]
+                        val screen = bottomNavItems.getOrNull(index) ?: return@MiBottomNavigation
                         navController.navigate(screen.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
