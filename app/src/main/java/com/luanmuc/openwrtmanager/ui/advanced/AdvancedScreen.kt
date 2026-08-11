@@ -36,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,8 +72,25 @@ fun AdvancedScreen(
     viewModel: AdvancedViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showRebootDialog by remember { mutableStateOf(false) }
     var showShutdownDialog by remember { mutableStateOf(false) }
+    
+    // 错误提示
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
+    
+    // 成功提示
+    LaunchedEffect(uiState.actionSuccess) {
+        if (uiState.actionSuccess) {
+            android.widget.Toast.makeText(context, "操作成功", android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearSuccess()
+        }
+    }
     
     Scaffold(
         topBar = {
