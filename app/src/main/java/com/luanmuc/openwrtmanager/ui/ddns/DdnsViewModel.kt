@@ -47,6 +47,110 @@ class DdnsViewModel(application: Application) : BaseViewModel(application) {
         loadDdnsConfig()
     }
 
+    /**
+     * 添加DDNS配置
+     */
+    fun addDdns(config: DdnsConfig) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null, success = null)
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val configs = _uiState.value.ddnsConfigs.toMutableList()
+                    configs.add(config.copy(name = "ddns_${System.currentTimeMillis()}"))
+                    _uiState.value = _uiState.value.copy(ddnsConfigs = configs, isLoading = false, success = "添加成功")
+                    return@launch
+                }
+                val activeRouter = getActiveRouter() ?: return@launch
+                val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                if (!luciRepository.isLoggedIn()) {
+                    luciRepository.login(activeRouter.address, activeRouter.username, password)
+                }
+                val success = luciRepository.addDdnsConfig(config)
+                if (success) {
+                    loadDdnsConfig()
+                    _uiState.value = _uiState.value.copy(success = "添加成功")
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "添加失败")
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message ?: "添加失败")
+            }
+        }
+    }
+
+    /**
+     * 删除DDNS配置
+     */
+    fun deleteDdns(sectionName: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null, success = null)
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val configs = _uiState.value.ddnsConfigs.filter { it.name != sectionName }
+                    _uiState.value = _uiState.value.copy(ddnsConfigs = configs, isLoading = false, success = "删除成功")
+                    return@launch
+                }
+                val activeRouter = getActiveRouter() ?: return@launch
+                val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                if (!luciRepository.isLoggedIn()) {
+                    luciRepository.login(activeRouter.address, activeRouter.username, password)
+                }
+                val success = luciRepository.deleteDdnsConfig(sectionName)
+                if (success) {
+                    loadDdnsConfig()
+                    _uiState.value = _uiState.value.copy(success = "删除成功")
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "删除失败")
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message ?: "删除失败")
+            }
+        }
+    }
+
+    /**
+     * 更新DDNS配置
+     */
+    fun updateDdns(sectionName: String, config: DdnsConfig) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null, success = null)
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(500)
+                    val configs = _uiState.value.ddnsConfigs.map {
+                        if (it.name == sectionName) config.copy(name = sectionName) else it
+                    }
+                    _uiState.value = _uiState.value.copy(ddnsConfigs = configs, isLoading = false, success = "更新成功")
+                    return@launch
+                }
+                val activeRouter = getActiveRouter() ?: return@launch
+                val password = EncryptionUtil.decrypt(activeRouter.encryptedPassword)
+                if (!luciRepository.isLoggedIn()) {
+                    luciRepository.login(activeRouter.address, activeRouter.username, password)
+                }
+                val success = luciRepository.updateDdnsConfig(sectionName, config)
+                if (success) {
+                    loadDdnsConfig()
+                    _uiState.value = _uiState.value.copy(success = "更新成功")
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "更新失败")
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message ?: "更新失败")
+            }
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun clearSuccess() {
+        _uiState.value = _uiState.value.copy(success = null)
+    }
+
     private fun observeRouters() {
         viewModelScope.launch {
             routerRepository.routers.collect { routers ->

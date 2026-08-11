@@ -17,20 +17,31 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,7 +69,26 @@ fun DdnsScreen(
     viewModel: DdnsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+    val context = LocalContext.current
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf<DdnsConfig?>(null) }
+    var showDeleteDialog by remember { mutableStateOf<DdnsConfig?>(null) }
+    var editingConfig by remember { mutableStateOf(DdnsConfig()) }
+
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(uiState.success) {
+        uiState.success?.let { success ->
+            android.widget.Toast.makeText(context, success, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearSuccess()
+        }
+    }
+
     Scaffold(
         topBar = {
             MiTopAppBar(
@@ -80,6 +110,16 @@ fun DdnsScreen(
                             tint = MiTheme.TextSecondary
                         )
                     }
+                    IconButton(onClick = {
+                        editingConfig = DdnsConfig()
+                        showAddDialog = true
+                    }) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "添加",
+                            tint = MiColors.Primary
+                        )
+                    }
                 }
             )
         },
@@ -90,9 +130,8 @@ fun DdnsScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            // 离线提示条
             OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
-            
+
             if (uiState.isLoading) {
                 MiLoadingState()
             } else if (uiState.error != null && uiState.ddnsConfigs.isEmpty()) {
@@ -118,16 +157,78 @@ fun DdnsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(uiState.ddnsConfigs, key = { it.name }) { config ->
-                        DdnsCard(config = config)
+                        DdnsCard(
+                            config = config,
+                            onEdit = {
+                                editingConfig = config
+                                showEditDialog = config
+                            },
+                            onDelete = { showDeleteDialog = config }
+                        )
                     }
                 }
             }
         }
     }
+
+    if (showAddDialog) {
+        DdnsEditDialog(
+            title = "添加DDNS",
+            config = editingConfig,
+            onConfigChange = { editingConfig = it },
+            onConfirm = {
+                viewModel.addDdns(it)
+                showAddDialog = false
+            },
+            onDismiss = { showAddDialog = false }
+        )
+    }
+
+    if (showEditDialog != null) {
+        DdnsEditDialog(
+            title = "编辑DDNS",
+            config = editingConfig,
+            onConfigChange = { editingConfig = it },
+            onConfirm = {
+                viewModel.updateDdns(showEditDialog!!.name, it)
+                showEditDialog = null
+            },
+            onDismiss = { showEditDialog = null }
+        )
+    }
+
+    if (showDeleteDialog != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = null },
+            icon = {
+                Icon(Icons.Default.Delete, contentDescription = null, tint = MiColors.Error)
+            },
+            title = { Text("删除DDNS配置", fontWeight = FontWeight.Bold) },
+            text = { Text("确定要删除DDNS配置「${showDeleteDialog!!.name}」吗？") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteDdns(showDeleteDialog!!.name)
+                    showDeleteDialog = null
+                }) {
+                    Text("删除", color = MiColors.Error, fontWeight = FontWeight.Medium)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = null }) {
+                    Text("取消", color = MiTheme.TextTertiary)
+                }
+            },
+            containerColor = Color.White
+        )
+    }
 }
 
 @Composable
-fun DdnsCard(config: DdnsConfig) {
+fun DdnsCard(
+    config: DdnsConfig,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {}
+) {
     MiCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -187,6 +288,93 @@ fun DdnsCard(config: DdnsConfig) {
                     }
                 }
             }
+            Column {
+                IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "编辑",
+                        tint = MiColors.Primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "删除",
+                        tint = MiColors.Error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DdnsEditDialog(
+    title: String,
+    config: DdnsConfig,
+    onConfigChange: (DdnsConfig) -> Unit,
+    onConfirm: (DdnsConfig) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = config.service,
+                    onValueChange = { onConfigChange(config.copy(service = it)) },
+                    label = { Text("服务商") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = config.domain,
+                    onValueChange = { onConfigChange(config.copy(domain = it)) },
+                    label = { Text("域名") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = config.username,
+                    onValueChange = { onConfigChange(config.copy(username = it)) },
+                    label = { Text("用户名") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = config.password,
+                    onValueChange = { onConfigChange(config.copy(password = it)) },
+                    label = { Text("密码") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = config.interfaceName,
+                    onValueChange = { onConfigChange(config.copy(interfaceName = it)) },
+                    label = { Text("网络接口") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(config) }) {
+                Text("确定", color = MiColors.Primary, fontWeight = FontWeight.Medium)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消", color = MiTheme.TextTertiary)
+            }
+        },
+        containerColor = Color.White
+    )
 }

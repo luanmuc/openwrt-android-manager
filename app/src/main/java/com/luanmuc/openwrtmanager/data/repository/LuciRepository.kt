@@ -1074,6 +1074,26 @@ class LuciRepository {
     }
 
     /**
+     * 更新端口转发规则
+     */
+    suspend fun updatePortForward(ruleName: String, rule: PortForwardRule): Boolean {
+        return try {
+            setUciConfig("firewall", ruleName, "name", rule.name)
+            setUciConfig("firewall", ruleName, "proto", rule.proto)
+            setUciConfig("firewall", ruleName, "src", rule.src)
+            setUciConfig("firewall", ruleName, "src_dport", rule.srcPort)
+            setUciConfig("firewall", ruleName, "dest", rule.dest)
+            setUciConfig("firewall", ruleName, "dest_ip", rule.destIp)
+            setUciConfig("firewall", ruleName, "dest_port", rule.destPort)
+            setUciConfig("firewall", ruleName, "enabled", if (rule.enabled) "1" else "0")
+            commitUci("firewall")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
      * 获取DDNS配置列表
      */
     suspend fun getDdnsConfigs(): List<DdnsConfig> {
@@ -1102,6 +1122,70 @@ class LuciRepository {
             configs
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    /**
+     * 添加DDNS配置
+     */
+    suspend fun addDdnsConfig(config: DdnsConfig): Boolean {
+        return try {
+            val sectionName = "ddns_${System.currentTimeMillis()}"
+            callUbus(
+                "uci", "add", mapOf(
+                    "config" to "ddns",
+                    "type" to "service",
+                    "name" to sectionName,
+                    "values" to mapOf(
+                        "service_name" to config.service,
+                        "domain" to config.domain,
+                        "username" to config.username,
+                        "password" to config.password,
+                        "interface" to config.interfaceName,
+                        "enabled" to if (config.enabled) "1" else "0"
+                    )
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "ddns"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 删除DDNS配置
+     */
+    suspend fun deleteDdnsConfig(sectionName: String): Boolean {
+        return try {
+            callUbus(
+                "uci", "delete", mapOf(
+                    "config" to "ddns",
+                    "section" to sectionName
+                )
+            )
+            callUbus("uci", "commit", mapOf("config" to "ddns"))
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 更新DDNS配置
+     */
+    suspend fun updateDdnsConfig(sectionName: String, config: DdnsConfig): Boolean {
+        return try {
+            setUciConfig("ddns", sectionName, "service_name", config.service)
+            setUciConfig("ddns", sectionName, "domain", config.domain)
+            setUciConfig("ddns", sectionName, "username", config.username)
+            setUciConfig("ddns", sectionName, "password", config.password)
+            setUciConfig("ddns", sectionName, "interface", config.interfaceName)
+            setUciConfig("ddns", sectionName, "enabled", if (config.enabled) "1" else "0")
+            commitUci("ddns")
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

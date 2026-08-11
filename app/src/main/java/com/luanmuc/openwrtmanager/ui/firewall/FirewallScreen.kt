@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
@@ -68,6 +69,8 @@ fun FirewallScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf<PortForwardRule?>(null) }
+    var editingRule by remember { mutableStateOf(PortForwardRule()) }
     
     Scaffold(
         topBar = {
@@ -137,7 +140,11 @@ fun FirewallScreen(
                     items(uiState.portForwards, key = { it.name }) { rule ->
                         PortForwardCard(
                             rule = rule,
-                            onDelete = { viewModel.deletePortForward(it) }
+                            onDelete = { viewModel.deletePortForward(it) },
+                            onEdit = { rule ->
+                                editingRule = rule
+                                showEditDialog = rule
+                            }
                         )
                     }
                 }
@@ -167,7 +174,8 @@ fun FirewallScreen(
 @Composable
 fun PortForwardCard(
     rule: PortForwardRule,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit = {},
+    onEdit: (PortForwardRule) -> Unit = {}
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     
@@ -215,6 +223,14 @@ fun PortForwardCard(
                         color = MiTheme.TextTertiary
                     )
                 }
+            }
+            IconButton(onClick = { onEdit(rule) }) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "编辑",
+                    tint = MiColors.Primary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
             IconButton(onClick = { showDeleteDialog = true }) {
                 Icon(
