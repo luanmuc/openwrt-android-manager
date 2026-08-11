@@ -123,154 +123,174 @@ fun PluginsScreen(
         },
         containerColor = MiTheme.Background
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
+                .fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // 离线提示条
-            OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            item {
+                OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+            }
 
             // 搜索框
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                MiTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = "搜索插件...",
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MiTheme.TextTertiary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                )
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    MiTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { viewModel.setSearchQuery(it) },
+                        placeholder = "搜索插件...",
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = null,
+                                tint = MiTheme.TextTertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    )
+                }
             }
 
             // 分类筛选栏
-            CategoryFilterBar(
-                selectedCategory = uiState.selectedCategory,
-                categories = viewModel.getAvailableCategories(),
-                onCategorySelected = { viewModel.setCategory(it) }
-            )
+            item {
+                CategoryFilterBar(
+                    selectedCategory = uiState.selectedCategory,
+                    categories = viewModel.getAvailableCategories(),
+                    onCategorySelected = { viewModel.setCategory(it) }
+                )
+            }
 
             // 更新软件源进度条
             if (uiState.isUpdatingRepo) {
-                MiLinearProgress(
-                    progress = 0.5f,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-                Text(
-                    text = "正在更新软件源...",
-                    fontSize = 12.sp,
-                    color = MiTheme.TextSecondary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
+                item {
+                    MiLinearProgress(
+                        progress = 0.5f,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                    Text(
+                        text = "正在更新软件源...",
+                        fontSize = 12.sp,
+                        color = MiTheme.TextSecondary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
             }
 
             // 推荐插件区域
-            RecommendedPluginsSection(
-                recommendedPlugins = viewModel.getRecommendedPlugins(),
-                installedPackages = uiState.installedPackages,
-                onInstallClick = { viewModel.installPackage(it) },
-                onDetailClick = { /* 跳转到详情 */ }
-            )
+            item {
+                RecommendedPluginsSection(
+                    recommendedPlugins = viewModel.getRecommendedPlugins(),
+                    installedPackages = uiState.installedPackages,
+                    onInstallClick = { viewModel.installPackage(it) },
+                    onDetailClick = { /* 跳转到详情 */ }
+                )
+            }
 
-            // 快捷操作区域
-            QuickActionsSection(
-                onManageRepos = { onNavigateToRepos() },
-                onInstallIpk = { /* 打开文件选择器 */ },
-                packageManager = uiState.systemInfo.packageManager
-            )
+            // 快捷操作区域（只保留软件源管理）
+            item {
+                QuickActionsSection(
+                    onManageRepos = { onNavigateToRepos() },
+                    packageManager = uiState.systemInfo.packageManager
+                )
+            }
 
             // Tab栏
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = MiTheme.Background,
-                divider = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(0.5.dp)
-                            .background(MiTheme.Divider)
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { selectedTab = index },
-                        text = {
-                            Text(
-                                title,
-                                fontSize = 15.sp,
-                                fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium
-                            )
-                        },
-                        selectedContentColor = MiColors.Primary,
-                        unselectedContentColor = MiTheme.TextTertiary
-                    )
+            item {
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = MiTheme.Background,
+                    divider = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(0.5.dp)
+                                .background(MiTheme.Divider)
+                        )
+                    }
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = {
+                                Text(
+                                    title,
+                                    fontSize = 15.sp,
+                                    fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium
+                                )
+                            },
+                            selectedContentColor = MiColors.Primary,
+                            unselectedContentColor = MiTheme.TextTertiary
+                        )
+                    }
                 }
             }
 
-            // 排序方式选择（简单实现）
+            // 排序方式选择
             if (showSortMenu) {
-                MiCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Column {
-                        Text(
-                            "排序方式",
-                            modifier = Modifier.padding(16.dp),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MiTheme.TextPrimary
-                        )
-                        PluginsViewModel.SortType.values().forEach { sortType ->
-                            MiListItem(
-                                title = sortType.displayName,
-                                onClick = {
-                                    viewModel.setSortType(sortType)
-                                    showSortMenu = false
-                                },
-                                trailing = {
-                                    if (uiState.sortType == sortType) {
-                                        Icon(
-                                            Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = MiColors.Primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
+                item {
+                    MiCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                "排序方式",
+                                modifier = Modifier.padding(16.dp),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MiTheme.TextPrimary
                             )
+                            PluginsViewModel.SortType.values().forEach { sortType ->
+                                MiListItem(
+                                    title = sortType.displayName,
+                                    onClick = {
+                                        viewModel.setSortType(sortType)
+                                        showSortMenu = false
+                                    },
+                                    trailing = {
+                                        if (uiState.sortType == sortType) {
+                                            Icon(
+                                                Icons.Default.CheckCircle,
+                                                contentDescription = null,
+                                                tint = MiColors.Primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
             if (uiState.isLoading) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MiColors.Primary,
-                        strokeWidth = 3.dp,
-                        modifier = Modifier.size(36.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "加载中...",
-                        color = MiTheme.TextTertiary,
-                        fontSize = 14.sp
-                    )
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MiColors.Primary,
+                            strokeWidth = 3.dp,
+                            modifier = Modifier.size(36.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "加载中...",
+                            color = MiTheme.TextTertiary,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             } else {
                 val packages = when (selectedTab) {
@@ -281,41 +301,38 @@ fun PluginsScreen(
                 }
 
                 if (packages.isEmpty()) {
-                    MiEmptyState(
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Extension,
-                                contentDescription = null,
-                                tint = MiTheme.TextTertiary,
-                                modifier = Modifier.size(40.dp)
-                            )
-                        },
-                        text = when (selectedTab) {
-                            0 -> "暂无已安装插件"
-                            1 -> "暂无可用插件"
-                            else -> "暂无插件"
-                        }
-                    )
+                    item {
+                        MiEmptyState(
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Extension,
+                                    contentDescription = null,
+                                    tint = MiTheme.TextTertiary,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            },
+                            text = when (selectedTab) {
+                                0 -> "暂无已安装插件"
+                                1 -> "暂无可用插件"
+                                else -> "暂无插件"
+                            }
+                        )
+                    }
                 } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(packages, key = { it.name }) { plugin ->
-                            val isInstalled = uiState.installedPackages.any { it.name == plugin.name }
-                            PluginCard(
-                                plugin = plugin,
-                                isInstalled = isInstalled,
-                                isLoading = uiState.actionLoading == plugin.name,
-                                installProgress = uiState.installProgress[plugin.name] ?: 0,
-                                onInstall = { viewModel.installPackage(plugin.name) },
-                                onRemove = { viewModel.removePackage(plugin.name) },
-                                onClick = {
-                                    viewModel.showPackageDetail(plugin)
-                                    scope.launch { sheetState.show() }
-                                }
-                            )
-                        }
+                    items(packages, key = { it.name }) { plugin ->
+                        val isInstalled = uiState.installedPackages.any { it.name == plugin.name }
+                        PluginCard(
+                            plugin = plugin,
+                            isInstalled = isInstalled,
+                            isLoading = uiState.actionLoading == plugin.name,
+                            installProgress = uiState.installProgress[plugin.name] ?: 0,
+                            onInstall = { viewModel.installPackage(plugin.name) },
+                            onRemove = { viewModel.removePackage(plugin.name) },
+                            onClick = {
+                                viewModel.showPackageDetail(plugin)
+                                scope.launch { sheetState.show() }
+                            }
+                        )
                     }
                 }
             }
@@ -783,7 +800,6 @@ private fun RecommendedPluginsSection(
 @Composable
 private fun QuickActionsSection(
     onManageRepos: () -> Unit,
-    onInstallIpk: () -> Unit,
     packageManager: com.luanmuc.openwrtmanager.data.model.PackageManagerType = com.luanmuc.openwrtmanager.data.model.PackageManagerType.OPKG
 ) {
     Row(
@@ -822,7 +838,6 @@ private fun QuickActionsSection(
         MiCard(
             modifier = Modifier
                 .weight(1f)
-                .clickable { onInstallIpk() }
         ) {
             Column(
                 modifier = Modifier
@@ -831,14 +846,14 @@ private fun QuickActionsSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    Icons.Default.Extension,
+                    Icons.Default.SystemUpdate,
                     contentDescription = null,
                     tint = MiTheme.Primary,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (packageManager == com.luanmuc.openwrtmanager.data.model.PackageManagerType.APK) "安装本地APK" else "安装本地IPK",
+                    text = "更新全部",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MiTheme.TextPrimary

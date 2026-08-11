@@ -88,11 +88,19 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             routerRepository.routers.collect { routers ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
-                if (routers.isNotEmpty() && _uiState.value.installedPackages.isEmpty()) {
-                    // 先加载缓存
+                // 演示模式下也需要加载数据
+                val shouldLoad = if (DebugMode.isDebugMode) {
+                    _uiState.value.installedPackages.isEmpty()
+                } else {
+                    routers.isNotEmpty() && _uiState.value.installedPackages.isEmpty()
+                }
+                if (shouldLoad) {
+                    // 先加载缓存（演示模式跳过）
                     loadFromCache()
-                    // 然后从网络加载
+                    // 然后从网络加载（演示模式使用假数据）
                     loadPackages()
+                    // 加载系统信息
+                    loadSystemInfo()
                 }
             }
         }
