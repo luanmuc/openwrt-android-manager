@@ -91,6 +91,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiListItem
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
 import com.luanmuc.openwrtmanager.ui.components.MiSwitch
 import kotlinx.coroutines.CoroutineScope
+import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -125,6 +126,7 @@ fun ProfileScreen(
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     
     Scaffold(
         topBar = {
@@ -433,6 +435,7 @@ fun UserInfoCard() {
 @Composable
 fun SettingsList() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val settings = SettingsRepository.getInstance(context)
     
     // 状态
@@ -1074,7 +1077,7 @@ fun SettingsList() {
                 TextButton(
                     onClick = {
                         // 清除缓存
-                        CoroutineScope(Dispatchers.IO).launch {
+                        scope.launch(Dispatchers.IO) {
                             try {
                                 CacheRepository.getInstance(context).clearAllCache()
                                 withContext(Dispatchers.Main) {
@@ -1107,6 +1110,7 @@ fun AboutCard(
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var clickCount by remember { mutableIntStateOf(0) }
     
     MiCard(

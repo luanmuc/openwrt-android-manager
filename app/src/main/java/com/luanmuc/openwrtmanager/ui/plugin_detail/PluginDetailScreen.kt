@@ -37,6 +37,8 @@ fun PluginDetailScreen(
     val pluginDetail by viewModel.pluginDetail.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
     val isInstalling by viewModel.isInstalling.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val operationResult by viewModel.operationResult.collectAsState()
     
     // 首次加载
     androidx.compose.runtime.LaunchedEffect(packageName) {
@@ -89,6 +91,46 @@ fun PluginDetailScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(MiDimens.horizontalPadding)
             ) {
+                // 错误提示
+                if (error != null) {
+                    item {
+                        Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MiTheme.Error.copy(alpha = 0.1f), MiTheme.shapes.smallShape)
+                                .padding(MiDimens.cardPadding)
+                        ) {
+                            Text(
+                                text = error ?: "",
+                                color = MiTheme.Error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
+                    }
+                }
+                
+                // 操作结果提示
+                if (operationResult != null) {
+                    item {
+                        Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MiTheme.Success.copy(alpha = 0.1f), MiTheme.shapes.smallShape)
+                                .padding(MiDimens.cardPadding)
+                        ) {
+                            Text(
+                                text = operationResult ?: "",
+                                color = MiTheme.Success,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
+                    }
+                }
+                
                 // 插件基本信息
                 item {
                     Spacer(modifier = Modifier.height(MiDimens.itemSpacing))
