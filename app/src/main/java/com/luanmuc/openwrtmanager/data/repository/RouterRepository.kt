@@ -135,6 +135,7 @@ class RouterRepository(private val context: Context) {
 
     /**
      * 获取路由器列表（一次性读取）
+     * 如果开启了演示模式，会自动添加演示路由器
      */
     suspend fun getRoutersList(): List<Router> {
         return try {
@@ -143,8 +144,14 @@ class RouterRepository(private val context: Context) {
             val type = object : TypeToken<List<Router>>() {}.type
             val list: List<Router> = (gson.fromJson(json, type) as? List<Router>) ?: emptyList()
             // 解密所有密码
-            list.map { router ->
+            val decryptedList = list.map { router ->
                 router.copy(encryptedPassword = EncryptionUtil.decrypt(router.encryptedPassword))
+            }
+            // 如果开启了演示模式，添加演示路由器到列表开头
+            if (DebugMode.isDebugMode) {
+                listOf(DebugMode.getDemoRouter()) + decryptedList
+            } else {
+                decryptedList
             }
         } catch (e: Exception) {
             e.printStackTrace()

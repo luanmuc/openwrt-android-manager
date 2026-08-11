@@ -97,15 +97,34 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
 
     private fun observeRouters() {
         viewModelScope.launch {
-            routerRepository.routers.collect { routers ->
+            kotlinx.coroutines.flow.combine(
+                routerRepository.routers,
+                DebugMode.isDebugModeFlow
+            ) { routers, isDebugMode ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
-                if (routers.isNotEmpty()) {
-                    // 先加载缓存
-                    loadLogsFromCache()
-                    // 然后从网络加载
-                    loadLogs()
+                
+                // 调试模式变化时，清空缓存数据强制重新加载
+                if (isDebugMode && (_uiState.value.logsFromCache || _uiState.value.processesFromCache)) {
+                    _uiState.value = _uiState.value.copy(
+                        logs = emptyList(),
+                        processes = emptyList(),
+                        systemInfo = FullSystemInfo(),
+                        logsFromCache = false,
+                        processesFromCache = false
+                    )
                 }
-            }
+                
+                if (routers.isNotEmpty() || isDebugMode) {
+                    // 先加载缓存（演示模式跳过）
+                    loadLogsFromCache()
+                    // 然后从网络加载（演示模式使用假数据）
+                    loadLogs()
+                    // 加载系统信息
+                    if (_uiState.value.systemInfo.hostname.isEmpty()) {
+                        loadSystemInfo()
+                    }
+                }
+            }.collect()
         }
     }
 

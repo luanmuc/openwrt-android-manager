@@ -86,10 +86,23 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
 
     private fun observeRouters() {
         viewModelScope.launch {
-            routerRepository.routers.collect { routers ->
+            kotlinx.coroutines.flow.combine(
+                routerRepository.routers,
+                DebugMode.isDebugModeFlow
+            ) { routers, isDebugMode ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
+                
+                // 调试模式变化时，清空现有数据强制重新加载
+                if (isDebugMode && _uiState.value.isFromCache) {
+                    _uiState.value = _uiState.value.copy(
+                        installedPackages = emptyList(),
+                        availablePackages = emptyList(),
+                        isFromCache = false
+                    )
+                }
+                
                 // 演示模式下也需要加载数据
-                val shouldLoad = if (DebugMode.isDebugMode) {
+                val shouldLoad = if (isDebugMode) {
                     _uiState.value.installedPackages.isEmpty()
                 } else {
                     routers.isNotEmpty() && _uiState.value.installedPackages.isEmpty()
@@ -102,7 +115,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
                     // 加载系统信息
                     loadSystemInfo()
                 }
-            }
+            }.collect()
         }
     }
 
