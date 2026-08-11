@@ -225,7 +225,7 @@ object SystemUtils {
      * 检查是否是低内存状态
      */
     fun isLowMemory(context: Context): Boolean {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return 0L
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return false
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memoryInfo)
         return memoryInfo.lowMemory
@@ -243,7 +243,7 @@ object SystemUtils {
      */
     fun getProcessName(context: Context): String {
         val pid = getPid()
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return 0L
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return ""
         for (process in activityManager.runningAppProcesses) {
             if (process.pid == pid) {
                 return process.processName
