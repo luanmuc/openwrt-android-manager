@@ -161,7 +161,7 @@ fun PluginsScreen(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        "安装本地IPK",
+                                        if (uiState.systemInfo.packageManager == com.luanmuc.openwrtmanager.data.model.PackageManagerType.APK) "安装本地APK" else "安装本地IPK",
                                         color = MiTheme.TextPrimary,
                                         fontSize = 14.sp
                                     )
