@@ -55,9 +55,20 @@ class OnlineDevicesViewModel(application: Application) : BaseViewModel(applicati
 
     private fun observeRouters() {
         viewModelScope.launch {
-            routerRepository.routers.collect { routers ->
+            kotlinx.coroutines.flow.combine(
+                routerRepository.routers,
+                DebugMode.isDebugModeFlow
+            ) { routers, isDebugMode ->
+                Pair(routers, isDebugMode)
+            }.collect { (routers, isDebugMode) ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
-                if (routers.isNotEmpty() && _uiState.value.devices.isEmpty()) {
+                
+                // 调试模式变化时，清空现有数据强制重新加载
+                if (isDebugMode && _uiState.value.devices.isNotEmpty() && _uiState.value.isFromCache) {
+                    _uiState.value = _uiState.value.copy(devices = emptyList(), isFromCache = false)
+                }
+                
+                if ((routers.isNotEmpty() || isDebugMode) && _uiState.value.devices.isEmpty()) {
                     // 先加载缓存
                     loadFromCache()
                     // 然后从网络加载

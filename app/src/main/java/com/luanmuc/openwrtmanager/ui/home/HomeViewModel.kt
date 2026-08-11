@@ -93,20 +93,27 @@ class HomeViewModel(application: Application) : BaseViewModel(application) {
             try {
                 combine(
                     routerRepository.routers,
-                    routerRepository.activeRouterId
-                ) { routers, activeId ->
+                    routerRepository.activeRouterId,
+                    DebugMode.isDebugModeFlow
+                ) { routers, activeId, isDebugMode ->
                     val activeRouter = if (activeId != null) {
                         routers.find { it.id == activeId } ?: routers.firstOrNull()
                     } else {
                         routers.firstOrNull()
                     }
-                    Pair(routers, activeRouter)
-                }.collect { (routers, activeRouter) ->
+                    Triple(routers, activeRouter, isDebugMode)
+                }.collect { (routers, activeRouter, isDebugMode) ->
                     try {
                         _uiState.value = _uiState.value.copy(
                             activeRouter = activeRouter,
                             hasRouter = routers.isNotEmpty()
                         )
+                        
+                        // 调试模式变化时，清空现有数据强制重新加载
+                        if (isDebugMode && _uiState.value.routerStatus != null && !DebugMode.isDemoRouter(activeRouter?.id ?: "")) {
+                            _uiState.value = _uiState.value.copy(routerStatus = null)
+                        }
+                        
                         if (activeRouter != null && _uiState.value.routerStatus == null) {
                             // 先加载缓存
                             loadFromCache(activeRouter)
