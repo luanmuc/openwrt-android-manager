@@ -29,7 +29,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +60,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Context
+import android.net.Uri
 import com.luanmuc.openwrtmanager.R
 import com.luanmuc.openwrtmanager.data.model.PackageInfo
 import com.luanmuc.openwrtmanager.data.model.RecommendedPlugin
@@ -89,8 +96,27 @@ fun PluginsScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("已安装", "可用", "全部")
     var showSortMenu by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    // 文件选择器
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            try {
+                val fileName = getFileName(context, selectedUri)
+                val fileData = readFileData(context, selectedUri)
+                if (fileData != null) {
+                    viewModel.installIpk(fileName, fileData)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -117,6 +143,64 @@ fun PluginsScreen(
                             contentDescription = "刷新",
                             tint = MiTheme.TextSecondary
                         )
+                    }
+                    // 更多操作菜单
+                    Box {
+                        IconButton(onClick = { showMoreMenu = true }) {
+                            Icon(
+                                Icons.Default.MoreVert,
+                                contentDescription = "更多",
+                                tint = MiTheme.TextSecondary
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMoreMenu,
+                            onDismissRequest = { showMoreMenu = false },
+                            containerColor = MiTheme.CardBackground
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "安装本地IPK",
+                                        color = MiTheme.TextPrimary,
+                                        fontSize = 14.sp
+                                    )
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    filePickerLauncher.launch("*/*")
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.InstallMobile,
+                                        contentDescription = null,
+                                        tint = MiTheme.Primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "更新全部",
+                                        color = MiTheme.TextPrimary,
+                                        fontSize = 14.sp
+                                    )
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    viewModel.updateRepo()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.SystemUpdate,
+                                        contentDescription = null,
+                                        tint = MiTheme.Primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -710,6 +794,45 @@ private fun formatSize(bytes: Long): String {
         bytes >= 1048576 -> String.format("%.1f MB", bytes / 1048576.0)
         bytes >= 1024 -> String.format("%.1f KB", bytes / 1024.0)
         else -> "$bytes B"
+    }
+}
+
+/**
+ * 从Uri获取文件名
+ */
+private fun getFileName(context: Context, uri: Uri): String {
+    var result: String? = null
+    if (uri.scheme == "content") {
+        val cursor = context.contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    result = it.getString(nameIndex)
+                }
+            }
+        }
+    }
+    if (result == null) {
+        result = uri.path?.let { path ->
+            val cut = path.lastIndexOf('/')
+            if (cut != -1) path.substring(cut + 1) else path
+        }
+    }
+    return result ?: "unknown.ipk"
+}
+
+/**
+ * 从Uri读取文件数据
+ */
+private fun readFileData(context: Context, uri: Uri): ByteArray? {
+    return try {
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            inputStream.readBytes()
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }
 
