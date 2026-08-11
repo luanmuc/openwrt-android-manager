@@ -614,7 +614,7 @@ fun RouterStatusCard(
                     colors = if (isOnline) {
                         listOf(
                             MiTheme.Primary,
-                            MiTheme.PrimaryLight
+                            MiColors.PrimaryLight
                         )
                     } else {
                         listOf(
