@@ -101,6 +101,8 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                 routerRepository.routers,
                 DebugMode.isDebugModeFlow
             ) { routers, isDebugMode ->
+                Pair(routers, isDebugMode)
+            }.collect { (routers, isDebugMode) ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 
                 // 调试模式变化时，清空缓存数据强制重新加载
@@ -124,7 +126,7 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                         loadSystemInfo()
                     }
                 }
-            }.collect()
+            }
         }
     }
 

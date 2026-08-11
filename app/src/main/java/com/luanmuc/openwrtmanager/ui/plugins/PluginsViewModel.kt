@@ -90,6 +90,8 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
                 routerRepository.routers,
                 DebugMode.isDebugModeFlow
             ) { routers, isDebugMode ->
+                Pair(routers, isDebugMode)
+            }.collect { (routers, isDebugMode) ->
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 
                 // 调试模式变化时，清空现有数据强制重新加载
@@ -115,7 +117,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
                     // 加载系统信息
                     loadSystemInfo()
                 }
-            }.collect()
+            }
         }
     }
 
