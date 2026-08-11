@@ -20,13 +20,13 @@ object RetrofitClient {
     private var retrofit: Retrofit? = null
     private var apiService: LuciApiService? = null
 
-    private val trustAllCerts = arrayOf<TrustManager>(
-        object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-        }
-    )
+    private val trustManager = object : X509TrustManager {
+        override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+        override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+        override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+    }
+
+    private val trustAllCerts = arrayOf<TrustManager>(trustManager)
 
     private val sslContext: SSLContext by lazy {
         SSLContext.getInstance("TLS").apply {
@@ -43,7 +43,7 @@ object RetrofitClient {
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .writeTimeout(10, TimeUnit.SECONDS)
-            .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(logging)
             .retryOnConnectionFailure(true)

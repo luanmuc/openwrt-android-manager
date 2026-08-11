@@ -116,6 +116,7 @@ object NetUtils {
         if (!isValidIpAddress(ip)) return false
         
         val parts = ip.split(".").map { it.toInt() }
+        if (parts.size < 2) return false
         
         // 10.0.0.0/8
         if (parts[0] == 10) return true

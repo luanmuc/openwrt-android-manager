@@ -62,6 +62,9 @@ class LuciRepository {
     private val KEY_EXPIRE_TIME = "expire_time"
     private val KEY_EXPIRES_IN = "expires_in"
     
+    // 重试限制
+    private val MAX_RELOGIN_RETRY = 3
+    
     // 单例
     companion object {
         @Volatile
@@ -320,7 +323,8 @@ class LuciRepository {
     private suspend fun callUbus(
         obj: String,
         method: String,
-        params: Map<String, Any> = emptyMap()
+        params: Map<String, Any> = emptyMap(),
+        retryCount: Int = 0
     ): Map<String, Any> {
         // 请求前检查session是否快过期，快过期则自动刷新
         checkAndRefreshSession()
@@ -331,9 +335,9 @@ class LuciRepository {
             val response = api.call(LuciApiService.UBUS_PATH, request)
 
             if (response.error != null) {
-                if (response.error.code == -32002 || response.error.message?.contains("session", true) == true) {
+                if ((response.error.code == -32002 || response.error.message?.contains("session", true) == true) && retryCount < MAX_RELOGIN_RETRY) {
                     reLogin()
-                    return callUbus(obj, method, params)
+                    return callUbus(obj, method, params, retryCount + 1)
                 }
                 throw LuciException(
                     code = response.error.code,
@@ -348,9 +352,9 @@ class LuciRepository {
 
             val statusCode = (result[0] as? Number)?.toInt() ?: -1
             if (statusCode != 0) {
-                if (statusCode == -32002 || statusCode == -6) {
+                if ((statusCode == -32002 || statusCode == -6) && retryCount < MAX_RELOGIN_RETRY) {
                     reLogin()
-                    return callUbus(obj, method, params)
+                    return callUbus(obj, method, params, retryCount + 1)
                 }
                 throw LuciException(
                     code = statusCode,
