@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.plugin_detail
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 import com.luanmuc.openwrtmanager.R
 import androidx.compose.ui.res.stringResource
 
@@ -69,9 +70,9 @@ fun PluginDetailScreen(
                     isInstalled = plugin.isInstalled,
                     isUpdateAvailable = plugin.isUpdateAvailable,
                     isInstalling = isInstalling,
-                    onInstall = { viewModel.installPlugin() },
-                    onUninstall = { viewModel.uninstallPlugin() },
-                    onUpdate = { viewModel.updatePlugin() }
+                    onInstall = { if (DebounceUtils.canClick()) viewModel.installPlugin() },
+                    onUninstall = { if (DebounceUtils.canClick()) viewModel.uninstallPlugin() },
+                    onUpdate = { if (DebounceUtils.canClick()) viewModel.updatePlugin() }
                 )
             }
         }

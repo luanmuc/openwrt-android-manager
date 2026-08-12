@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.network
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -156,9 +157,9 @@ fun NetworkScreen(
                         text = "保存配置",
                         onClick = {
                             when (selectedTab) {
-                                0 -> viewModel.saveLanConfig()
-                                1 -> viewModel.saveWanConfig()
-                                2 -> viewModel.saveLanConfig()
+                                0 -> if (DebounceUtils.canClick()) viewModel.saveLanConfig()
+                                1 -> if (DebounceUtils.canClick()) viewModel.saveWanConfig()
+                                2 -> if (DebounceUtils.canClick()) viewModel.saveLanConfig()
                             }
                         },
                         enabled = !uiState.isSaving,

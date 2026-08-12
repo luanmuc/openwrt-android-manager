@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.backup
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import com.luanmuc.openwrtmanager.R
 
@@ -434,7 +435,7 @@ private fun BackupItemCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { viewModel.restoreBackup(backup.id) },
+                    onClick = { if (DebounceUtils.canClick()) viewModel.restoreBackup(backup.id) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MiTheme.Primary
@@ -451,7 +452,7 @@ private fun BackupItemCard(
                 }
                 
                 OutlinedButton(
-                    onClick = { viewModel.deleteBackup(backup.id) },
+                    onClick = { if (DebounceUtils.canClick()) viewModel.deleteBackup(backup.id) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MiTheme.Error

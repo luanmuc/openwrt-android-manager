@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.firmware
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import com.luanmuc.openwrtmanager.R
 
@@ -103,7 +104,7 @@ fun FirmwareScreen(
                 LatestVersionCard(
                     release = release,
                     isChecking = uiState.isChecking,
-                    onDownloadClick = { viewModel.downloadFirmware() }
+                    onDownloadClick = { if (DebounceUtils.canClick()) viewModel.downloadFirmware() }
                 )
             } ?: if (uiState.isChecking) {
                 CheckingCard()
@@ -165,7 +166,7 @@ fun FirmwareScreen(
                 Text(stringResource(R.string.dialog_firmware_upgrade_confirm))
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.confirmFlash() }) {
+                TextButton(onClick = { if (DebounceUtils.canClick()) viewModel.confirmFlash() }) {
                     Text(stringResource(R.string.common_confirm_upgrade), color = MiTheme.Primary)
                 }
             },

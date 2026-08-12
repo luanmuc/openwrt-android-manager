@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.wifi
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -155,7 +156,7 @@ fun WifiScreen(
                             gradient = MiColors.GradientOrange,
                             config = uiState.wifi2g,
                             onConfigChange = { viewModel.updateWifi2g(it) },
-                            onSave = { viewModel.saveWifiConfig("2g") },
+                            onSave = { if (DebounceUtils.canClick()) viewModel.saveWifiConfig("2g") },
                             isSaving = uiState.isSaving
                         )
                         selectedTab == 1 && uiState.has5g -> WifiSettingsCard(
@@ -163,7 +164,7 @@ fun WifiScreen(
                             gradient = MiColors.GradientBlue,
                             config = uiState.wifi5g,
                             onConfigChange = { viewModel.updateWifi5g(it) },
-                            onSave = { viewModel.saveWifiConfig("5g") },
+                            onSave = { if (DebounceUtils.canClick()) viewModel.saveWifiConfig("5g") },
                             isSaving = uiState.isSaving
                         )
                         else -> WifiSettingsCard(
@@ -171,7 +172,7 @@ fun WifiScreen(
                             gradient = MiColors.GradientGreen,
                             config = uiState.guestWifi,
                             onConfigChange = { viewModel.updateGuestWifi(it) },
-                            onSave = { viewModel.saveWifiConfig("guest") },
+                            onSave = { if (DebounceUtils.canClick()) viewModel.saveWifiConfig("guest") },
                             isSaving = uiState.isSaving
                         )
                     }

@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.ddns
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import com.luanmuc.openwrtmanager.R
 
@@ -180,8 +181,10 @@ fun DdnsScreen(
             config = editingConfig,
             onConfigChange = { editingConfig = it },
             onConfirm = {
-                viewModel.addDdns(it)
-                showAddDialog = false
+                if (DebounceUtils.canClick()) {
+                    viewModel.addDdns(it)
+                    showAddDialog = false
+                }
             },
             onDismiss = { showAddDialog = false }
         )
@@ -194,8 +197,10 @@ fun DdnsScreen(
             onConfigChange = { editingConfig = it },
             onConfirm = {
                 val editName = showEditDialog?.name ?: return@DdnsEditDialog
-                viewModel.updateDdns(editName, it)
-                showEditDialog = null
+                if (DebounceUtils.canClick()) {
+                    viewModel.updateDdns(editName, it)
+                    showEditDialog = null
+                }
             },
             onDismiss = { showEditDialog = null }
         )
@@ -212,8 +217,10 @@ fun DdnsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog?.name?.let { deleteName ->
-                        viewModel.deleteDdns(deleteName)
-                        showDeleteDialog = null
+                        if (DebounceUtils.canClick()) {
+                            viewModel.deleteDdns(deleteName)
+                            showDeleteDialog = null
+                        }
                     }
                 }) {
                     Text(stringResource(R.string.common_delete), color = MiColors.Error, fontWeight = FontWeight.Medium)

@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.firewall
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 import com.luanmuc.openwrtmanager.R
 import androidx.compose.ui.res.stringResource
 
@@ -142,7 +143,7 @@ fun FirewallScreen(
                     items(uiState.portForwards, key = { it.name }) { rule ->
                         PortForwardCard(
                             rule = rule,
-                            onDelete = { viewModel.deletePortForward(it) },
+                            onDelete = { if (DebounceUtils.canClick()) viewModel.deletePortForward(it) },
                             onEdit = { rule ->
                                 editingRule = rule
                                 showEditDialog = rule
@@ -158,7 +159,8 @@ fun FirewallScreen(
         AddPortForwardDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, proto, srcPort, destIp, destPort ->
-                viewModel.addPortForward(
+                if (DebounceUtils.canClick()) {
+                    viewModel.addPortForward(
                     PortForwardRule(
                         name = name,
                         proto = proto,
