@@ -93,6 +93,8 @@ class DeviceManagerViewModel(application: Application) : AndroidViewModel(applic
     /**
      * 清除操作结果
      */
+    fun clearError() { _uiState.value = _uiState.value.copy(error = null) }
+
     fun clearOperationResult() {
         _operationResult.value = null
     }

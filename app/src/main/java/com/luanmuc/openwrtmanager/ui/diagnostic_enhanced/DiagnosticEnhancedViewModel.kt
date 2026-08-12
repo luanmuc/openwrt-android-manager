@@ -111,6 +111,8 @@ class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(a
     /**
      * 清除操作结果
      */
+    fun clearError() { _uiState.value = _uiState.value.copy(error = null) }
+
     fun clearOperationResult() {
         _operationResult.value = null
     }
