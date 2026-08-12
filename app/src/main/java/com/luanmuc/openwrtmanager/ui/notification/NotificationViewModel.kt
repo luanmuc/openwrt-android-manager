@@ -92,7 +92,7 @@ class NotificationViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        loadSettings()
+        // 无需刷新
     }
 }
 

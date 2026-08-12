@@ -199,6 +199,6 @@ class WidgetConfigViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        loadWidgets()
+        loadWidgetConfig()
     }
 }

@@ -82,6 +82,6 @@ class TrafficViewModel(application: Application) : BaseViewModel(application) {
     }
 
     override fun refreshData() {
-        loadTrafficStats()
+        loadTrafficData()
     }
 }

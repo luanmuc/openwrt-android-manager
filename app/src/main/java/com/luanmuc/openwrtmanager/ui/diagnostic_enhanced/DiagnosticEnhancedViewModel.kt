@@ -135,6 +135,6 @@ class DiagnosticEnhancedViewModel(application: Application) : BaseViewModel(appl
     }
 
     override fun refreshData() {
-        runDiagnostic()
+        loadLastResult()
     }
 }

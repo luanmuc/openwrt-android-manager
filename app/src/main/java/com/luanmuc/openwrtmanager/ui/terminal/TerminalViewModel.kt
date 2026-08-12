@@ -197,6 +197,6 @@ class TerminalViewModel(application: Application) : BaseViewModel(application) {
     }
 
     override fun refreshData() {
-        loadHistory()
+        loadTerminalData()
     }
 }
