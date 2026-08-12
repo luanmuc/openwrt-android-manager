@@ -166,7 +166,8 @@ fun ProfileScreen(
                 onNavigateToBackup = onNavigateToBackup,
                 onNavigateToWifiEnhanced = onNavigateToWifiEnhanced,
                 onNavigateToTerminal = onNavigateToTerminal,
-                onNavigateToWidgetConfig = onNavigateToWidgetConfig
+                onNavigateToWidgetConfig = onNavigateToWidgetConfig,
+                onNavigateToPlugins = onNavigateToPlugins
             )
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -209,7 +210,8 @@ fun ToolsGrid(
     onNavigateToBackup: () -> Unit,
     onNavigateToWifiEnhanced: () -> Unit,
     onNavigateToTerminal: () -> Unit,
-    onNavigateToWidgetConfig: () -> Unit
+    onNavigateToWidgetConfig: () -> Unit,
+    onNavigateToPlugins: () -> Unit
 ) {
     MiCard(
         modifier = Modifier
