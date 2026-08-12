@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager
+import com.luanmuc.openwrtmanager.R
 
 import android.os.Bundle
 import com.luanmuc.openwrtmanager.ui.theme.ThemeManager
