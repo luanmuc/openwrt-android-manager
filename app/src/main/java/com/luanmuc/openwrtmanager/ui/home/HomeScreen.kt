@@ -717,7 +717,7 @@ fun RouterStatusCard(
                 StatusItem(
                     icon = Icons.Default.Speed,
                     label = "CPU",
-                    value = "${((status?.cpuUsage ?: 0f) * 100).toInt()}",
+                    value = "${(status?.cpuUsage ?: 0f).toInt()}",
                     unit = "%",
                     onClick = onViewSystem
                 )
@@ -1175,7 +1175,7 @@ fun SystemStatusCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "${((status?.cpuUsage ?: 0f) * 100).toInt()}%",
+                    text = "${(status?.cpuUsage ?: 0f).toInt()}%",
                     fontSize = 14.sp,
                     color = MiTheme.TextPrimary,
                     fontWeight = FontWeight.Medium
@@ -1187,7 +1187,7 @@ fun SystemStatusCard(
             // CPU历史曲线图
             if (uiState.cpuHistory.isNotEmpty()) {
                 LineChart(
-                    data = uiState.cpuHistory.map { it.usage * 100 },
+                    data = uiState.cpuHistory.map { it.usage },
                     color = MiColors.Success,
                     unit = "%",
                     showGrid = false,

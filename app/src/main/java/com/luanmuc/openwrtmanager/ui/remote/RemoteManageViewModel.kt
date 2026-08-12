@@ -18,6 +18,7 @@ class RemoteManageViewModel(application: Application) : BaseViewModel(applicatio
 
     init {
         initNetworkMonitor()
+        loadRemoteConfig()
     }
 
     private val routerRepository = RouterRepository.getInstance(application)

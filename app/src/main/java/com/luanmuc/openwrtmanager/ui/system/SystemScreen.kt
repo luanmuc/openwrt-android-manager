@@ -107,10 +107,10 @@ fun SystemScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (uiState.selectedTab == 0) {
-                                viewModel.loadLogs()
-                            } else {
-                                viewModel.loadProcesses()
+                            when (uiState.selectedTab) {
+                                0 -> viewModel.loadSystemInfo()
+                                1 -> viewModel.loadLogs()
+                                2 -> viewModel.loadProcesses()
                             }
                         }
                     ) {
