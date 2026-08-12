@@ -27,7 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,9 +55,10 @@ fun StorageScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { error ->
-            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_SHORT).show()
+    val errorMessage = uiState.error
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            android.widget.Toast.makeText(context, errorMessage, android.widget.Toast.LENGTH_SHORT).show()
             viewModel.clearError()
         }
     }
@@ -289,7 +290,7 @@ fun StorageScreen(
                                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                             )
                         }
-                        items(uiState.mountPoints, key = { it.mountPoint }) { mount: MountPointInfo ->
+                        items(uiState.mountPoints, key = { mount: MountPointInfo -> mount.mountPoint }) { mount: MountPointInfo ->
                             MiCard {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row(
