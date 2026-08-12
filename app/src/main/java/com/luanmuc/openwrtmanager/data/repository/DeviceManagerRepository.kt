@@ -16,6 +16,7 @@ import org.json.JSONObject
  * 负责设备备注、分组、限速、拉黑、历史记录等功能
  */
 class DeviceManagerRepository private constructor(private val context: Context) {
+    private val luciRepository = LuciRepository.getInstance()
     
     private val prefs: SharedPreferences = context.getSharedPreferences("device_manager", Context.MODE_PRIVATE)
     

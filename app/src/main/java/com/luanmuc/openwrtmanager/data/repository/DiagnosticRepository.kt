@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
  * 负责全面体检、网络质量检测、优化建议等功能
  */
 class DiagnosticRepository private constructor(private val context: Context) {
+    private val luciRepository = LuciRepository.getInstance()
     
     /**
      * 执行全面体检

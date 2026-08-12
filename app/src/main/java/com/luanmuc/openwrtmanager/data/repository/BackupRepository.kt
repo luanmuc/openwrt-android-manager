@@ -17,6 +17,7 @@ import kotlinx.coroutines.delay
  * 负责配置备份、恢复、管理等功能
  */
 class BackupRepository private constructor(private val context: Context) {
+    private val luciRepository = LuciRepository.getInstance()
     
     private val prefs: SharedPreferences = context.getSharedPreferences("backup_manager", Context.MODE_PRIVATE)
     private val backupDir: File = File(context.filesDir, "backups")

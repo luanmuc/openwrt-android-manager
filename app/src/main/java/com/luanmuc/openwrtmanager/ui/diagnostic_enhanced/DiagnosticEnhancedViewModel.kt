@@ -44,6 +44,9 @@ class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(a
     // 操作结果
     private val _operationResult = MutableStateFlow<String?>(null)
     val operationResult: StateFlow<String?> = _operationResult.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
     
     init {
         loadLastResult()
@@ -111,7 +114,7 @@ class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(a
     /**
      * 清除操作结果
      */
-    fun clearError() { _uiState.value = _uiState.value.copy(error = null) }
+    fun clearError() { _error.value = null }
 
     fun clearOperationResult() {
         _operationResult.value = null

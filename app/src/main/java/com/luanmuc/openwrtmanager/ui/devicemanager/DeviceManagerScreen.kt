@@ -3,6 +3,7 @@ package com.luanmuc.openwrtmanager.ui.devicemanager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,16 @@ fun DeviceManagerScreen(
     viewModel: DeviceManagerViewModel = viewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
+
+    // 错误提示
+    LaunchedEffect(error) {
+        error?.let { err ->
+            android.widget.Toast.makeText(context, err, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
     val deviceGroups by viewModel.deviceGroups.collectAsState()
     val deviceHistory by viewModel.deviceHistory.collectAsState()
     

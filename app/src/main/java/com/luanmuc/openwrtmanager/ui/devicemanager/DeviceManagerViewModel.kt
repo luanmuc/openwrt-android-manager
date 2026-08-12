@@ -34,6 +34,9 @@ class DeviceManagerViewModel(application: Application) : AndroidViewModel(applic
     // 操作结果
     private val _operationResult = MutableStateFlow<String?>(null)
     val operationResult: StateFlow<String?> = _operationResult.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
     
     init {
         loadDeviceManagerData()
@@ -93,7 +96,7 @@ class DeviceManagerViewModel(application: Application) : AndroidViewModel(applic
     /**
      * 清除操作结果
      */
-    fun clearError() { _uiState.value = _uiState.value.copy(error = null) }
+    fun clearError() { _error.value = null }
 
     fun clearOperationResult() {
         _operationResult.value = null
