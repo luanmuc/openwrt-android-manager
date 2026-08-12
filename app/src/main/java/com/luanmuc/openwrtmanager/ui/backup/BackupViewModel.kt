@@ -41,6 +41,9 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _success = MutableStateFlow<String?>(null)
+    val success: StateFlow<String?> = _success.asStateFlow()
     
     init {
         loadBackupList()
