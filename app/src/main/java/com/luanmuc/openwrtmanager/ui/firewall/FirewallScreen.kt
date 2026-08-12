@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -312,11 +313,11 @@ fun AddPortForwardDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String, String) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var proto by remember { mutableStateOf("tcp") }
-    var srcPort by remember { mutableStateOf("") }
-    var destIp by remember { mutableStateOf("") }
-    var destPort by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var proto by rememberSaveable { mutableStateOf("tcp") }
+    var srcPort by rememberSaveable { mutableStateOf("") }
+    var destIp by rememberSaveable { mutableStateOf("") }
+    var destPort by rememberSaveable { mutableStateOf("") }
     
     AlertDialog(
         onDismissRequest = onDismiss,
