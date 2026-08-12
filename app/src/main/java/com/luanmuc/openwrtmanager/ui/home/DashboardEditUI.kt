@@ -321,8 +321,7 @@ fun AddCardButton(
 /**
  * 根据卡片类型获取图标
  */
-fun getCardIcon(
-                            contentDescription = "路由器",cardType: CardType): androidx.compose.ui.graphics.vector.ImageVector {
+fun getCardIcon(cardType: CardType): androidx.compose.ui.graphics.vector.ImageVector {
     return when (cardType) {
         CardType.ROUTER_STATUS -> Icons.Default.Router
         CardType.NETWORK_SPEED -> Icons.Default.Speed

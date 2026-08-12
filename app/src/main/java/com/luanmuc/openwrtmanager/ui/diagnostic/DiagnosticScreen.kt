@@ -132,7 +132,6 @@ fun DiagnosticScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                            contentDescription = "已完成",
                                 imageVector = if (result.isHealthy) {
                                     Icons.Default.CheckCircle
                                 } else {
