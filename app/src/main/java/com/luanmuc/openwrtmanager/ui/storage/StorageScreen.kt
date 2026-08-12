@@ -150,10 +150,13 @@ fun StorageScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 // 进度条
+                                val flashUsedPercent = if (uiState.storageTotal > 0) {
+                                    (uiState.storageUsed * 100f / uiState.storageTotal).toInt()
+                                } else 0
                                 StorageProgressBar(
                                     used = uiState.storageUsed,
                                     total = uiState.storageTotal,
-                                    color = getUsageColor(usedPercent)
+                                    color = getUsageColor(flashUsedPercent)
                                 )
                                 Spacer(modifier = Modifier.height(12.dp))
 

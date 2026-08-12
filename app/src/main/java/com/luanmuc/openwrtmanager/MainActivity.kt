@@ -77,7 +77,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Firewall : Screen("firewall", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
-    data object Storage : Screen("storage", 0, Icons.Default.Storage, Icons.Default.Storage)
+    data object Storage : Screen("storage", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)
