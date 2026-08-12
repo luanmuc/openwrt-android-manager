@@ -208,9 +208,10 @@ fun DdnsScreen(
             text = { Text("确定要删除DDNS配置「${showDeleteDialog!!.name}」吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    val deleteName = showDeleteDialog?.name ?: return@DdnsEditDialog
-                    viewModel.deleteDdns(deleteName)
-                    showDeleteDialog = null
+                    showDeleteDialog?.name?.let { deleteName ->
+                        viewModel.deleteDdns(deleteName)
+                        showDeleteDialog = null
+                    }
                 }) {
                     Text("删除", color = MiColors.Error, fontWeight = FontWeight.Medium)
                 }
