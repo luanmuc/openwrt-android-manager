@@ -169,6 +169,17 @@ fun FirewallScreen(
             }
         )
     }
+
+    if (showEditDialog != null) {
+        EditPortForwardDialog(
+            initialRule = editingRule,
+            onDismiss = { showEditDialog = null },
+            onConfirm = { rule ->
+                viewModel.editPortForward(showEditDialog!!.name, rule)
+                showEditDialog = null
+            }
+        )
+    }
 }
 
 @Composable
@@ -392,6 +403,135 @@ fun AddPortForwardDialog(
             ) {
                 Text(
                     "添加",
+                    color = MiColors.Primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    "取消",
+                    color = MiTheme.TextTertiary
+                )
+            }
+        },
+        containerColor = Color.White
+    )
+}
+
+@Composable
+fun EditPortForwardDialog(
+    initialRule: PortForwardRule,
+    onDismiss: () -> Unit,
+    onConfirm: (PortForwardRule) -> Unit
+) {
+    var name by remember { mutableStateOf(initialRule.name) }
+    var proto by remember { mutableStateOf(initialRule.proto) }
+    var srcPort by remember { mutableStateOf(initialRule.srcPort) }
+    var destIp by remember { mutableStateOf(initialRule.destIp) }
+    var destPort by remember { mutableStateOf(initialRule.destPort) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "编辑端口转发",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("规则名称", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiTheme.Divider
+                    )
+                )
+                Text("协议", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("tcp", "udp", "tcpudp").forEach { p ->
+                        androidx.compose.material3.FilterChip(
+                            selected = proto == p,
+                            onClick = { proto = p },
+                            label = { Text(p.uppercase(), fontSize = 12.sp) },
+                            colors = if (proto == p) {
+                                androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MiColors.Primary,
+                                    selectedLabelColor = Color.White
+                                )
+                            } else {
+                                androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    containerColor = MiTheme.CardBackground,
+                                    labelColor = MiTheme.TextTertiary
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    }
+                }
+                Text("外部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = srcPort,
+                    onValueChange = { srcPort = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiTheme.Divider
+                    )
+                )
+                Text("内部IP", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = destIp,
+                    onValueChange = { destIp = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiTheme.Divider
+                    )
+                )
+                Text("内部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                androidx.compose.material3.OutlinedTextField(
+                    value = destPort,
+                    onValueChange = { destPort = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MiColors.Primary,
+                        unfocusedBorderColor = MiTheme.Divider
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotEmpty() && srcPort.isNotEmpty() && destIp.isNotEmpty() && destPort.isNotEmpty()) {
+                        onConfirm(
+                            PortForwardRule(
+                                name = name,
+                                proto = proto,
+                                srcPort = srcPort,
+                                destIp = destIp,
+                                destPort = destPort
+                            )
+                        )
+                    }
+                }
+            ) {
+                Text(
+                    "保存",
                     color = MiColors.Primary,
                     fontWeight = FontWeight.Medium
                 )
