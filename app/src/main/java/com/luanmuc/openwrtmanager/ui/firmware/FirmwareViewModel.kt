@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.firmware
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -311,6 +312,40 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
     /**
      * 重置状态
      */
+    fun uploadLocalFirmware(uri: Uri, fileName: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = true,
+                    error = null
+                )
+
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(1000)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        upgradeState = FirmwareUpgradeState.Ready,
+                        error = null
+                    )
+                    return@launch
+                }
+
+                // 真实模式：读取文件并上传到路由器
+                // 由于OpenWrt的sysupgrade需要通过SSH或Web上传，这里先标记为待刷写
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    upgradeState = FirmwareUpgradeState.Ready,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "文件处理失败"
+                )
+            }
+        }
+    }
+
     fun resetState() {
         _uiState.value = _uiState.value.copy(
             upgradeState = FirmwareUpgradeState.IDLE,

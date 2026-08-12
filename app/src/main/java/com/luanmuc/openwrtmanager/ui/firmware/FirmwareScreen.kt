@@ -8,6 +8,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
@@ -32,6 +34,17 @@ fun FirmwareScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // 文件选择器
+    val fileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            val fileName = it.lastPathSegment ?: "firmware.bin"
+            android.widget.Toast.makeText(context, "已选择: $fileName", android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.uploadLocalFirmware(it, fileName)
+        }
+    }
     
     // 错误提示
     LaunchedEffect(uiState.error) {
@@ -127,7 +140,7 @@ fun FirmwareScreen(
 
             // 本地固件升级
             LocalUpgradeCard(
-                onSelectFile = { }
+                onSelectFile = { fileLauncher.launch("*/*") }
             )
 
             // 升级配置
