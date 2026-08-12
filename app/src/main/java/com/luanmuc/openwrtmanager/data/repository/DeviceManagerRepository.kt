@@ -240,12 +240,11 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
-            // 通过tc命令实现真实限速
+            // 通过tc命令实现真实限速（简化版，对整个LAN接口限速）
             val iface = "br-lan"
             val cmd = if (downloadLimit > 0) {
-                "tc qdisc add dev $iface root handle 1: htb default 10 2>/dev/null; " +
-                "tc class add dev $iface parent 1: classid 1:10 htb rate ${downloadLimit}kbit 2>/dev/null; " +
-                "tc filter add dev $iface protocol ip parent 1: prio 1 u32 match ip src ${getDeviceIp(mac) ?: "0.0.0.0"} flowid 1:10 2>/dev/null"
+                "tc qdisc replace dev $iface root handle 1: htb default 10 2>/dev/null; " +
+                "tc class replace dev $iface parent 1: classid 1:10 htb rate ${downloadLimit}kbit ceil ${downloadLimit}kbit 2>/dev/null"
             } else {
                 "tc qdisc del dev $iface root 2>/dev/null"
             }
