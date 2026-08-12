@@ -1,5 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.notification
 
+import com.luanmuc.openwrtmanager.R
+
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
