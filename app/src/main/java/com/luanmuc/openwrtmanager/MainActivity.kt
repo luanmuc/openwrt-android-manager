@@ -203,7 +203,8 @@ fun MainScreen() {
                     onNavigateToBackup = { navController.navigate(Screen.Backup.route) },
                     onNavigateToWifiEnhanced = { navController.navigate(Screen.WifiEnhanced.route) },
                     onNavigateToTerminal = { navController.navigate(Screen.Terminal.route) },
-                    onNavigateToWidgetConfig = { navController.navigate(Screen.WidgetConfig.route) }
+                    onNavigateToWidgetConfig = { navController.navigate(Screen.WidgetConfig.route) },
+                    onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) }
                 )
             }
             composable(Screen.AddRouter.route) {

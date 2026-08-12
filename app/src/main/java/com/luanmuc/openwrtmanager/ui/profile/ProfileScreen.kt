@@ -123,6 +123,7 @@ fun ProfileScreen(
     onNavigateToWifiEnhanced: () -> Unit = {},
     onNavigateToTerminal: () -> Unit = {},
     onNavigateToWidgetConfig: () -> Unit = {},
+    onNavigateToPlugins: () -> Unit = {},
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -340,7 +341,7 @@ fun ToolsGrid(
                     icon = Icons.Default.Extension,
                     title = "插件市场",
                     gradient = MiColors.GradientRed,
-                    onClick = {}
+                    onClick = onNavigateToPlugins
                 )
             }
         }
