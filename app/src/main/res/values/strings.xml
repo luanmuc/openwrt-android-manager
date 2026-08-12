@@ -96,5 +96,56 @@
     <string name="notification_title">通知设置</string>
     <!-- 小部件 -->
     <string name="widget_config_title">小部件配置</string>
+    <!-- 通用按钮 -->
+    <string name="common_close">关闭</string>
+    <string name="common_uninstall">卸载</string>
+    <string name="common_update">更新</string>
+    <string name="common_install">安装</string>
+    <string name="common_execute">执行</string>
+    <string name="common_clear">清空</string>
+    <string name="common_clear_cache">清除缓存</string>
+    <string name="common_one_click_fix">一键修复</string>
+    <string name="common_confirm_upgrade">确认升级</string>
+    <string name="common_scan_channel">扫描信道</string>
+    <!-- 状态文字 -->
+    <string name="status_updating">更新中...</string>
+    <string name="status_installing">安装中...</string>
+    <string name="status_uninstalling">卸载中...</string>
+    <string name="status_scanning">扫描中...</string>
+    <!-- 表单标签 -->
+    <string name="form_username">用户名</string>
+    <string name="form_password">密码</string>
+    <string name="form_name">名称</string>
+    <string name="form_domain">域名</string>
+    <string name="form_url">URL地址</string>
+    <string name="form_provider">服务商</string>
+    <string name="form_network_interface">网络接口</string>
+    <string name="form_connection_timeout">连接超时</string>
+    <string name="form_retry_count">重试次数</string>
+    <string name="form_refresh_interval">刷新间隔</string>
+    <string name="form_traffic_unit">流量单位</string>
+    <!-- 设置项 -->
+    <string name="setting_language">语言设置</string>
+    <string name="setting_theme">主题设置</string>
+    <string name="setting_widget">桌面小部件</string>
+    <string name="setting_wifi_enhanced">WiFi增强</string>
+    <!-- 对话框标题 -->
+    <string name="dialog_delete_device">删除设备</string>
+    <!-- 对话框内容（含格式化参数） -->
+    <string name="dialog_clear_cache_confirm">确定要清除所有缓存数据吗？</string>
+    <string name="dialog_firmware_upgrade_confirm">确定要升级固件吗？升级过程中请勿断电，升级完成后路由器将自动重启。</string>
+    <string name="dialog_delete_port_forward_confirm">确定要删除端口转发规则「%1$s」吗？</string>
+    <string name="dialog_delete_router_confirm">确定要删除「%1$s」吗？\n删除后需要重新添加。</string>
+    <string name="dialog_kill_process_confirm">确定要结束进程「%1$s」(PID: %2$d) 吗？</string>
+    <!-- 防火墙表单标签 -->
+    <string name="firewall_rule_name">规则名称</string>
+    <string name="firewall_protocol">协议</string>
+    <string name="firewall_external_port">外部端口</string>
+    <string name="firewall_internal_ip">内部IP</string>
+    <string name="firewall_internal_port">内部端口</string>
+    <!-- 通用 -->
+    <string name="common_add">添加</string>
+    <!-- DDNS删除确认 -->
+    <string name="dialog_delete_ddns_confirm">确定要删除DDNS配置「%1$s」吗？</string>
 
 </resources>

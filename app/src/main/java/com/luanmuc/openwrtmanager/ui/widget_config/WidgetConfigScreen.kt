@@ -1,4 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.widget_config
+import com.luanmuc.openwrtmanager.R
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -45,7 +47,7 @@ fun WidgetConfigScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("桌面小部件") },
+                title = { Text(stringResource(R.string.setting_widget)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")

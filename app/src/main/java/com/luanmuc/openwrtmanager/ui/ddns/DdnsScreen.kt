@@ -208,7 +208,7 @@ fun DdnsScreen(
                 Icon(Icons.Default.Delete, contentDescription = null, tint = MiColors.Error)
             },
             title = { Text(stringResource(R.string.ddns_delete_title), fontWeight = FontWeight.Bold) },
-            text = { Text("确定要删除DDNS配置「${showDeleteDialog?.name ?: ""}」吗？") },
+            text = { Text(stringResource(R.string.dialog_delete_ddns_confirm, showDeleteDialog?.name ?: "")) },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog?.name?.let { deleteName ->
@@ -333,7 +333,7 @@ fun DdnsEditDialog(
                 OutlinedTextField(
                     value = config.service,
                     onValueChange = { onConfigChange(config.copy(service = it)) },
-                    label = { Text("服务商") },
+                    label = { Text(stringResource(R.string.form_provider)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -341,7 +341,7 @@ fun DdnsEditDialog(
                 OutlinedTextField(
                     value = config.domain,
                     onValueChange = { onConfigChange(config.copy(domain = it)) },
-                    label = { Text("域名") },
+                    label = { Text(stringResource(R.string.form_domain)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -349,7 +349,7 @@ fun DdnsEditDialog(
                 OutlinedTextField(
                     value = config.username,
                     onValueChange = { onConfigChange(config.copy(username = it)) },
-                    label = { Text("用户名") },
+                    label = { Text(stringResource(R.string.form_username)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -357,7 +357,7 @@ fun DdnsEditDialog(
                 OutlinedTextField(
                     value = config.password,
                     onValueChange = { onConfigChange(config.copy(password = it)) },
-                    label = { Text("密码") },
+                    label = { Text(stringResource(R.string.form_password)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -365,7 +365,7 @@ fun DdnsEditDialog(
                 OutlinedTextField(
                     value = config.interfaceName,
                     onValueChange = { onConfigChange(config.copy(interfaceName = it)) },
-                    label = { Text("网络接口") },
+                    label = { Text(stringResource(R.string.form_network_interface)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )

@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.ui.home
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -309,7 +310,7 @@ fun DeviceSelectorDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text(stringResource(R.string.common_close))
             }
         }
     )

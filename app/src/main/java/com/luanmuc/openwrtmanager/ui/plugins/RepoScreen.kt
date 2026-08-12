@@ -235,7 +235,7 @@ fun RepoScreen(
                     OutlinedTextField(
                         value = repoName,
                         onValueChange = { repoName = it },
-                        label = { Text("名称") },
+                        label = { Text(stringResource(R.string.form_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -243,7 +243,7 @@ fun RepoScreen(
                     OutlinedTextField(
                         value = repoUrl,
                         onValueChange = { repoUrl = it },
-                        label = { Text("URL地址") },
+                        label = { Text(stringResource(R.string.form_url)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -260,7 +260,7 @@ fun RepoScreen(
                         }
                     }
                 ) {
-                    Text("添加", color = MiTheme.Primary)
+                    Text(stringResource(R.string.common_add), color = MiTheme.Primary)
                 }
             },
             dismissButton = {

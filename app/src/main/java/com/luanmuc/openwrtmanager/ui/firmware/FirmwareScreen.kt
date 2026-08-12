@@ -159,14 +159,14 @@ fun FirmwareScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissConfirmDialog() },
             title = {
-                Text("确认升级")
+                Text(stringResource(R.string.common_confirm_upgrade))
             },
             text = {
-                Text("确定要升级固件吗？升级过程中请勿断电，升级完成后路由器将自动重启。")
+                Text(stringResource(R.string.dialog_firmware_upgrade_confirm))
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.confirmFlash() }) {
-                    Text("确认升级", color = MiTheme.Primary)
+                    Text(stringResource(R.string.common_confirm_upgrade), color = MiTheme.Primary)
                 }
             },
             dismissButton = {

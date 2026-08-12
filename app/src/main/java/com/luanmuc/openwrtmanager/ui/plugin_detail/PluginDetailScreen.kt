@@ -1,4 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.plugin_detail
+import com.luanmuc.openwrtmanager.R
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -540,9 +542,9 @@ private fun BottomActionBar(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("更新中...")
+                            Text(stringResource(R.string.status_updating))
                         } else {
-                            Text("更新")
+                            Text(stringResource(R.string.common_update))
                         }
                     }
                     
@@ -556,7 +558,7 @@ private fun BottomActionBar(
                         ),
                         shape = RoundedCornerShape(MiDimens.buttonRadius)
                     ) {
-                        Text("卸载")
+                        Text(stringResource(R.string.common_uninstall))
                     }
                 }
                 isInstalled -> {
@@ -577,9 +579,9 @@ private fun BottomActionBar(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("卸载中...")
+                            Text(stringResource(R.string.status_uninstalling))
                         } else {
-                            Text("卸载")
+                            Text(stringResource(R.string.common_uninstall))
                         }
                     }
                 }
@@ -601,9 +603,9 @@ private fun BottomActionBar(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("安装中...")
+                            Text(stringResource(R.string.status_installing))
                         } else {
-                            Text("安装")
+                            Text(stringResource(R.string.common_install))
                         }
                     }
                 }

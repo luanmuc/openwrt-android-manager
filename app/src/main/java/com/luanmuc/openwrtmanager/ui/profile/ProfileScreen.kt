@@ -817,7 +817,7 @@ fun SettingsList() {
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text("主题设置") },
+            title = { Text(stringResource(R.string.setting_theme)) },
             text = {
                 Column {
                     ThemeMode.values().forEach { mode ->
@@ -861,7 +861,7 @@ fun SettingsList() {
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text("语言设置") },
+            title = { Text(stringResource(R.string.setting_language)) },
             text = {
                 Column {
                     Language.values().forEach { lang ->
@@ -903,7 +903,7 @@ fun SettingsList() {
     if (showRefreshIntervalDialog) {
         AlertDialog(
             onDismissRequest = { showRefreshIntervalDialog = false },
-            title = { Text("刷新间隔") },
+            title = { Text(stringResource(R.string.form_refresh_interval)) },
             text = {
                 Column {
                     RefreshInterval.values().forEach { interval ->
@@ -945,7 +945,7 @@ fun SettingsList() {
     if (showConnectionTimeoutDialog) {
         AlertDialog(
             onDismissRequest = { showConnectionTimeoutDialog = false },
-            title = { Text("连接超时") },
+            title = { Text(stringResource(R.string.form_connection_timeout)) },
             text = {
                 Column {
                     ConnectionTimeout.values().forEach { timeout ->
@@ -987,7 +987,7 @@ fun SettingsList() {
     if (showRetryCountDialog) {
         AlertDialog(
             onDismissRequest = { showRetryCountDialog = false },
-            title = { Text("重试次数") },
+            title = { Text(stringResource(R.string.form_retry_count)) },
             text = {
                 Column {
                     RetryCount.values().forEach { count ->
@@ -1029,7 +1029,7 @@ fun SettingsList() {
     if (showTrafficUnitDialog) {
         AlertDialog(
             onDismissRequest = { showTrafficUnitDialog = false },
-            title = { Text("流量单位") },
+            title = { Text(stringResource(R.string.form_traffic_unit)) },
             text = {
                 Column {
                     TrafficUnit.values().forEach { unit ->
@@ -1071,8 +1071,8 @@ fun SettingsList() {
     if (showClearCacheDialog) {
         AlertDialog(
             onDismissRequest = { showClearCacheDialog = false },
-            title = { Text("清除缓存") },
-            text = { Text("确定要清除所有缓存数据吗？") },
+            title = { Text(stringResource(R.string.common_clear_cache)) },
+            text = { Text(stringResource(R.string.dialog_clear_cache_confirm)) },
             confirmButton = {
                 TextButton(
                     onClick = {

@@ -200,7 +200,7 @@ fun TerminalScreen(
                         ),
                         shape = RoundedCornerShape(MiDimens.buttonRadius)
                     ) {
-                        Text("执行")
+                        Text(stringResource(R.string.common_execute))
                     }
                 }
             }
@@ -250,7 +250,7 @@ private fun QuickCommandsPanel(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = onDismiss) {
-                    Text("关闭")
+                    Text(stringResource(R.string.common_close))
                 }
             }
             
@@ -330,7 +330,7 @@ private fun SettingsPanel(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 TextButton(onClick = onDismiss) {
-                    Text("关闭")
+                    Text(stringResource(R.string.common_close))
                 }
             }
             

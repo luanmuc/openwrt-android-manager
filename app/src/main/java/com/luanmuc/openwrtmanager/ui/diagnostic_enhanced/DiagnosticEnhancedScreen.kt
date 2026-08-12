@@ -505,7 +505,7 @@ private fun SuggestionCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("一键修复")
+                        Text(stringResource(R.string.common_one_click_fix))
                     }
                 }
             }

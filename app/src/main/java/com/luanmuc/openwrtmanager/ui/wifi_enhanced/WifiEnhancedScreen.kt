@@ -1,4 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.wifi_enhanced
+import com.luanmuc.openwrtmanager.R
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,7 +49,7 @@ fun WifiEnhancedScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("WiFi增强") },
+                title = { Text(stringResource(R.string.setting_wifi_enhanced)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
@@ -166,11 +168,11 @@ fun WifiEnhancedScreen(
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("扫描中...")
+                        Text(stringResource(R.string.status_scanning))
                     } else {
                         Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("扫描信道")
+                        Text(stringResource(R.string.common_scan_channel))
                     }
                 }
                 

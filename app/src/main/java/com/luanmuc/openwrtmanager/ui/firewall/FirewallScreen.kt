@@ -1,4 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.firewall
+import com.luanmuc.openwrtmanager.R
+import androidx.compose.ui.res.stringResource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -273,7 +275,7 @@ fun PortForwardCard(
                 )
             },
             text = {
-                Text("确定要删除端口转发规则「${rule.name}」吗？")
+                Text(stringResource(R.string.dialog_delete_port_forward_confirm, rule.name))
             },
             confirmButton = {
                 TextButton(
@@ -323,7 +325,7 @@ fun AddPortForwardDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("规则名称", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_rule_name), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -335,7 +337,7 @@ fun AddPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("协议", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_protocol), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("tcp", "udp", "tcpudp").forEach { p ->
                         androidx.compose.material3.FilterChip(
@@ -357,7 +359,7 @@ fun AddPortForwardDialog(
                         )
                     }
                 }
-                Text("外部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_external_port), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = srcPort,
                     onValueChange = { srcPort = it },
@@ -369,7 +371,7 @@ fun AddPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部IP", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_internal_ip), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destIp,
                     onValueChange = { destIp = it },
@@ -381,7 +383,7 @@ fun AddPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_internal_port), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destPort,
                     onValueChange = { destPort = it },
@@ -444,7 +446,7 @@ fun EditPortForwardDialog(
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("规则名称", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_rule_name), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -456,7 +458,7 @@ fun EditPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("协议", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_protocol), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("tcp", "udp", "tcpudp").forEach { p ->
                         androidx.compose.material3.FilterChip(
@@ -478,7 +480,7 @@ fun EditPortForwardDialog(
                         )
                     }
                 }
-                Text("外部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_external_port), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = srcPort,
                     onValueChange = { srcPort = it },
@@ -490,7 +492,7 @@ fun EditPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部IP", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_internal_ip), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destIp,
                     onValueChange = { destIp = it },
@@ -502,7 +504,7 @@ fun EditPortForwardDialog(
                         unfocusedBorderColor = MiTheme.Divider
                     )
                 )
-                Text("内部端口", fontSize = 14.sp, color = MiTheme.TextSecondary)
+                Text(stringResource(R.string.firewall_internal_port), fontSize = 14.sp, color = MiTheme.TextSecondary)
                 androidx.compose.material3.OutlinedTextField(
                     value = destPort,
                     onValueChange = { destPort = it },

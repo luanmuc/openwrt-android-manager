@@ -590,7 +590,7 @@ fun ProcessesContent(
                 )
             },
             text = {
-                Text("确定要结束进程「${process.name}」(PID: ${process.pid}) 吗？")
+                Text(stringResource(R.string.dialog_kill_process_confirm, process.name, process.pid))
             },
             confirmButton = {
                 TextButton(

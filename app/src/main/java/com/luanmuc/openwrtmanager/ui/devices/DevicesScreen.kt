@@ -135,9 +135,9 @@ fun DevicesScreen(
                     tint = MiColors.Error
                 )
             },
-            title = { Text("删除设备") },
+            title = { Text(stringResource(R.string.dialog_delete_device)) },
             text = {
-                Text("确定要删除「${router.name.ifEmpty { router.address }}」吗？\n删除后需要重新添加。")
+                Text(stringResource(R.string.dialog_delete_router_confirm, router.name.ifEmpty { router.address }))
             },
             confirmButton = {
                 TextButton(
