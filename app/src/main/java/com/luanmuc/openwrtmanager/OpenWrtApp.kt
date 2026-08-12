@@ -7,6 +7,7 @@ import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
 import com.luanmuc.openwrtmanager.util.NetworkMonitor
 import com.luanmuc.openwrtmanager.util.AppNotificationManager
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 /**
  * Application 类
@@ -15,6 +16,8 @@ class OpenWrtApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // 初始化日志工具（release版本禁用调试日志）
+        LogUtils.isDebugEnabled = BuildConfig.DEBUG
         // 初始化全局异常处理
         initGlobalExceptionHandler()
         // 初始化仓库

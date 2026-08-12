@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.Router
+import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
 import com.luanmuc.openwrtmanager.util.DebugMode
 
@@ -53,6 +54,13 @@ class DevicesViewModel(application: Application) : BaseViewModel(application) {
 
     fun setActiveRouter(routerId: String) {
         viewModelScope.launch {
+            // 切换路由器时清除旧路由器的缓存
+            val oldRouterId = _uiState.value.activeRouterId
+            if (oldRouterId != null && oldRouterId != routerId) {
+                try {
+                    CacheRepository.getInstance(getApplication()).clearRouterCache(oldRouterId)
+                } catch (_: Exception) {}
+            }
             // 如果是演示路由器，开启演示模式
             if (DebugMode.isDemoRouter(routerId)) {
                 DebugMode.enableDemoMode()

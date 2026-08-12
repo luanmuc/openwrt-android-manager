@@ -38,19 +38,23 @@ object LogUtils {
      * 信息日志
      */
     fun i(tag: String = TAG, message: String) {
-        val sanitized = sanitizeMessage(message)
-        logChunked(Log.INFO, tag, sanitized)
+        if (isDebugEnabled) {
+            val sanitized = sanitizeMessage(message)
+            logChunked(Log.INFO, tag, sanitized)
+        }
     }
     
     /**
      * 警告日志
      */
     fun w(tag: String = TAG, message: String, throwable: Throwable? = null) {
-        val sanitized = sanitizeMessage(message)
-        if (throwable != null) {
-            Log.w(tag, sanitized, throwable)
-        } else {
-            logChunked(Log.WARN, tag, sanitized)
+        if (isDebugEnabled) {
+            val sanitized = sanitizeMessage(message)
+            if (throwable != null) {
+                Log.w(tag, sanitized, throwable)
+            } else {
+                logChunked(Log.WARN, tag, sanitized)
+            }
         }
     }
     
@@ -58,11 +62,13 @@ object LogUtils {
      * 错误日志
      */
     fun e(tag: String = TAG, message: String, throwable: Throwable? = null) {
-        val sanitized = sanitizeMessage(message)
-        if (throwable != null) {
-            Log.e(tag, sanitized, throwable)
-        } else {
-            logChunked(Log.ERROR, tag, sanitized)
+        if (isDebugEnabled) {
+            val sanitized = sanitizeMessage(message)
+            if (throwable != null) {
+                Log.e(tag, sanitized, throwable)
+            } else {
+                logChunked(Log.ERROR, tag, sanitized)
+            }
         }
     }
     
