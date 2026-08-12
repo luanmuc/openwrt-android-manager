@@ -161,15 +161,16 @@ fun FirewallScreen(
             onConfirm = { name, proto, srcPort, destIp, destPort ->
                 if (DebounceUtils.canClick()) {
                     viewModel.addPortForward(
-                    PortForwardRule(
-                        name = name,
-                        proto = proto,
-                        srcPort = srcPort,
-                        destIp = destIp,
-                        destPort = destPort
+                        PortForwardRule(
+                            name = name,
+                            proto = proto,
+                            srcPort = srcPort,
+                            destIp = destIp,
+                            destPort = destPort
+                        )
                     )
-                )
-                showAddDialog = false
+                    showAddDialog = false
+                }
             }
         )
     }
