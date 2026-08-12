@@ -240,9 +240,23 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
-            // TODO: 实现真实的限速功能
+            // 通过tc命令实现真实限速
+            val iface = "br-lan"
+            val cmd = if (downloadLimit > 0) {
+                "tc qdisc add dev $iface root handle 1: htb default 10 2>/dev/null; " +
+                "tc class add dev $iface parent 1: classid 1:10 htb rate ${downloadLimit}kbit 2>/dev/null; " +
+                "tc filter add dev $iface protocol ip parent 1: prio 1 u32 match ip src ${getDeviceIp(mac) ?: "0.0.0.0"} flowid 1:10 2>/dev/null"
+            } else {
+                "tc qdisc del dev $iface root 2>/dev/null"
+            }
+            luciRepository.executeCommand(cmd)
             val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
             saveDeviceNote(note.copy(speedLimit = downloadLimit))
+            addDeviceHistory(DeviceHistory(
+                mac = mac,
+                eventType = DeviceEventType.SPEED_LIMITED,
+                timestamp = System.currentTimeMillis()
+            ))
             true
         } catch (e: Exception) {
             false
@@ -265,8 +279,15 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
+            // 通过tc命令取消限速
+            luciRepository.executeCommand("tc qdisc del dev br-lan root 2>/dev/null")
             val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
             saveDeviceNote(note.copy(speedLimit = 0))
+            addDeviceHistory(DeviceHistory(
+                mac = mac,
+                eventType = DeviceEventType.SPEED_UNLIMITED,
+                timestamp = System.currentTimeMillis()
+            ))
             true
         } catch (e: Exception) {
             false

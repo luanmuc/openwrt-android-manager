@@ -274,8 +274,24 @@ jobs:
             ls -lh app/build/outputs/apk/debug/
             echo "APK_SIZE=$(stat -c%s app/build/outputs/apk/debug/app-debug.apk)" >> $GITHUB_ENV
           else
-            echo "❌ 编译失败，APK文件未找到"
+            echo "❌ Debug编译失败，APK文件未找到"
             exit 1
+          fi
+
+      - name: 编译 Release APK
+        id: build_release
+        run: |
+          echo "=== 开始Release编译 ==="
+          ./gradlew assembleRelease             --info             --stacktrace             --no-daemon             --build-cache             2>&1 | tee build_release.log
+
+          echo ""
+          echo "=== Release编译结果 ==="
+          if [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ] || [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            echo "✅ Release编译成功！"
+            ls -lh app/build/outputs/apk/release/
+          else
+            echo "⚠️ Release编译产物未找到，检查输出目录"
+            ls -la app/build/outputs/apk/ 2>/dev/null || echo "无APK输出目录"
           fi
 
       - name: 编译失败时输出错误日志

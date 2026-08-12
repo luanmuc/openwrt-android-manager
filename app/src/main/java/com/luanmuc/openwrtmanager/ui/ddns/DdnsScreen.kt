@@ -205,7 +205,7 @@ fun DdnsScreen(
                 Icon(Icons.Default.Delete, contentDescription = null, tint = MiColors.Error)
             },
             title = { Text("删除DDNS配置", fontWeight = FontWeight.Bold) },
-            text = { Text("确定要删除DDNS配置「${showDeleteDialog!!.name}」吗？") },
+            text = { Text("确定要删除DDNS配置「${showDeleteDialog?.name ?: ""}」吗？") },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog?.name?.let { deleteName ->
