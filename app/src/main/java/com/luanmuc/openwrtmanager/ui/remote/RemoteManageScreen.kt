@@ -20,6 +20,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.luanmuc.openwrtmanager.ui.components.MiColors
 import com.luanmuc.openwrtmanager.ui.components.MiTheme
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
@@ -32,21 +34,24 @@ import com.luanmuc.openwrtmanager.util.DebounceUtils
 @Composable
 fun RemoteManageScreen(
     onBack: () -> Unit = {},
-    remoteEnabled: Boolean = false,
-    remoteAddress: String = "",
-    remotePort: Int = 443,
-    remoteProtocol: String = "https",
-    autoSwitchRemote: Boolean = true,
-    isRemoteMode: Boolean = false,
-    onRemoteEnabledChange: (Boolean) -> Unit = {},
-    onRemoteAddressChange: (String) -> Unit = {},
-    onRemotePortChange: (Int) -> Unit = {},
-    onRemoteProtocolChange: (String) -> Unit = {},
-    onAutoSwitchRemoteChange: (Boolean) -> Unit = {},
-    onForceRemoteMode: (Boolean) -> Unit = {},
-    onTestConnection: () -> Unit = {}
+    viewModel: RemoteManageViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    
+    val remoteEnabled = uiState.remoteEnabled
+    val remoteAddress = uiState.remoteAddress
+    val remotePort = uiState.remotePort
+    val remoteProtocol = uiState.remoteProtocol
+    val autoSwitchRemote = uiState.autoSwitchRemote
+    val isRemoteMode = uiState.isRemoteMode
+    val onRemoteEnabledChange: (Boolean) -> Unit = { viewModel.onRemoteEnabledChange(it) }
+    val onRemoteAddressChange: (String) -> Unit = { viewModel.onRemoteAddressChange(it) }
+    val onRemotePortChange: (Int) -> Unit = { viewModel.onRemotePortChange(it) }
+    val onRemoteProtocolChange: (String) -> Unit = { viewModel.onRemoteProtocolChange(it) }
+    val onAutoSwitchRemoteChange: (Boolean) -> Unit = { viewModel.onAutoSwitchRemoteChange(it) }
+    val onForceRemoteMode: (Boolean) -> Unit = { viewModel.onForceRemoteMode(it) }
+    val onTestConnection: () -> Unit = { viewModel.testRemoteConnection() }
     var showProtocolDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
 

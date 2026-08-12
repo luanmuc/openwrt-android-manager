@@ -56,7 +56,6 @@ import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
 import com.luanmuc.openwrtmanager.ui.storage.StorageScreen
 import com.luanmuc.openwrtmanager.ui.remote.RemoteManageScreen
-import com.luanmuc.openwrtmanager.ui.remote.RemoteManageViewModel
 import com.luanmuc.openwrtmanager.ui.traffic.TrafficScreen
 import com.luanmuc.openwrtmanager.ui.theme.OpenWrtManagerTheme
 import com.luanmuc.openwrtmanager.ui.wifi.WifiScreen
@@ -270,23 +269,8 @@ fun MainScreen() {
                 )
             }
             composable(Screen.RemoteManage.route) {
-                val remoteViewModel: RemoteManageViewModel = viewModel()
-                val remoteUiState by remoteViewModel.uiState.collectAsStateWithLifecycle()
                 RemoteManageScreen(
-                    onBack = { navController.popBackStack() },
-                    remoteEnabled = remoteUiState.remoteEnabled,
-                    remoteAddress = remoteUiState.remoteAddress,
-                    remotePort = remoteUiState.remotePort,
-                    remoteProtocol = remoteUiState.remoteProtocol,
-                    autoSwitchRemote = remoteUiState.autoSwitchRemote,
-                    isRemoteMode = remoteUiState.isRemoteMode,
-                    onRemoteEnabledChange = { remoteViewModel.onRemoteEnabledChange(it) },
-                    onRemoteAddressChange = { remoteViewModel.onRemoteAddressChange(it) },
-                    onRemotePortChange = { remoteViewModel.onRemotePortChange(it) },
-                    onRemoteProtocolChange = { remoteViewModel.onRemoteProtocolChange(it) },
-                    onAutoSwitchRemoteChange = { remoteViewModel.onAutoSwitchRemoteChange(it) },
-                    onForceRemoteMode = { remoteViewModel.onForceRemoteMode(it) },
-                    onTestConnection = { remoteViewModel.testRemoteConnection() }
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.Diagnostic.route) {
