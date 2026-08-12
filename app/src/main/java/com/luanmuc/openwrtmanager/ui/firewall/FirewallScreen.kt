@@ -175,7 +175,8 @@ fun FirewallScreen(
             initialRule = editingRule,
             onDismiss = { showEditDialog = null },
             onConfirm = { rule ->
-                viewModel.editPortForward(showEditDialog!!.name, rule)
+                val editName = showEditDialog?.name ?: return@TextButton
+                viewModel.editPortForward(editName, rule)
                 showEditDialog = null
             }
         )
