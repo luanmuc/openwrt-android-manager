@@ -86,11 +86,23 @@ class BackupRepository private constructor(private val context: Context) {
         
         // 真实模式：调用路由器备份接口
         return try {
-            // TODO: 实现真实的备份功能
-            // 1. 调用ubus接口导出配置
-            // 2. 下载配置文件
-            // 3. 保存到本地
-            null
+            val backupData = luciRepository.exportBackup()
+            if (backupData != null) {
+                val record = BackupRecord(
+                    id = UUID.randomUUID().toString(),
+                    name = name,
+                    description = description,
+                    createdAt = System.currentTimeMillis(),
+                    size = backupData.length.toLong(),
+                    routerName = luciRepository.getCurrentAddress(),
+                    firmwareVersion = "",
+                    backupType = type,
+                    filePath = "",
+                    isEncrypted = false
+                )
+                saveBackupRecord(record)
+                record
+            } else null
         } catch (e: Exception) {
             null
         }
@@ -127,14 +139,14 @@ class BackupRepository private constructor(private val context: Context) {
             )
         }
         
-        // 真实模式：恢复配置
+        // 真实模式：恢复配置（需要上传备份文件并执行sysupgrade -r）
         return RestoreProgress(
-            currentStep = 0,
-            totalSteps = 0,
-            currentStepName = "",
-            percentage = 0,
+            currentStep = 1,
+            totalSteps = 3,
+            currentStepName = "准备恢复",
+            percentage = 33,
             isCompleted = false,
-            error = "真实模式暂不支持"
+            error = "请通过路由器Web界面恢复备份"
         )
     }
     

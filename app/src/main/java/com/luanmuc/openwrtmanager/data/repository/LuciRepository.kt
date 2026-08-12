@@ -2199,6 +2199,97 @@ class LuciRepository {
             false
         }
     }
+
+    /**
+     * 导出系统配置备份
+     * 通过sysupgrade -b生成备份并返回base64编码内容
+     */
+    suspend fun exportBackup(): String? {
+        return try {
+            // 使用ubus调用file exec执行sysupgrade -b
+            val result = callUbus(
+                "file", "exec", mapOf(
+                    "command" to "/sbin/sysupgrade",
+                    "params" to listOf("-b", "/tmp/backup.tar.gz")
+                )
+            )
+            // 读取生成的备份文件
+            val fileResult = callUbus(
+                "file", "read", mapOf(
+                    "path" to "/tmp/backup.tar.gz"
+                )
+            )
+            (fileResult as? Map<*, *>)?.get("data")?.toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * 拉黑设备（通过防火墙添加拒绝规则）
+     */
+    suspend fun blockDevice(mac: String): Boolean {
+        return try {
+            val ruleName = "block_${mac.replace(":", "").lowercase()}"
+            // 添加拒绝转发规则
+            callUbus(
+                "uci", "add", mapOf(
+                    "config" to "firewall",
+                    "type" to "rule",
+                    "name" to ruleName,
+                    "values" to mapOf(
+                        "name" to "Block-$mac",
+                        "src" to "lan",
+                        "dest" to "wan",
+                        "proto" to "all",
+                        "src_mac" to mac,
+                        "target" to "REJECT",
+                        "enabled" to "1"
+                    )
+                )
+            )
+            commitUci("firewall")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 解除设备拉黑
+     */
+    suspend fun unblockDevice(mac: String): Boolean {
+        return try {
+            val ruleName = "block_${mac.replace(":", "").lowercase()}"
+            callUbus(
+                "uci", "delete", mapOf(
+                    "config" to "firewall",
+                    "section" to ruleName
+                )
+            )
+            commitUci("firewall")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 执行系统命令（用于诊断）
+     */
+    suspend fun executeCommand(command: String): String? {
+        return try {
+            val result = callUbus(
+                "file", "exec", mapOf(
+                    "command" to "/bin/sh",
+                    "params" to listOf("-c", command)
+                )
+            )
+            (result as? Map<*, *>)?.get("stdout")?.toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
 
 

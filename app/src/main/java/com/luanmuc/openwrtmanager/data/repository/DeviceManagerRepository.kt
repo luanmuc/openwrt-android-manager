@@ -181,12 +181,19 @@ class DeviceManagerRepository private constructor(private val context: Context) 
             return true
         }
         
-        // 真实模式：调用ubus接口拉黑设备
+        // 真实模式：调用防火墙规则拉黑设备
         return try {
-            // TODO: 实现真实的拉黑功能
-            val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
-            saveDeviceNote(note.copy(isBlocked = true))
-            true
+            val success = luciRepository.blockDevice(mac)
+            if (success) {
+                val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
+                saveDeviceNote(note.copy(isBlocked = true))
+                addDeviceHistory(DeviceHistory(
+                    mac = mac,
+                    eventType = DeviceEventType.BLOCKED,
+                    timestamp = System.currentTimeMillis()
+                ))
+            }
+            success
         } catch (e: Exception) {
             false
         }
