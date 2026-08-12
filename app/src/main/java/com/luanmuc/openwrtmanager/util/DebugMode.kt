@@ -88,12 +88,53 @@ object DebugMode {
             cpuUsage = fakeState.cpuUsage,
             memoryTotal = 512 * 1024 * 1024L,
             memoryUsed = (512 * 1024 * 1024L * (0.3f + fakeState.memoryUsageDelta)).toLong(),
+            memoryFree = (512 * 1024 * 1024L * 0.4f).toLong(),
+            memoryCached = (512 * 1024 * 1024L * 0.2f).toLong(),
+            memoryBuffered = (512 * 1024 * 1024L * 0.1f).toLong(),
             storageTotal = 128 * 1024 * 1024L,
             storageUsed = 45 * 1024 * 1024L,
+            storageFree = 83 * 1024 * 1024L,
+            loadAverage = listOf(0.23f, 0.18f, 0.15f),
+            temperature = 45.5f,
             onlineDevices = 12,
             wanConnected = true,
             wanIp = "192.168.1.100",
             wanUptime = 2 * 24 * 3600 + 8 * 3600
+        )
+    }
+
+    /**
+     * 生成假的挂载点列表
+     */
+    fun getFakeMountPoints(): List<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo> {
+        return listOf(
+            com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
+                mountPoint = "/",
+                device = "/dev/root",
+                filesystem = "squashfs",
+                total = 128 * 1024 * 1024L,
+                used = 45 * 1024 * 1024L,
+                free = 83 * 1024 * 1024L,
+                usedPercent = 35.2f
+            ),
+            com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
+                mountPoint = "/tmp",
+                device = "tmpfs",
+                filesystem = "tmpfs",
+                total = 256 * 1024 * 1024L,
+                used = 12 * 1024 * 1024L,
+                free = 244 * 1024 * 1024L,
+                usedPercent = 4.7f
+            ),
+            com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
+                mountPoint = "/overlay",
+                device = "/dev/mmcblk0p2",
+                filesystem = "ext4",
+                total = 64 * 1024 * 1024L,
+                used = 28 * 1024 * 1024L,
+                free = 36 * 1024 * 1024L,
+                usedPercent = 43.8f
+            )
         )
     }
 

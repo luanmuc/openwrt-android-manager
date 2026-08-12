@@ -54,6 +54,7 @@ import com.luanmuc.openwrtmanager.ui.firmware.FirmwareScreen
 import com.luanmuc.openwrtmanager.ui.firmware.FirmwareViewModel
 import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
+import com.luanmuc.openwrtmanager.ui.storage.StorageScreen
 import com.luanmuc.openwrtmanager.ui.traffic.TrafficScreen
 import com.luanmuc.openwrtmanager.ui.theme.OpenWrtManagerTheme
 import com.luanmuc.openwrtmanager.ui.wifi.WifiScreen
@@ -76,6 +77,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Firewall : Screen("firewall", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Ddns : Screen("ddns", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Advanced : Screen("advanced", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object Storage : Screen("storage", 0, Icons.Filled.Storage, Icons.Filled.Storage)
     data object Diagnostic : Screen("diagnostic", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object Repos : Screen("repos", 0, Icons.Filled.Extension, Icons.Filled.Extension)
     data object WebViewPlugin : Screen("webview_plugin", 0, Icons.Filled.Extension, Icons.Filled.Extension)

@@ -463,6 +463,84 @@ class LuciRepository {
     /**
      * 重启路由器
      */
+    /**
+     * 获取挂载点信息
+     */
+    suspend fun getMountPoints(): List<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo> {
+        return try {
+            val result = callLuciRpc("file", "list", mapOf("path" to "/proc/mounts"))
+            val mounts = mutableListOf<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo>()
+            
+            // 尝试通过ubus获取磁盘信息
+            try {
+                val diskInfo = callUbus("file", "list", mapOf("path" to "/proc/mounts"))
+                // 解析挂载点信息
+                val lines = (diskInfo as? Map<*, *>)?.get("data")?.toString()?.lines() ?: emptyList()
+                for (line in lines) {
+                    val parts = line.split("\s+".toRegex())
+                    if (parts.size >= 3) {
+                        val device = parts[0]
+                        val mountPoint = parts[1]
+                        val fs = parts[2]
+                        // 只显示真实文件系统
+                        if (fs in listOf("ext4", "squashfs", "vfat", "f2fs", "btrfs", "xfs") && mountPoint.startsWith("/")) {
+                            // 获取磁盘使用情况
+                            val usage = getDiskUsage(mountPoint)
+                            mounts.add(
+                                com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
+                                    mountPoint = mountPoint,
+                                    device = device,
+                                    filesystem = fs,
+                                    total = usage.first,
+                                    used = usage.second,
+                                    free = usage.third,
+                                    usedPercent = if (usage.first > 0) (usage.second * 100f / usage.first) else 0f
+                                )
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // 忽略解析错误
+            }
+            
+            if (mounts.isEmpty()) {
+                // 返回根分区信息作为默认
+                val sysInfo = getSystemInfo()
+                val root = sysInfo["root"] as? Map<*, *>
+                val total = (root?.get("total") as? Number)?.toLong() ?: 0L
+                val free = (root?.get("free") as? Number)?.toLong() ?: 0L
+                val used = (root?.get("used") as? Number)?.toLong() ?: (total - free)
+                mounts.add(
+                    com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
+                        mountPoint = "/",
+                        device = "/dev/root",
+                        filesystem = "squashfs",
+                        total = total,
+                        used = used,
+                        free = free,
+                        usedPercent = if (total > 0) (used * 100f / total) else 0f
+                    )
+                )
+            }
+            
+            mounts
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private suspend fun getDiskUsage(path: String): Triple<Long, Long, Long> {
+        return try {
+            val result = callUbus("file", "stat", mapOf("path" to path))
+            val data = result as? Map<*, *>
+            val total = (data?.get("size") as? Number)?.toLong() ?: 0L
+            Triple(total, 0L, total)
+        } catch (e: Exception) {
+            Triple(0L, 0L, 0L)
+        }
+    }
+
     suspend fun reboot(): Boolean {
         return try {
             callUbus("system", "reboot")

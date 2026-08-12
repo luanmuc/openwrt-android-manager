@@ -71,6 +71,7 @@ import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 fun AdvancedScreen(
     onBack: () -> Unit = {},
     onNavigateToSystem: () -> Unit = {},
+    onNavigateToStorage: () -> Unit = {},
     onNavigateToDiagnostic: () -> Unit = {},
     onOpenWebView: (String, String) -> Unit = { _, _ -> },
     viewModel: AdvancedViewModel = viewModel()
@@ -198,7 +199,7 @@ fun AdvancedScreen(
                                 modifier = Modifier.size(22.dp)
                             )
                         },
-                        onClick = onNavigateToSystem
+                        onClick = onNavigateToStorage
                     )
                     MiDivider(indent = 60.dp)
                     MiListItem(

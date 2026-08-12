@@ -95,7 +95,7 @@ class PluginsViewModel(application: Application) : BaseViewModel(application) {
                 _uiState.value = _uiState.value.copy(hasRouter = routers.isNotEmpty())
                 
                 // 调试模式变化时，清空现有数据强制重新加载
-                if (isDebugMode && _uiState.value.isFromCache) {
+                if (isDebugMode && (_uiState.value.isFromCache || _uiState.value.installedPackages.isNotEmpty())) {
                     _uiState.value = _uiState.value.copy(
                         installedPackages = emptyList(),
                         availablePackages = emptyList(),

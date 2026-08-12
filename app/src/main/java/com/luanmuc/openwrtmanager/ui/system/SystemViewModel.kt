@@ -62,6 +62,15 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
         initNetworkMonitor()
         observeRouters()
         startRealtimeMonitoring()
+        // 调试模式下设置初始CPU内存值
+        if (DebugMode.isDebugMode) {
+            _uiState.value = _uiState.value.copy(
+                cpuUsage = 35f,
+                memoryUsage = 52f,
+                cpuHistory = listOf(30f, 35f, 32f, 38f, 35f),
+                memoryHistory = listOf(48f, 50f, 52f, 51f, 52f)
+            )
+        }
     }
     
     /**
@@ -119,8 +128,10 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                 if (routers.isNotEmpty() || isDebugMode) {
                     // 先加载缓存（演示模式跳过）
                     loadLogsFromCache()
+                    loadProcessesFromCache()
                     // 然后从网络加载（演示模式使用假数据）
                     loadLogs()
+                    loadProcesses()
                     // 加载系统信息
                     if (_uiState.value.systemInfo.hostname.isEmpty()) {
                         loadSystemInfo()
@@ -442,8 +453,6 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingSystemInfo = true)
             try {
-                val activeRouter = getActiveRouter() ?: return@launch
-
                 if (DebugMode.isDebugMode) {
                     // 调试模式：使用假数据
                     val fakeInfo = DebugMode.getFakeFullSystemInfo()
@@ -458,6 +467,8 @@ class SystemViewModel(application: Application) : BaseViewModel(application) {
                     )
                     return@launch
                 }
+
+                val activeRouter = getActiveRouter() ?: return@launch
 
                 // 从缓存加载
                 val cachedInfo = cacheRepository.getCacheEvenExpired(
