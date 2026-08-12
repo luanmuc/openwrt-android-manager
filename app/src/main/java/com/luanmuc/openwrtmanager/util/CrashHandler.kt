@@ -1,7 +1,7 @@
 package com.luanmuc.openwrtmanager.util
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.content.Context
-import android.util.Log
 import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
@@ -33,7 +33,7 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
         this.defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler(this)
         
-        Log.d(TAG, "CrashHandler initialized")
+        LogUtils.d(TAG, "CrashHandler initialized")
     }
     
     /**
@@ -48,9 +48,9 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
             // 通知监听器
             crashListener?.invoke(crashInfo, throwable)
             
-            Log.e(TAG, "App crashed: ${throwable.message}", throwable)
+            LogUtils.e(TAG, "App crashed: ${throwable.message}", throwable)
         } catch (e: Exception) {
-            Log.e(TAG, "Error handling crash", e)
+            LogUtils.e(TAG, "Error handling crash", e)
         } finally {
             // 交给默认处理器处理
             defaultHandler?.uncaughtException(thread, throwable)
@@ -129,10 +129,10 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
                 // 清理旧日志
                 cleanOldLogs(logDir)
                 
-                Log.d(TAG, "Crash log saved: ${logFile.absolutePath}")
+                LogUtils.d(TAG, "Crash log saved: ${logFile.absolutePath}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to save crash log", e)
+            LogUtils.e(TAG, "Failed to save crash log", e)
         }
     }
     
@@ -152,7 +152,7 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to clean old crash logs", e)
+            LogUtils.e(TAG, "Failed to clean old crash logs", e)
         }
     }
     
@@ -191,7 +191,7 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
                 logDir.deleteRecursively()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to clear crash logs", e)
+            LogUtils.e(TAG, "Failed to clear crash logs", e)
         }
     }
     
@@ -206,7 +206,7 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
      * 手动记录异常（用于捕获的异常）
      */
     fun logException(tag: String, message: String, throwable: Throwable? = null) {
-        Log.e(tag, message, throwable)
+        LogUtils.e(tag, message, throwable)
         
         // 也可以保存到文件
         try {
@@ -238,7 +238,7 @@ object CrashHandler : Thread.UncaughtExceptionHandler {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to log exception", e)
+            LogUtils.e(TAG, "Failed to log exception", e)
         }
     }
 }

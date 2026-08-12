@@ -1,6 +1,6 @@
 package com.luanmuc.openwrtmanager.util
+import com.luanmuc.openwrtmanager.util.LogUtils
 
-import android.util.Log
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -20,7 +20,7 @@ object JsonUtils {
         return try {
             json?.getJSONObject(key)
         } catch (e: JSONException) {
-            Log.e(TAG, "获取JSONObject失败: $key", e)
+            LogUtils.e(TAG, "获取JSONObject失败: $key", e)
             null
         }
     }
@@ -32,7 +32,7 @@ object JsonUtils {
         return try {
             json?.getJSONArray(key)
         } catch (e: JSONException) {
-            Log.e(TAG, "获取JSONArray失败: $key", e)
+            LogUtils.e(TAG, "获取JSONArray失败: $key", e)
             null
         }
     }
@@ -147,7 +147,7 @@ object JsonUtils {
         return try {
             JSONObject(jsonString)
         } catch (e: JSONException) {
-            Log.e(TAG, "解析JSON失败", e)
+            LogUtils.e(TAG, "解析JSON失败", e)
             null
         }
     }
@@ -159,7 +159,7 @@ object JsonUtils {
         return try {
             JSONArray(jsonString)
         } catch (e: JSONException) {
-            Log.e(TAG, "解析JSONArray失败", e)
+            LogUtils.e(TAG, "解析JSONArray失败", e)
             null
         }
     }
@@ -224,7 +224,7 @@ object JsonUtils {
                     else -> json.put(key, value.toString())
                 }
             } catch (e: JSONException) {
-                Log.e(TAG, "构建JSON失败: $key", e)
+                LogUtils.e(TAG, "构建JSON失败: $key", e)
             }
         }
         return json
@@ -249,7 +249,7 @@ object JsonUtils {
                     else -> array.put(item.toString())
                 }
             } catch (e: JSONException) {
-                Log.e(TAG, "构建JSONArray失败", e)
+                LogUtils.e(TAG, "构建JSONArray失败", e)
             }
         }
         return array
@@ -322,7 +322,7 @@ object JsonUtils {
             try {
                 result.put(key, json2.get(key))
             } catch (e: JSONException) {
-                Log.e(TAG, "合并JSON失败: $key", e)
+                LogUtils.e(TAG, "合并JSON失败: $key", e)
             }
         }
         return result
@@ -412,7 +412,7 @@ object JsonUtils {
                     else -> json.put(key, value.toString())
                 }
             } catch (e: JSONException) {
-                Log.e(TAG, "Map转JSON失败: $key", e)
+                LogUtils.e(TAG, "Map转JSON失败: $key", e)
             }
         }
         return json
@@ -437,7 +437,7 @@ object JsonUtils {
                     else -> array.put(item.toString())
                 }
             } catch (e: JSONException) {
-                Log.e(TAG, "List转JSONArray失败", e)
+                LogUtils.e(TAG, "List转JSONArray失败", e)
             }
         }
         return array

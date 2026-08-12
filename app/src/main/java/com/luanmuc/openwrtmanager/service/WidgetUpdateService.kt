@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.service
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.app.Service
 import android.appwidget.AppWidgetManager
@@ -6,7 +7,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import com.luanmuc.openwrtmanager.util.DebugMode
 import com.luanmuc.openwrtmanager.widget.NetworkSpeedWidget
 import com.luanmuc.openwrtmanager.widget.RouterStatusWidget
@@ -31,7 +31,7 @@ class WidgetUpdateService : Service() {
                 val intent = Intent(context, WidgetUpdateService::class.java)
                 context.startService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "启动服务失败", e)
+                LogUtils.e(TAG, "启动服务失败", e)
             }
         }
         
@@ -40,7 +40,7 @@ class WidgetUpdateService : Service() {
                 val intent = Intent(context, WidgetUpdateService::class.java)
                 context.stopService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "停止服务失败", e)
+                LogUtils.e(TAG, "停止服务失败", e)
             }
         }
     }
@@ -49,12 +49,12 @@ class WidgetUpdateService : Service() {
     
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "服务创建")
+        LogUtils.d(TAG, "服务创建")
         startUpdates()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "服务启动")
+        LogUtils.d(TAG, "服务启动")
         return START_STICKY
     }
     
@@ -64,7 +64,7 @@ class WidgetUpdateService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "服务销毁")
+        LogUtils.d(TAG, "服务销毁")
         stopUpdates()
     }
     
@@ -79,7 +79,7 @@ class WidgetUpdateService : Service() {
                 try {
                     updateAllWidgets()
                 } catch (e: Exception) {
-                    Log.e(TAG, "更新Widget失败", e)
+                    LogUtils.e(TAG, "更新Widget失败", e)
                 }
                 delay(UPDATE_INTERVAL)
             }
@@ -99,7 +99,7 @@ class WidgetUpdateService : Service() {
      */
     private suspend fun updateAllWidgets() {
         try {
-            Log.d(TAG, "更新所有Widget")
+            LogUtils.d(TAG, "更新所有Widget")
             
             val appWidgetManager = AppWidgetManager.getInstance(this)
             
@@ -110,7 +110,7 @@ class WidgetUpdateService : Service() {
             updateNetworkSpeedWidget(appWidgetManager)
             
         } catch (e: Exception) {
-            Log.e(TAG, "更新所有Widget失败", e)
+            LogUtils.e(TAG, "更新所有Widget失败", e)
         }
     }
     
@@ -123,7 +123,7 @@ class WidgetUpdateService : Service() {
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
             
             if (appWidgetIds.isNotEmpty()) {
-                Log.d(TAG, "更新路由器状态Widget，数量: ${appWidgetIds.size}")
+                LogUtils.d(TAG, "更新路由器状态Widget，数量: ${appWidgetIds.size}")
                 
                 val intent = Intent(this, RouterStatusWidget::class.java).apply {
                     action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
@@ -132,7 +132,7 @@ class WidgetUpdateService : Service() {
                 sendBroadcast(intent)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "更新路由器状态Widget失败", e)
+            LogUtils.e(TAG, "更新路由器状态Widget失败", e)
         }
     }
     
@@ -145,7 +145,7 @@ class WidgetUpdateService : Service() {
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
             
             if (appWidgetIds.isNotEmpty()) {
-                Log.d(TAG, "更新网速Widget，数量: ${appWidgetIds.size}")
+                LogUtils.d(TAG, "更新网速Widget，数量: ${appWidgetIds.size}")
                 
                 val intent = Intent(this, NetworkSpeedWidget::class.java).apply {
                     action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
@@ -154,7 +154,7 @@ class WidgetUpdateService : Service() {
                 sendBroadcast(intent)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "更新网速Widget失败", e)
+            LogUtils.e(TAG, "更新网速Widget失败", e)
         }
     }
 }

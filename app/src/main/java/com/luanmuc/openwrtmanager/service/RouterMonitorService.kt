@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.service
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.app.Notification
 import android.app.NotificationManager
@@ -8,7 +9,6 @@ import android.content.Intent
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.luanmuc.openwrtmanager.R
 import com.luanmuc.openwrtmanager.util.AppNotificationManager
@@ -35,7 +35,7 @@ class RouterMonitorService : Service() {
                 val intent = Intent(context, RouterMonitorService::class.java)
                 context.startService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "启动服务失败", e)
+                LogUtils.e(TAG, "启动服务失败", e)
             }
         }
         
@@ -44,7 +44,7 @@ class RouterMonitorService : Service() {
                 val intent = Intent(context, RouterMonitorService::class.java)
                 context.stopService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "停止服务失败", e)
+                LogUtils.e(TAG, "停止服务失败", e)
             }
         }
     }
@@ -56,7 +56,7 @@ class RouterMonitorService : Service() {
     
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "服务创建")
+        LogUtils.d(TAG, "服务创建")
         
         // 创建前台通知
         startForeground(NOTIFICATION_ID, createForegroundNotification())
@@ -66,7 +66,7 @@ class RouterMonitorService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "服务启动")
+        LogUtils.d(TAG, "服务启动")
         return START_STICKY
     }
     
@@ -76,7 +76,7 @@ class RouterMonitorService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "服务销毁")
+        LogUtils.d(TAG, "服务销毁")
         stopMonitoring()
     }
     
@@ -106,7 +106,7 @@ class RouterMonitorService : Service() {
                 try {
                     checkRouterStatus()
                 } catch (e: Exception) {
-                    Log.e(TAG, "检查路由器状态失败", e)
+                    LogUtils.e(TAG, "检查路由器状态失败", e)
                 }
                 delay(CHECK_INTERVAL)
             }
@@ -158,7 +158,7 @@ class RouterMonitorService : Service() {
                     routerName = "OpenWrt 路由器"
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "发送离线通知失败", e)
+                LogUtils.e(TAG, "发送离线通知失败", e)
             }
         }
     }
@@ -173,7 +173,7 @@ class RouterMonitorService : Service() {
                     routerName = "OpenWrt 路由器"
                 )
             } catch (e: Exception) {
-                Log.e(TAG, "发送在线通知失败", e)
+                LogUtils.e(TAG, "发送在线通知失败", e)
             }
         }
     }

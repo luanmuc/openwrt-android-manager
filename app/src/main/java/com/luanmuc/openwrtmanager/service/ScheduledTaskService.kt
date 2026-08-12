@@ -1,4 +1,5 @@
 package com.luanmuc.openwrtmanager.service
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -6,7 +7,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import com.luanmuc.openwrtmanager.util.DebugMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +29,7 @@ class ScheduledTaskService : Service() {
                 val intent = Intent(context, ScheduledTaskService::class.java)
                 context.startService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "启动服务失败", e)
+                LogUtils.e(TAG, "启动服务失败", e)
             }
         }
         
@@ -38,7 +38,7 @@ class ScheduledTaskService : Service() {
                 val intent = Intent(context, ScheduledTaskService::class.java)
                 context.stopService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "停止服务失败", e)
+                LogUtils.e(TAG, "停止服务失败", e)
             }
         }
         
@@ -63,9 +63,9 @@ class ScheduledTaskService : Service() {
                     pendingIntent
                 )
                 
-                Log.d(TAG, "定时闹钟已设置")
+                LogUtils.d(TAG, "定时闹钟已设置")
             } catch (e: Exception) {
-                Log.e(TAG, "设置定时闹钟失败", e)
+                LogUtils.e(TAG, "设置定时闹钟失败", e)
             }
         }
         
@@ -84,9 +84,9 @@ class ScheduledTaskService : Service() {
                 )
                 
                 alarmManager.cancel(pendingIntent)
-                Log.d(TAG, "定时闹钟已取消")
+                LogUtils.d(TAG, "定时闹钟已取消")
             } catch (e: Exception) {
-                Log.e(TAG, "取消定时闹钟失败", e)
+                LogUtils.e(TAG, "取消定时闹钟失败", e)
             }
         }
     }
@@ -95,12 +95,12 @@ class ScheduledTaskService : Service() {
     
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "服务创建")
+        LogUtils.d(TAG, "服务创建")
         startTasks()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "服务启动")
+        LogUtils.d(TAG, "服务启动")
         return START_STICKY
     }
     
@@ -110,7 +110,7 @@ class ScheduledTaskService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "服务销毁")
+        LogUtils.d(TAG, "服务销毁")
         stopTasks()
     }
     
@@ -125,7 +125,7 @@ class ScheduledTaskService : Service() {
                 try {
                     executeScheduledTasks()
                 } catch (e: Exception) {
-                    Log.e(TAG, "执行定时任务失败", e)
+                    LogUtils.e(TAG, "执行定时任务失败", e)
                 }
                 delay(TASK_INTERVAL)
             }
@@ -144,7 +144,7 @@ class ScheduledTaskService : Service() {
      * 执行定时任务
      */
     private suspend fun executeScheduledTasks() {
-        Log.d(TAG, "执行定时任务")
+        LogUtils.d(TAG, "执行定时任务")
         
         // 任务1：刷新数据
         refreshData()
@@ -163,18 +163,18 @@ class ScheduledTaskService : Service() {
      */
     private suspend fun refreshData() {
         try {
-            Log.d(TAG, "刷新数据")
+            LogUtils.d(TAG, "刷新数据")
             // 演示模式下模拟刷新
             if (DebugMode.isDebugMode) {
                 delay(1000)
-                Log.d(TAG, "数据刷新完成（演示模式）")
+                LogUtils.d(TAG, "数据刷新完成（演示模式）")
             } else {
                 // 真实模式：调用Repository刷新数据
                 // 暂时留空，后续完善真实API对接
-                Log.d(TAG, "数据刷新完成（真实模式）")
+                LogUtils.d(TAG, "数据刷新完成（真实模式）")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "刷新数据失败", e)
+            LogUtils.e(TAG, "刷新数据失败", e)
         }
     }
     
@@ -183,18 +183,18 @@ class ScheduledTaskService : Service() {
      */
     private suspend fun checkFirmwareUpdate() {
         try {
-            Log.d(TAG, "检查固件更新")
+            LogUtils.d(TAG, "检查固件更新")
             // 演示模式下模拟检查
             if (DebugMode.isDebugMode) {
                 delay(500)
-                Log.d(TAG, "固件更新检查完成（演示模式）")
+                LogUtils.d(TAG, "固件更新检查完成（演示模式）")
             } else {
                 // 真实模式：调用FirmwareRepository检查更新
                 // 暂时留空，后续完善真实API对接
-                Log.d(TAG, "固件更新检查完成（真实模式）")
+                LogUtils.d(TAG, "固件更新检查完成（真实模式）")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "检查固件更新失败", e)
+            LogUtils.e(TAG, "检查固件更新失败", e)
         }
     }
     
@@ -211,18 +211,18 @@ class ScheduledTaskService : Service() {
      */
     private suspend fun performAutoBackup() {
         try {
-            Log.d(TAG, "执行自动备份")
+            LogUtils.d(TAG, "执行自动备份")
             // 演示模式下模拟备份
             if (DebugMode.isDebugMode) {
                 delay(2000)
-                Log.d(TAG, "自动备份完成（演示模式）")
+                LogUtils.d(TAG, "自动备份完成（演示模式）")
             } else {
                 // 真实模式：调用BackupRepository执行备份
                 // 暂时留空，后续完善真实API对接
-                Log.d(TAG, "自动备份完成（真实模式）")
+                LogUtils.d(TAG, "自动备份完成（真实模式）")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "执行自动备份失败", e)
+            LogUtils.e(TAG, "执行自动备份失败", e)
         }
     }
 }

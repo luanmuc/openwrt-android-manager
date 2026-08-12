@@ -1,7 +1,7 @@
 package com.luanmuc.openwrtmanager.util
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.os.SystemClock
-import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -56,7 +56,7 @@ object PerformanceMonitor {
         // 更新统计
         updateStats(name, elapsed)
         
-        Log.d(TAG, "[$name] 耗时: ${elapsed}ms")
+        LogUtils.d(TAG, "[$name] 耗时: ${elapsed}ms")
         
         return elapsed
     }
@@ -67,7 +67,7 @@ object PerformanceMonitor {
     fun stopTimer(name: String, message: String): Long {
         val elapsed = stopTimer(name)
         if (enabled) {
-            Log.d(TAG, "[$name] $message - 耗时: ${elapsed}ms")
+            LogUtils.d(TAG, "[$name] $message - 耗时: ${elapsed}ms")
         }
         return elapsed
     }
@@ -164,25 +164,25 @@ object PerformanceMonitor {
     fun printReport() {
         if (!enabled) return
         
-        Log.d(TAG, "=== 性能监控报告 ===")
+        LogUtils.d(TAG, "=== 性能监控报告 ===")
         
         if (stats.isEmpty()) {
-            Log.d(TAG, "暂无性能数据")
+            LogUtils.d(TAG, "暂无性能数据")
             return
         }
         
         val sortedStats = stats.values.sortedByDescending { it.totalTime }
         
         for (stat in sortedStats) {
-            Log.d(TAG, "${stat.name}:")
-            Log.d(TAG, "  调用次数: ${stat.count}")
-            Log.d(TAG, "  总耗时: ${stat.totalTime}ms")
-            Log.d(TAG, "  平均耗时: ${stat.avgTime}ms")
-            Log.d(TAG, "  最小耗时: ${stat.minTime}ms")
-            Log.d(TAG, "  最大耗时: ${stat.maxTime}ms")
+            LogUtils.d(TAG, "${stat.name}:")
+            LogUtils.d(TAG, "  调用次数: ${stat.count}")
+            LogUtils.d(TAG, "  总耗时: ${stat.totalTime}ms")
+            LogUtils.d(TAG, "  平均耗时: ${stat.avgTime}ms")
+            LogUtils.d(TAG, "  最小耗时: ${stat.minTime}ms")
+            LogUtils.d(TAG, "  最大耗时: ${stat.maxTime}ms")
         }
         
-        Log.d(TAG, "===================")
+        LogUtils.d(TAG, "===================")
     }
     
     /**
@@ -247,12 +247,12 @@ object PerformanceMonitor {
      */
     fun printMemoryUsage() {
         val memory = getMemoryUsage()
-        Log.d(TAG, "内存使用情况:")
-        Log.d(TAG, "  已用: ${FormatUtils.formatFileSize(memory.used)}")
-        Log.d(TAG, "  空闲: ${FormatUtils.formatFileSize(memory.free)}")
-        Log.d(TAG, "  总计: ${FormatUtils.formatFileSize(memory.total)}")
-        Log.d(TAG, "  最大: ${FormatUtils.formatFileSize(memory.max)}")
-        Log.d(TAG, "  使用率: ${memory.usedPercent}%")
+        LogUtils.d(TAG, "内存使用情况:")
+        LogUtils.d(TAG, "  已用: ${FormatUtils.formatFileSize(memory.used)}")
+        LogUtils.d(TAG, "  空闲: ${FormatUtils.formatFileSize(memory.free)}")
+        LogUtils.d(TAG, "  总计: ${FormatUtils.formatFileSize(memory.total)}")
+        LogUtils.d(TAG, "  最大: ${FormatUtils.formatFileSize(memory.max)}")
+        LogUtils.d(TAG, "  使用率: ${memory.usedPercent}%")
     }
     
     /**
@@ -261,12 +261,12 @@ object PerformanceMonitor {
     fun triggerGc() {
         if (!enabled) return
         
-        Log.d(TAG, "触发GC...")
+        LogUtils.d(TAG, "触发GC...")
         System.gc()
         System.runFinalization()
         System.gc()
         
         val memoryBefore = getMemoryUsage()
-        Log.d(TAG, "GC后内存使用: ${FormatUtils.formatFileSize(memoryBefore.used)} (${memoryBefore.usedPercent}%)")
+        LogUtils.d(TAG, "GC后内存使用: ${FormatUtils.formatFileSize(memoryBefore.used)} (${memoryBefore.usedPercent}%)")
     }
 }

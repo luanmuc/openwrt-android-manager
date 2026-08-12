@@ -1,7 +1,7 @@
 package com.luanmuc.openwrtmanager.util
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.util.Base64
-import android.util.Log
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -30,7 +30,7 @@ object EncryptionUtils {
             val digest = md.digest(input.toByteArray())
             digest.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "MD5加密失败", e)
+            LogUtils.e(TAG, "MD5加密失败", e)
             ""
         }
     }
@@ -44,7 +44,7 @@ object EncryptionUtils {
             val digest = md.digest(input.toByteArray())
             digest.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "SHA-256加密失败", e)
+            LogUtils.e(TAG, "SHA-256加密失败", e)
             ""
         }
     }
@@ -58,7 +58,7 @@ object EncryptionUtils {
             val digest = md.digest(input.toByteArray())
             digest.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
-            Log.e(TAG, "SHA-1加密失败", e)
+            LogUtils.e(TAG, "SHA-1加密失败", e)
             ""
         }
     }
@@ -70,7 +70,7 @@ object EncryptionUtils {
         return try {
             Base64.encodeToString(input.toByteArray(), Base64.NO_WRAP)
         } catch (e: Exception) {
-            Log.e(TAG, "Base64编码失败", e)
+            LogUtils.e(TAG, "Base64编码失败", e)
             ""
         }
     }
@@ -83,7 +83,7 @@ object EncryptionUtils {
             val decoded = Base64.decode(input, Base64.NO_WRAP)
             String(decoded)
         } catch (e: Exception) {
-            Log.e(TAG, "Base64解码失败", e)
+            LogUtils.e(TAG, "Base64解码失败", e)
             ""
         }
     }
@@ -95,7 +95,7 @@ object EncryptionUtils {
         return try {
             Base64.encodeToString(input, Base64.NO_WRAP)
         } catch (e: Exception) {
-            Log.e(TAG, "Base64编码失败", e)
+            LogUtils.e(TAG, "Base64编码失败", e)
             ""
         }
     }
@@ -107,7 +107,7 @@ object EncryptionUtils {
         return try {
             Base64.decode(input, Base64.NO_WRAP)
         } catch (e: Exception) {
-            Log.e(TAG, "Base64解码失败", e)
+            LogUtils.e(TAG, "Base64解码失败", e)
             null
         }
     }
@@ -122,7 +122,7 @@ object EncryptionUtils {
             random.nextBytes(key)
             base64EncodeBytes(key)
         } catch (e: Exception) {
-            Log.e(TAG, "生成随机密钥失败", e)
+            LogUtils.e(TAG, "生成随机密钥失败", e)
             ""
         }
     }
@@ -137,7 +137,7 @@ object EncryptionUtils {
             random.nextBytes(iv)
             base64EncodeBytes(iv)
         } catch (e: Exception) {
-            Log.e(TAG, "生成随机IV失败", e)
+            LogUtils.e(TAG, "生成随机IV失败", e)
             ""
         }
     }
@@ -159,7 +159,7 @@ object EncryptionUtils {
             val encrypted = cipher.doFinal(plainText.toByteArray())
             base64EncodeBytes(encrypted)
         } catch (e: Exception) {
-            Log.e(TAG, "AES加密失败", e)
+            LogUtils.e(TAG, "AES加密失败", e)
             ""
         }
     }
@@ -182,7 +182,7 @@ object EncryptionUtils {
             val decrypted = cipher.doFinal(cipherBytes)
             String(decrypted)
         } catch (e: Exception) {
-            Log.e(TAG, "AES解密失败", e)
+            LogUtils.e(TAG, "AES解密失败", e)
             ""
         }
     }
@@ -208,7 +208,7 @@ object EncryptionUtils {
             val encrypted = cipher.doFinal(plainText.toByteArray())
             base64EncodeBytes(encrypted)
         } catch (e: Exception) {
-            Log.e(TAG, "AES加密失败", e)
+            LogUtils.e(TAG, "AES加密失败", e)
             ""
         }
     }
@@ -235,7 +235,7 @@ object EncryptionUtils {
             val decrypted = cipher.doFinal(cipherBytes)
             String(decrypted)
         } catch (e: Exception) {
-            Log.e(TAG, "AES解密失败", e)
+            LogUtils.e(TAG, "AES解密失败", e)
             ""
         }
     }
@@ -255,7 +255,7 @@ object EncryptionUtils {
             
             base64EncodeBytes(output)
         } catch (e: Exception) {
-            Log.e(TAG, "XOR加密失败", e)
+            LogUtils.e(TAG, "XOR加密失败", e)
             ""
         }
     }
@@ -275,7 +275,7 @@ object EncryptionUtils {
             
             String(output)
         } catch (e: Exception) {
-            Log.e(TAG, "XOR解密失败", e)
+            LogUtils.e(TAG, "XOR解密失败", e)
             ""
         }
     }

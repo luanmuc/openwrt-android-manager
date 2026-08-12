@@ -1,10 +1,10 @@
 package com.luanmuc.openwrtmanager.service
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import com.luanmuc.openwrtmanager.util.DebugMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +27,7 @@ class TrafficStatsService : Service() {
                 val intent = Intent(context, TrafficStatsService::class.java)
                 context.startService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "启动服务失败", e)
+                LogUtils.e(TAG, "启动服务失败", e)
             }
         }
         
@@ -36,7 +36,7 @@ class TrafficStatsService : Service() {
                 val intent = Intent(context, TrafficStatsService::class.java)
                 context.stopService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "停止服务失败", e)
+                LogUtils.e(TAG, "停止服务失败", e)
             }
         }
     }
@@ -45,12 +45,12 @@ class TrafficStatsService : Service() {
     
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "服务创建")
+        LogUtils.d(TAG, "服务创建")
         startStats()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "服务启动")
+        LogUtils.d(TAG, "服务启动")
         return START_STICKY
     }
     
@@ -60,7 +60,7 @@ class TrafficStatsService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "服务销毁")
+        LogUtils.d(TAG, "服务销毁")
         stopStats()
     }
     
@@ -75,7 +75,7 @@ class TrafficStatsService : Service() {
                 try {
                     recordTrafficPoint()
                 } catch (e: Exception) {
-                    Log.e(TAG, "记录流量数据失败", e)
+                    LogUtils.e(TAG, "记录流量数据失败", e)
                 }
                 delay(STATS_INTERVAL)
             }
@@ -95,7 +95,7 @@ class TrafficStatsService : Service() {
      */
     private suspend fun recordTrafficPoint() {
         try {
-            Log.d(TAG, "记录流量数据点")
+            LogUtils.d(TAG, "记录流量数据点")
             
             if (DebugMode.isDebugMode) {
                 // 演示模式：模拟流量数据
@@ -105,7 +105,7 @@ class TrafficStatsService : Service() {
                 recordRealTraffic()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "记录流量数据点失败", e)
+            LogUtils.e(TAG, "记录流量数据点失败", e)
         }
     }
     
@@ -118,12 +118,12 @@ class TrafficStatsService : Service() {
             val downloadSpeed = (Math.random() * 10 * 1024 * 1024).toLong() // 0-10 MB/s
             val uploadSpeed = (Math.random() * 2 * 1024 * 1024).toLong() // 0-2 MB/s
             
-            Log.d(TAG, "演示模式流量记录: 下载=${formatSpeed(downloadSpeed)}, 上传=${formatSpeed(uploadSpeed)}")
+            LogUtils.d(TAG, "演示模式流量记录: 下载=${formatSpeed(downloadSpeed)}, 上传=${formatSpeed(uploadSpeed)}")
             
             // 这里应该调用TrafficRepository.recordTrafficPoint()
             // 暂时只记录日志，后续完善
         } catch (e: Exception) {
-            Log.e(TAG, "记录演示流量数据失败", e)
+            LogUtils.e(TAG, "记录演示流量数据失败", e)
         }
     }
     
@@ -132,12 +132,12 @@ class TrafficStatsService : Service() {
      */
     private suspend fun recordRealTraffic() {
         try {
-            Log.d(TAG, "真实模式：从路由器获取流量数据")
+            LogUtils.d(TAG, "真实模式：从路由器获取流量数据")
             // 这里应该调用LuciRepository获取流量数据
             // 然后调用TrafficRepository.recordTrafficPoint()
             // 暂时留空，后续完善真实API对接
         } catch (e: Exception) {
-            Log.e(TAG, "记录真实流量数据失败", e)
+            LogUtils.e(TAG, "记录真实流量数据失败", e)
         }
     }
     

@@ -1,9 +1,9 @@
 package com.luanmuc.openwrtmanager.service
+import com.luanmuc.openwrtmanager.util.LogUtils
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 
 /**
  * 定时任务广播接收器
@@ -18,7 +18,7 @@ class ScheduledTaskReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         try {
             val action = intent?.action
-            Log.d(TAG, "收到广播: $action")
+            LogUtils.d(TAG, "收到广播: $action")
             
             when (action) {
                 "com.luanmuc.openwrtmanager.SCHEDULED_TASK" -> {
@@ -31,7 +31,7 @@ class ScheduledTaskReceiver : BroadcastReceiver() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "处理广播失败", e)
+            LogUtils.e(TAG, "处理广播失败", e)
         }
     }
 }
