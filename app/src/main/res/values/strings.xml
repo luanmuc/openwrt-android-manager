@@ -55,5 +55,46 @@
 
     <string name="widget_router_status_description">显示路由器在线状态</string>
     <string name="widget_network_speed_description">显示实时上传下载速度</string>
+    <!-- 通用按钮 -->
+    <string name="common_confirm">确定</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_delete">删除</string>
+    <string name="common_edit">编辑</string>
+    <string name="common_save">保存</string>
+    <string name="common_back">返回</string>
+    <string name="common_retry">重试</string>
+    <string name="common_loading">加载中...</string>
+    <string name="common_empty">暂无数据</string>
+    <string name="common_success">操作成功</string>
+    <string name="common_failed">操作失败</string>
+    <string name="common_complete">完成</string>
+    <string name="common_restore">恢复</string>
+    <!-- 高级设置 -->
+    <string name="advanced_title">高级设置</string>
+    <string name="advanced_reboot_confirm">确定要重启路由器吗？重启期间网络将中断。</string>
+    <string name="advanced_shutdown_confirm">确定要关闭路由器吗？关闭后需要手动开机。</string>
+    <!-- 备份 -->
+    <string name="backup_title">配置备份</string>
+    <!-- DDNS -->
+    <string name="ddns_delete_title">删除DDNS配置</string>
+    <string name="ddns_delete_confirm">确定要删除DDNS配置吗？</string>
+    <!-- 系统 -->
+    <string name="system_title">系统信息</string>
+    <!-- WiFi -->
+    <string name="wifi_title">WiFi设置</string>
+    <!-- 固件 -->
+    <string name="firmware_title">固件升级</string>
+    <!-- 终端 -->
+    <string name="terminal_title">终端</string>
+    <!-- 诊断 -->
+    <string name="diagnostic_title">智能诊断</string>
+    <!-- 流量 -->
+    <string name="traffic_title">流量统计</string>
+    <!-- 设备管理 -->
+    <string name="device_manager_title">设备管理</string>
+    <!-- 通知 -->
+    <string name="notification_title">通知设置</string>
+    <!-- 小部件 -->
+    <string name="widget_config_title">小部件配置</string>
 
 </resources>

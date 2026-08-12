@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.backup
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -55,7 +56,7 @@ fun BackupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("配置备份") },
+                title = { Text(stringResource(R.string.backup_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")
@@ -306,7 +307,7 @@ private fun RestoreProgressCard(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("完成")
+                    Text(stringResource(R.string.common_complete))
                 }
             }
         }
@@ -444,7 +445,7 @@ private fun BackupItemCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("恢复")
+                    Text(stringResource(R.string.common_restore))
                 }
                 
                 OutlinedButton(
@@ -461,7 +462,7 @@ private fun BackupItemCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("删除")
+                    Text(stringResource(R.string.common_delete))
                 }
             }
         }

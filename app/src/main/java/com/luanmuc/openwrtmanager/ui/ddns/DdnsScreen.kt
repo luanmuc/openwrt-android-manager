@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.ddns
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -204,7 +205,7 @@ fun DdnsScreen(
             icon = {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = MiColors.Error)
             },
-            title = { Text("删除DDNS配置", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.ddns_delete_title), fontWeight = FontWeight.Bold) },
             text = { Text("确定要删除DDNS配置「${showDeleteDialog?.name ?: ""}」吗？") },
             confirmButton = {
                 TextButton(onClick = {
@@ -213,12 +214,12 @@ fun DdnsScreen(
                         showDeleteDialog = null
                     }
                 }) {
-                    Text("删除", color = MiColors.Error, fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.common_delete), color = MiColors.Error, fontWeight = FontWeight.Medium)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("取消", color = MiTheme.TextTertiary)
+                    Text(stringResource(R.string.common_cancel), color = MiTheme.TextTertiary)
                 }
             },
             containerColor = Color.White
@@ -370,12 +371,12 @@ fun DdnsEditDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(config) }) {
-                Text("确定", color = MiColors.Primary, fontWeight = FontWeight.Medium)
+                Text(stringResource(R.string.common_confirm), color = MiColors.Primary, fontWeight = FontWeight.Medium)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消", color = MiTheme.TextTertiary)
+                Text(stringResource(R.string.common_cancel), color = MiTheme.TextTertiary)
             }
         },
         containerColor = Color.White

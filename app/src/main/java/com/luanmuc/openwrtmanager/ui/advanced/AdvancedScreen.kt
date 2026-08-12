@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.advanced
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -277,7 +278,7 @@ fun AdvancedScreen(
                 )
             },
             text = {
-                Text("确定要重启路由器吗？重启期间网络将中断。")
+                Text(stringResource(R.string.advanced_reboot_confirm))
             },
             confirmButton = {
                 TextButton(
@@ -323,7 +324,7 @@ fun AdvancedScreen(
                 )
             },
             text = {
-                Text("确定要关闭路由器吗？关闭后需要手动开机。")
+                Text(stringResource(R.string.advanced_shutdown_confirm))
             },
             confirmButton = {
                 TextButton(

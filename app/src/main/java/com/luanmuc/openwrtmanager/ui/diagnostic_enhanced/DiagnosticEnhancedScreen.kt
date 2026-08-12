@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.diagnostic_enhanced
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -58,7 +59,7 @@ fun DiagnosticEnhancedScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("智能诊断") },
+                title = { Text(stringResource(R.string.diagnostic_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")

@@ -146,12 +146,12 @@ fun DevicesScreen(
                         showDeleteDialog = null
                     }
                 ) {
-                    Text("删除", color = MiColors.Error)
+                    Text(stringResource(R.string.common_delete), color = MiColors.Error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = null }) {
-                    Text("取消", color = MiTheme.TextSecondary)
+                    Text(stringResource(R.string.common_cancel), color = MiTheme.TextSecondary)
                 }
             },
             shape = RoundedCornerShape(16.dp)

@@ -851,7 +851,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showThemeDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -893,7 +893,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -935,7 +935,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showRefreshIntervalDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -977,7 +977,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showConnectionTimeoutDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -1019,7 +1019,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showRetryCountDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -1061,7 +1061,7 @@ fun SettingsList() {
             },
             confirmButton = {
                 TextButton(onClick = { showTrafficUnitDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -1093,12 +1093,12 @@ fun SettingsList() {
                         showClearCacheDialog = false
                     }
                 ) {
-                    Text("确定", color = MiTheme.Error)
+                    Text(stringResource(R.string.common_confirm), color = MiTheme.Error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearCacheDialog = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -1234,7 +1234,7 @@ fun ThemeSelectionDialog(
             },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
             containerColor = MiTheme.CardBackground,

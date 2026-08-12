@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.devicemanager
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -53,7 +54,7 @@ fun DeviceManagerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设备管理") },
+                title = { Text(stringResource(R.string.device_manager_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")

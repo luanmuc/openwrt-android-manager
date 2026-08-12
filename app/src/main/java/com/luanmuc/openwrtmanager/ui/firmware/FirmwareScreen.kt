@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.firmware
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -168,7 +169,7 @@ fun FirmwareScreen(
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.dismissConfirmDialog() }) {
-                    Text("取消")
+                    Text(stringResource(R.string.common_cancel))
                 }
             },
             containerColor = MiTheme.CardBackground,

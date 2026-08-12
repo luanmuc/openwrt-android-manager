@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.terminal
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -53,7 +54,7 @@ fun TerminalScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("终端") },
+                title = { Text(stringResource(R.string.terminal_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "返回")

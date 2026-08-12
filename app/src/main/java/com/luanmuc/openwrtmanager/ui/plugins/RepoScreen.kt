@@ -1,5 +1,6 @@
 package com.luanmuc.openwrtmanager.ui.plugins
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -262,7 +263,7 @@ fun RepoScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text("取消", color = MiTheme.TextSecondary)
+                    Text(stringResource(R.string.common_cancel), color = MiTheme.TextSecondary)
                 }
             }
         )
