@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.traffic
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.DeviceTraffic
 import com.luanmuc.openwrtmanager.data.model.TrafficPeriod
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * 流量统计ViewModel
  */
-class TrafficViewModel(application: Application) : AndroidViewModel(application) {
+class TrafficViewModel(application: Application) : BaseViewModel(application) {
     
     private val trafficRepository = TrafficRepository.getInstance(application)
     
@@ -39,6 +40,7 @@ class TrafficViewModel(application: Application) : AndroidViewModel(application)
     private val routerId = "demo_router"
     
     init {
+        initNetworkMonitor()
         loadTrafficData()
     }
     
@@ -77,5 +79,9 @@ class TrafficViewModel(application: Application) : AndroidViewModel(application)
             bytes < 1024 * 1024 * 1024 -> String.format("%.2f MB", bytes / (1024.0 * 1024))
             else -> String.format("%.2f GB", bytes / (1024.0 * 1024 * 1024))
         }
+    }
+
+    override fun refreshData() {
+        loadTrafficStats()
     }
 }

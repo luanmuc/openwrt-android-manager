@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.widget_config
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 /**
  * 桌面小部件配置ViewModel
  */
-class WidgetConfigViewModel(application: Application) : AndroidViewModel(application) {
+class WidgetConfigViewModel(application: Application) : BaseViewModel(application) {
     
     // 小部件开关
     private val _routerStatusWidgetEnabled = MutableStateFlow(true)
@@ -55,6 +56,7 @@ class WidgetConfigViewModel(application: Application) : AndroidViewModel(applica
     )
     
     init {
+        initNetworkMonitor()
         loadWidgetConfig()
     }
     
@@ -194,5 +196,9 @@ class WidgetConfigViewModel(application: Application) : AndroidViewModel(applica
             minutes % 60 == 0 -> "${minutes / 60}小时"
             else -> "${minutes / 60}小时${minutes % 60}分钟"
         }
+    }
+
+    override fun refreshData() {
+        loadWidgets()
     }
 }

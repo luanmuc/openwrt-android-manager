@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.diagnostic_enhanced
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.DiagnosticCategory
 import com.luanmuc.openwrtmanager.data.model.DiagnosticStatus
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 /**
  * 智能诊断增强ViewModel
  */
-class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(application) {
+class DiagnosticEnhancedViewModel(application: Application) : BaseViewModel(application) {
     
     private val diagnosticRepository = DiagnosticRepository.getInstance(application)
     
@@ -49,6 +50,7 @@ class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(a
     val error: StateFlow<String?> = _error.asStateFlow()
     
     init {
+        initNetworkMonitor()
         loadLastResult()
     }
     
@@ -130,5 +132,9 @@ class DiagnosticEnhancedViewModel(application: Application) : AndroidViewModel(a
             DiagnosticStatus.ERROR -> MiTheme.Error
             DiagnosticStatus.CHECKING -> MiTheme.Primary
         }
+    }
+
+    override fun refreshData() {
+        runDiagnostic()
     }
 }

@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.terminal
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.CommandHistory
 import com.luanmuc.openwrtmanager.data.model.QuickCommand
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * 终端ViewModel
  */
-class TerminalViewModel(application: Application) : AndroidViewModel(application) {
+class TerminalViewModel(application: Application) : BaseViewModel(application) {
     
     private val terminalRepository = TerminalRepository.getInstance(application)
     
@@ -52,6 +53,7 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
     val showSettings: StateFlow<Boolean> = _showSettings.asStateFlow()
     
     init {
+        initNetworkMonitor()
         loadTerminalData()
     }
     
@@ -192,5 +194,9 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
         val date = java.util.Date(timestamp)
         val sdf = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
         return sdf.format(date)
+    }
+
+    override fun refreshData() {
+        loadHistory()
     }
 }

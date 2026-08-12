@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.wifi_enhanced
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.GuestNetworkConfig
 import com.luanmuc.openwrtmanager.data.model.WifiBand
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 /**
  * WiFi增强ViewModel
  */
-class WifiEnhancedViewModel(application: Application) : AndroidViewModel(application) {
+class WifiEnhancedViewModel(application: Application) : BaseViewModel(application) {
     
     private val wifiConfigRepository = WifiConfigRepository.getInstance(application)
     
@@ -53,6 +54,7 @@ class WifiEnhancedViewModel(application: Application) : AndroidViewModel(applica
     val operationResult: StateFlow<String?> = _operationResult.asStateFlow()
     
     init {
+        initNetworkMonitor()
         loadWifiConfig()
     }
     
@@ -164,5 +166,9 @@ class WifiEnhancedViewModel(application: Application) : AndroidViewModel(applica
      */
     fun clearOperationResult() {
         _operationResult.value = null
+    }
+
+    override fun refreshData() {
+        loadWifiConfig()
     }
 }

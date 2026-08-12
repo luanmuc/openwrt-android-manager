@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.devicemanager
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.DeviceGroup
 import com.luanmuc.openwrtmanager.data.model.DeviceHistory
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * 设备管理增强ViewModel
  */
-class DeviceManagerViewModel(application: Application) : AndroidViewModel(application) {
+class DeviceManagerViewModel(application: Application) : BaseViewModel(application) {
     
     private val deviceManagerRepository = DeviceManagerRepository.getInstance(application)
     
@@ -39,6 +40,7 @@ class DeviceManagerViewModel(application: Application) : AndroidViewModel(applic
     val error: StateFlow<String?> = _error.asStateFlow()
     
     init {
+        initNetworkMonitor()
         loadDeviceManagerData()
     }
     
@@ -109,5 +111,9 @@ class DeviceManagerViewModel(application: Application) : AndroidViewModel(applic
         val date = java.util.Date(timestamp)
         val sdf = java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault())
         return sdf.format(date)
+    }
+
+    override fun refreshData() {
+        loadDevices()
     }
 }

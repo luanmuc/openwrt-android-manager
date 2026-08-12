@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.plugin_detail
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.PluginDetail
 import com.luanmuc.openwrtmanager.data.model.PluginReview
@@ -18,7 +19,11 @@ import kotlinx.coroutines.launch
 /**
  * 插件详情ViewModel
  */
-class PluginDetailViewModel(application: Application) : AndroidViewModel(application) {
+class PluginDetailViewModel(application: Application) : BaseViewModel(application) {
+
+    init {
+        initNetworkMonitor()
+    }
     
     private val pluginMarketRepository = PluginMarketRepository.getInstance(application)
     private val luciRepository = LuciRepository.getInstance(application)
@@ -241,5 +246,9 @@ class PluginDetailViewModel(application: Application) : AndroidViewModel(applica
         val date = java.util.Date(timestamp)
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
         return sdf.format(date)
+    }
+
+    override fun refreshData() {
+        loadPluginDetail()
     }
 }

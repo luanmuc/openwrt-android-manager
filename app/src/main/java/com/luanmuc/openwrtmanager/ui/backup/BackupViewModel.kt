@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.backup
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import androidx.lifecycle.viewModelScope
 import com.luanmuc.openwrtmanager.data.model.BackupRecord
 import com.luanmuc.openwrtmanager.data.model.BackupType
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * 配置备份恢复ViewModel
  */
-class BackupViewModel(application: Application) : AndroidViewModel(application) {
+class BackupViewModel(application: Application) : BaseViewModel(application) {
     
     private val backupRepository = BackupRepository.getInstance(application)
     
@@ -46,6 +47,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     val success: StateFlow<String?> = _success.asStateFlow()
     
     init {
+        initNetworkMonitor()
         loadBackupList()
     }
     
@@ -152,5 +154,9 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         val date = java.util.Date(timestamp)
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
         return sdf.format(date)
+    }
+
+    override fun refreshData() {
+        loadBackupList()
     }
 }

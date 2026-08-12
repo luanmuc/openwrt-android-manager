@@ -2,6 +2,7 @@ package com.luanmuc.openwrtmanager.ui.notification
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import com.luanmuc.openwrtmanager.ui.base.BaseViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * 通知设置ViewModel
  */
-class NotificationViewModel(application: Application) : AndroidViewModel(application) {
+class NotificationViewModel(application: Application) : BaseViewModel(application) {
     
     // 通知开关状态
     private val _notificationEnabled = MutableStateFlow(true)
@@ -33,6 +34,7 @@ class NotificationViewModel(application: Application) : AndroidViewModel(applica
     val notificationHistory: StateFlow<List<NotificationHistoryItem>> = _notificationHistory.asStateFlow()
     
     init {
+        initNetworkMonitor()
         // 加载演示数据
         loadDemoData()
     }
@@ -109,4 +111,8 @@ enum class NotificationType(val displayName: String) {
     FIRMWARE("固件更新"),
     NETWORK_ALERT("网络告警"),
     DEVICE_EVENT("设备事件")
+
+    override fun refreshData() {
+        loadSettings()
+    }
 }
