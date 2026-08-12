@@ -164,7 +164,6 @@ fun MainScreen() {
                     onAddRouter = { navController.navigate(Screen.AddRouter.route) },
                     onNavigateToDevices = { navController.navigate(Screen.OnlineDevices.route) },
                     onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) },
-                    onNavigateToRemoteManage = { navController.navigate(Screen.RemoteManage.route) },
                     onNavigateToWifi = { navController.navigate(Screen.Wifi.route) },
                     onNavigateToNetwork = { navController.navigate(Screen.Network.route) },
                     onNavigateToSystem = { navController.navigate(Screen.System.route) },

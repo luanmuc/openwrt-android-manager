@@ -159,7 +159,7 @@ class RemoteManageViewModel(application: Application) : BaseViewModel(applicatio
                         username = router.username,
                         password = router.encryptedPassword
                     )
-                    if (result) {
+                    if (result.isNotBlank() && !result.contains("error", ignoreCase = true)) {
                         _uiState.value = _uiState.value.copy(
                             isTesting = false,
                             testResult = "远程连接测试成功！",
@@ -168,7 +168,7 @@ class RemoteManageViewModel(application: Application) : BaseViewModel(applicatio
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isTesting = false,
-                            testResult = "连接失败，请检查地址和端口",
+                            testResult = "连接失败：${result.ifEmpty { "未知错误" }}",
                             testSuccess = false
                         )
                     }
