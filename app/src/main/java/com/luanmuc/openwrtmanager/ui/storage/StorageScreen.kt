@@ -289,7 +289,7 @@ fun StorageScreen(
                                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
                             )
                         }
-                        items(uiState.mountPoints, key = { it.mountPoint }) { mount ->
+                        items(uiState.mountPoints, key = { it.mountPoint }) { mount: MountPointInfo ->
                             MiCard {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row(
