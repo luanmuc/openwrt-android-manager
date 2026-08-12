@@ -42,7 +42,7 @@ class DiagnosticRepository private constructor(private val context: Context) {
                 name = "系统状态",
                 status = if (uptime > 0) DiagnosticStatus.GOOD else DiagnosticStatus.WARNING,
                 message = "系统运行正常",
-                details = "运行时间: ${uptime / 86400}天"
+                detail = "运行时间: ${uptime / 86400}天"
             ))
 
             // 网络检测：检查WAN连接
@@ -52,7 +52,7 @@ class DiagnosticRepository private constructor(private val context: Context) {
                 name = "网络连接",
                 status = if (wanStatus?.isUp == true) DiagnosticStatus.GOOD else DiagnosticStatus.ERROR,
                 message = if (wanStatus?.isUp == true) "WAN连接正常" else "WAN未连接",
-                details = wanStatus?.ipaddr ?: "无IP"
+                detail = wanStatus?.ipaddr ?: "无IP"
             ))
 
             // 存储检测：执行df命令
@@ -63,7 +63,7 @@ class DiagnosticRepository private constructor(private val context: Context) {
                 name = "存储空间",
                 status = if (storageOk) DiagnosticStatus.GOOD else DiagnosticStatus.WARNING,
                 message = if (storageOk) "存储空间正常" else "无法获取存储信息",
-                details = dfOutput?.trim() ?: "未知"
+                detail = dfOutput?.trim() ?: "未知"
             ))
 
             // 计算总分
@@ -101,7 +101,7 @@ class DiagnosticRepository private constructor(private val context: Context) {
         return try {
             val pingOutput = luciRepository.executeCommand("ping -c 3 -W 2 8.8.8.8")
             val latency = if (pingOutput?.contains("time=") == true) {
-                val match = Regex("time=(\d+)").find(pingOutput)
+                val match = Regex("time=(\\d+)").find(pingOutput)
                 match?.groupValues?.get(1)?.toFloatOrNull() ?: 50f
             } else 100f
             NetworkQualityResult(

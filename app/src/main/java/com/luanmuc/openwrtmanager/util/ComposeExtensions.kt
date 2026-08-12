@@ -169,8 +169,8 @@ fun Modifier.miIconButton(
 fun Modifier.miListItemClick(
     onClick: () -> Unit
 ): Modifier = composed {
-    this
-        .clickable(onClick = onClick)
+    this.clickable(onClick = onClick)
+}
 
 /**
  * 显示Toast提示
