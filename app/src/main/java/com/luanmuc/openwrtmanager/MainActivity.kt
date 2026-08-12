@@ -89,6 +89,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object Terminal : Screen("terminal", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object PluginDetail : Screen("plugin_detail", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object WidgetConfig : Screen("widget_config", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object RemoteManage : Screen("remote_manage", 0, Icons.Filled.Cloud, Icons.Filled.Cloud)
 }
 
 val bottomNavItems = listOf(
@@ -163,6 +164,7 @@ fun MainScreen() {
                     onAddRouter = { navController.navigate(Screen.AddRouter.route) },
                     onNavigateToDevices = { navController.navigate(Screen.OnlineDevices.route) },
                     onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) },
+                    onNavigateToRemoteManage = { navController.navigate(Screen.RemoteManage.route) },
                     onNavigateToWifi = { navController.navigate(Screen.Wifi.route) },
                     onNavigateToNetwork = { navController.navigate(Screen.Network.route) },
                     onNavigateToSystem = { navController.navigate(Screen.System.route) },
@@ -204,7 +206,8 @@ fun MainScreen() {
                     onNavigateToWifiEnhanced = { navController.navigate(Screen.WifiEnhanced.route) },
                     onNavigateToTerminal = { navController.navigate(Screen.Terminal.route) },
                     onNavigateToWidgetConfig = { navController.navigate(Screen.WidgetConfig.route) },
-                    onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) }
+                    onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) },
+                    onNavigateToRemoteManage = { navController.navigate(Screen.RemoteManage.route) }
                 )
             }
             composable(Screen.AddRouter.route) {

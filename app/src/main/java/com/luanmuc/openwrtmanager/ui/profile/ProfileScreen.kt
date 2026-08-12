@@ -124,6 +124,7 @@ fun ProfileScreen(
     onNavigateToTerminal: () -> Unit = {},
     onNavigateToWidgetConfig: () -> Unit = {},
     onNavigateToPlugins: () -> Unit = {},
+    onNavigateToRemoteManage: () -> Unit = {},
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -167,7 +168,8 @@ fun ProfileScreen(
                 onNavigateToWifiEnhanced = onNavigateToWifiEnhanced,
                 onNavigateToTerminal = onNavigateToTerminal,
                 onNavigateToWidgetConfig = onNavigateToWidgetConfig,
-                onNavigateToPlugins = onNavigateToPlugins
+                onNavigateToPlugins = onNavigateToPlugins,
+                onNavigateToRemoteManage = onNavigateToRemoteManage
             )
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -211,7 +213,8 @@ fun ToolsGrid(
     onNavigateToWifiEnhanced: () -> Unit,
     onNavigateToTerminal: () -> Unit,
     onNavigateToWidgetConfig: () -> Unit,
-    onNavigateToPlugins: () -> Unit
+    onNavigateToPlugins: () -> Unit,
+    onNavigateToRemoteManage: () -> Unit
 ) {
     MiCard(
         modifier = Modifier
@@ -344,6 +347,20 @@ fun ToolsGrid(
                     title = "插件市场",
                     gradient = MiColors.GradientRed,
                     onClick = onNavigateToPlugins
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                ToolItem(
+                    icon = Icons.Default.Cloud,
+                    title = "远程管理",
+                    gradient = MiColors.GradientBlue,
+                    onClick = onNavigateToRemoteManage
                 )
             }
         }
