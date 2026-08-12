@@ -212,3 +212,20 @@ fun SuccessToastEffect(
         }
     }
 }
+
+/**
+ * 防抖点击Modifier
+ * 防止快速重复点击，默认500ms内只响应第一次
+ * 适用于安装、卸载、重启、保存等关键操作按钮
+ */
+fun Modifier.debounceClickable(
+    enabled: Boolean = true,
+    onClick: () -> Unit
+): Modifier = composed {
+    this.clickable(
+        enabled = enabled,
+        onClick = {
+            DebounceUtils.onClick(onClick)
+        }
+    )
+}

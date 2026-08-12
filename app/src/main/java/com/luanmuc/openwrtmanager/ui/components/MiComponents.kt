@@ -586,6 +586,7 @@ fun MiDivider(
 // ========== 小米风格功能图标 ==========
 @Composable
 fun MiFeatureIcon(
+                            contentDescription = "图标",
     icon: @Composable () -> Unit,
     gradient: Brush,
     modifier: Modifier = Modifier,
