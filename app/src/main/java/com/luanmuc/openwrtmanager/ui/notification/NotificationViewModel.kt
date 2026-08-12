@@ -90,6 +90,10 @@ class NotificationViewModel(application: Application) : BaseViewModel(applicatio
     fun clearHistory() {
         _notificationHistory.value = emptyList()
     }
+
+    override fun refreshData() {
+        loadSettings()
+    }
 }
 
 /**
@@ -111,8 +115,4 @@ enum class NotificationType(val displayName: String) {
     FIRMWARE("固件更新"),
     NETWORK_ALERT("网络告警"),
     DEVICE_EVENT("设备事件")
-
-    override fun refreshData() {
-        loadSettings()
-    }
 }
