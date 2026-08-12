@@ -160,5 +160,8 @@ class DiagnosticViewModel(application: Application) : BaseViewModel(application)
     override fun refreshData() {
         // 诊断页面不需要自动刷新
     }
-}
 
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
+}
