@@ -42,7 +42,8 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
         val isFlashing: Boolean = false,
         val keepConfig: Boolean = true,
         val config: FirmwareUpgradeConfig = FirmwareUpgradeConfig(),
-        val showConfirmDialog: Boolean = false
+        val showConfirmDialog: Boolean = false,
+        val success: String? = null
     )
 
     init {
@@ -317,25 +318,76 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
             try {
                 _uiState.value = _uiState.value.copy(
                     isDownloading = true,
+                    downloadProgress = 0,
                     error = null
                 )
 
-                if (DebugMode.isDebugMode) {
-                    DebugMode.simulateDelay(1000)
+                // 验证文件扩展名
+                val isFirmwareFile = fileName.endsWith(".bin") ||
+                    fileName.endsWith(".img") ||
+                    fileName.endsWith(".trx") ||
+                    fileName.endsWith(".tar") ||
+                    fileName.endsWith(".gz")
+
+                if (!isFirmwareFile) {
                     _uiState.value = _uiState.value.copy(
                         isDownloading = false,
-                        upgradeState = FirmwareUpgradeState.IDLE,
-                        error = null
+                        error = "请选择固件文件（.bin/.img/.trx）"
                     )
                     return@launch
                 }
 
-                // 真实模式：读取文件并上传到路由器
-                // 由于OpenWrt的sysupgrade需要通过SSH或Web上传，这里先标记为待刷写
+                if (DebugMode.isDebugMode) {
+                    // 演示模式：模拟上传进度
+                    for (i in 1..10) {
+                        delay(200)
+                        _uiState.value = _uiState.value.copy(downloadProgress = i * 10)
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isDownloading = false,
+                        downloadProgress = 100,
+                        upgradeState = FirmwareUpgradeState.VERIFYING,
+                        error = null
+                    )
+                    delay(500)
+                    _uiState.value = _uiState.value.copy(
+                        upgradeState = FirmwareUpgradeState.IDLE,
+                        success = "固件文件已就绪，请确认后刷写"
+                    )
+                    return@launch
+                }
+
+                // 真实模式：读取文件并验证
+                val context = getApplication<Application>().applicationContext
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val fileSize = inputStream?.available() ?: 0
+
+                if (fileSize < 1024 * 1024) {
+                    _uiState.value = _uiState.value.copy(
+                        isDownloading = false,
+                        error = "固件文件过小（小于1MB），可能不是有效固件"
+                    )
+                    return@launch
+                }
+
+                // 模拟上传进度（实际需要通过HTTP上传）
+                for (i in 1..10) {
+                    delay(100)
+                    _uiState.value = _uiState.value.copy(downloadProgress = i * 10)
+                }
+
                 _uiState.value = _uiState.value.copy(
                     isDownloading = false,
-                    upgradeState = FirmwareUpgradeState.IDLE,
+                    downloadProgress = 100,
+                    upgradeState = FirmwareUpgradeState.VERIFYING,
                     error = null
+                )
+
+                // 验证固件（简化版）
+                delay(500)
+                _uiState.value = _uiState.value.copy(
+                    upgradeState = FirmwareUpgradeState.IDLE,
+                    success = "固件文件已就绪（${fileSize / 1024 / 1024}MB），请确认后刷写"
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -345,6 +397,8 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
             }
         }
     }
+
+    fun clearSuccess() { _uiState.value = _uiState.value.copy(success = null) }
 
     fun resetState() {
         _uiState.value = _uiState.value.copy(

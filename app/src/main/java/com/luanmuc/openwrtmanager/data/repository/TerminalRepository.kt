@@ -278,6 +278,57 @@ class TerminalRepository private constructor(private val context: Context) {
                 456 root     3000 S    /usr/sbin/uhttpd
                 789 root     1000 S    /usr/sbin/dropbear
             """.trimIndent()
+            command.contains("ifconfig", true) || command.contains("ip addr", true) -> """
+                eth0      Link encap:Ethernet  HWaddr 00:11:22:33:44:55
+                          inet addr:192.168.1.1  Bcast:192.168.1.255  Mask:255.255.255.0
+                          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+                          RX packets:12345 errors:0 dropped:0 overruns:0 frame:0
+                          TX packets:6789 errors:0 dropped:0 overruns:0 carrier:0
+
+                lo        Link encap:Local Loopback
+                          inet addr:127.0.0.1  Mask:255.0.0.0
+                          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+            """.trimIndent()
+            command.contains("uptime", true) -> """
+                 14:30:45 up 5 days, 3:42, load average: 0.15, 0.08, 0.05
+            """.trimIndent()
+            command.contains("openwrt_release", true) || command.contains("cat /etc", true) -> """
+                DISTRIB_ID='OpenWrt'
+                DISTRIB_RELEASE='23.05.0'
+                DISTRIB_REVISION='r23497-6637af95aa'
+                DISTRIB_TARGET='x86/64'
+                DISTRIB_ARCH='x86_64'
+                DISTRIB_DESCRIPTION='OpenWrt 23.05.0'
+            """.trimIndent()
+            command.contains("logread", true) -> """
+                Mon Aug 12 14:30:01 2024 cron.info crond[123]: (root) CMD (/usr/bin/ddns_update)
+                Mon Aug 12 14:25:00 2024 daemon.info dnsmasq[456]: read /etc/hosts - 5 addresses
+                Mon Aug 12 14:20:15 2024 kern.info kernel: [12345.678] eth0: link up, 1000 Mbps full-duplex
+                Mon Aug 12 14:15:00 2024 user.notice firewall: Reloading firewall due to ifup of lan
+            """.trimIndent()
+            command.contains("top", true) -> """
+                Mem: 187000K used, 325000K free, 5000K shrd, 125000K buff
+                Load: 0.15 0.08 0.05
+                CPU:  5% usr  3% sys  0% nic 90% idle  2% io  0% irq
+                  PID  PPID USER     STAT   VSZ %VSZ %CPU COMMAND
+                  456     1 root     S     3000   1%   2% /usr/sbin/uhttpd
+                  123     1 root     S     2000   0%   1% /sbin/netifd
+                  789     1 root     S     1000   0%   0% /usr/sbin/dropbear
+            """.trimIndent()
+            command.contains("help", true) -> """
+                常用命令:
+                  uname -a    - 系统信息
+                  free -h     - 内存使用
+                  df -h       - 磁盘使用
+                  uptime      - 运行时间
+                  ps          - 进程列表
+                  ifconfig    - 网络接口
+                  netstat     - 网络连接
+                  logread     - 系统日志
+                  top         - 系统监控
+                  cat /etc/openwrt_release - 版本信息
+            """.trimIndent()
+            command == "clear" || command == "cls" -> ""
             else -> "命令执行完成\n$command"
         }
     }
