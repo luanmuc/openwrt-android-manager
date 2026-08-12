@@ -316,15 +316,15 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = true,
+                    isDownloading = true,
                     error = null
                 )
 
                 if (DebugMode.isDebugMode) {
                     DebugMode.simulateDelay(1000)
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        upgradeState = FirmwareUpgradeState.Ready,
+                        isDownloading = false,
+                        upgradeState = FirmwareUpgradeState.IDLE,
                         error = null
                     )
                     return@launch
@@ -333,13 +333,13 @@ class FirmwareViewModel(application: Application) : BaseViewModel(application) {
                 // 真实模式：读取文件并上传到路由器
                 // 由于OpenWrt的sysupgrade需要通过SSH或Web上传，这里先标记为待刷写
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    upgradeState = FirmwareUpgradeState.Ready,
+                    isDownloading = false,
+                    upgradeState = FirmwareUpgradeState.IDLE,
                     error = null
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
+                    isDownloading = false,
                     error = e.message ?: "文件处理失败"
                 )
             }

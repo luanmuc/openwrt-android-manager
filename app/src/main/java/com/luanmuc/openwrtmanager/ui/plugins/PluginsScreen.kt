@@ -109,7 +109,6 @@ fun PluginsScreen(
     var showMoreMenu by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    val context = androidx.compose.ui.platform.LocalContext.current
     
     // 文件选择器
     val filePickerLauncher = rememberLauncherForActivityResult(

@@ -190,7 +190,7 @@ fun DdnsScreen(
             config = editingConfig,
             onConfigChange = { editingConfig = it },
             onConfirm = {
-                val editName = showEditDialog?.name ?: return@TextButton
+                val editName = showEditDialog?.name ?: return@DdnsEditDialog
                 viewModel.updateDdns(editName, it)
                 showEditDialog = null
             },
@@ -208,7 +208,7 @@ fun DdnsScreen(
             text = { Text("确定要删除DDNS配置「${showDeleteDialog!!.name}」吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    val deleteName = showDeleteDialog?.name ?: return@TextButton
+                    val deleteName = showDeleteDialog?.name ?: return@DdnsEditDialog
                     viewModel.deleteDdns(deleteName)
                     showDeleteDialog = null
                 }) {

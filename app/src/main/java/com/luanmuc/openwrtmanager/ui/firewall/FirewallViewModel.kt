@@ -265,6 +265,57 @@ class FirewallViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
+    fun editPortForward(ruleName: String, rule: PortForwardRule) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+                val activeRouter = getActiveRouter()
+                if (activeRouter == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "未找到活动路由器"
+                    )
+                    return@launch
+                }
+
+                if (DebugMode.isDebugMode) {
+                    DebugMode.simulateDelay(800)
+                    // 演示模式：更新本地列表
+                    val updatedList = _uiState.value.portForwards.map {
+                        if (it.name == ruleName) rule.copy(name = ruleName) else it
+                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        portForwards = updatedList,
+                        success = "规则更新成功"
+                    )
+                    return@launch
+                }
+
+                // 真实模式：调用LuCI API更新
+                luciRepository.updatePortForward(ruleName, rule)
+
+                // 更新成功后清除缓存并重新加载
+                cacheRepository.deleteCache(
+                    CacheRepository.KEY_PORT_FORWARDS,
+                    activeRouter.id
+                )
+
+                loadFirewallConfig()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    success = "规则更新成功"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "更新失败"
+                )
+            }
+        }
+    }
+
     private suspend fun getActiveRouter(): Router? {
         val routers = routerRepository.getRoutersList()
         val activeId = routerRepository.getActiveRouterId()
