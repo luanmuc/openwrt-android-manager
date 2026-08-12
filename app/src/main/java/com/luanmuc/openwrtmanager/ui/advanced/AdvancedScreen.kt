@@ -1,6 +1,7 @@
 package com.luanmuc.openwrtmanager.ui.advanced
 
 import com.luanmuc.openwrtmanager.R
+import com.luanmuc.openwrtmanager.util.DebounceUtils
 
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
@@ -285,8 +286,10 @@ fun AdvancedScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.reboot()
-                        showRebootDialog = false
+                        if (DebounceUtils.canClick()) {
+                            viewModel.reboot()
+                            showRebootDialog = false
+                        }
                     }
                 ) {
                     Text(
@@ -331,8 +334,10 @@ fun AdvancedScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.shutdown()
-                        showShutdownDialog = false
+                        if (DebounceUtils.canClick()) {
+                            viewModel.shutdown()
+                            showShutdownDialog = false
+                        }
                     }
                 ) {
                     Text(
