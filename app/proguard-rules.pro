@@ -69,10 +69,6 @@
 # ========== Lifecycle ==========
 -keep class androidx.lifecycle.** { *; }
 
-# ========== Coil ==========
--keep class coil.** { *; }
--dontwarn coil.**
-
 # ========== 项目代码保护 ==========
 # 保持ViewModel
 -keep class * extends androidx.lifecycle.ViewModel { *; }
