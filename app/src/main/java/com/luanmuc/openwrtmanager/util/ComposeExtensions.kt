@@ -1,11 +1,14 @@
 package com.luanmuc.openwrtmanager.util
 
+import android.content.Context
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
@@ -166,38 +169,45 @@ fun Modifier.miListItemClick(
 ): Modifier = composed {
     this
         .clickable(onClick = onClick)
+
+/**
+ * 显示Toast提示
+ */
+fun Context.showToast(message: String, duration: Int = android.widget.Toast.LENGTH_SHORT) {
+    android.widget.Toast.makeText(this, message, duration).show()
 }
 
 /**
- * 分割线
+ * 错误状态自动显示Toast的Composable
  */
-fun Modifier.miDivider(): Modifier = this
-    .background(MiTheme.Divider)
+@Composable
+fun ErrorToastEffect(
+    error: String?,
+    onClear: () -> Unit
+) {
+    val context = LocalContext.current
+    LaunchedEffect(error) {
+        error?.let {
+            context.showToast(it)
+            onClear()
+        }
+    }
+}
 
 /**
- * 主色调文字背景
+ * 成功状态自动显示Toast的Composable
  */
-fun Modifier.primaryBackground(shape: Shape = MiTheme.shapes.smallShape): Modifier = this
-    .clip(shape)
-    .background(MiTheme.Primary)
-
-/**
- * 成功色调背景
- */
-fun Modifier.successBackground(shape: Shape = MiTheme.shapes.smallShape): Modifier = this
-    .clip(shape)
-    .background(MiTheme.Success)
-
-/**
- * 警告色调背景
- */
-fun Modifier.warningBackground(shape: Shape = MiTheme.shapes.smallShape): Modifier = this
-    .clip(shape)
-    .background(MiTheme.Warning)
-
-/**
- * 错误色调背景
- */
-fun Modifier.errorBackground(shape: Shape = MiTheme.shapes.smallShape): Modifier = this
-    .clip(shape)
-    .background(MiTheme.Error)
+@Composable
+fun SuccessToastEffect(
+    success: String?,
+    onClear: () -> Unit
+) {
+    val context = LocalContext.current
+    LaunchedEffect(success) {
+        success?.let {
+            context.showToast(it)
+            onClear()
+        }
+    }
+}
+}
