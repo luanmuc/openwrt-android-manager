@@ -52,7 +52,7 @@ class DiagnosticRepository private constructor(private val context: Context) {
                 name = "网络连接",
                 status = if (wanStatus?.isUp == true) DiagnosticStatus.GOOD else DiagnosticStatus.ERROR,
                 message = if (wanStatus?.isUp == true) "WAN连接正常" else "WAN未连接",
-                details = wanStatus?.ipAddress ?: "无IP"
+                details = wanStatus?.ipaddr ?: "无IP"
             ))
 
             // 存储检测：执行df命令

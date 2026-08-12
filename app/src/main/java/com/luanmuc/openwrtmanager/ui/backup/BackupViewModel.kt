@@ -124,7 +124,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
      * 清除操作结果
      */
     fun clearError() { _error.value = null }
-    fun clearSuccess() { _uiState.value = _uiState.value.copy(success = null) }
+    fun clearSuccess() { _success.value = null }
 
     fun clearOperationResult() {
         _operationResult.value = null
