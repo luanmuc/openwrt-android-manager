@@ -114,6 +114,6 @@ class DeviceManagerViewModel(application: Application) : BaseViewModel(applicati
     }
 
     override fun refreshData() {
-        loadDeviceManagerData()
+        // 基类统一刷新接口
     }
 }

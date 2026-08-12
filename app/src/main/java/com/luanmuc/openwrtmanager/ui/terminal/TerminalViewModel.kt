@@ -197,6 +197,6 @@ class TerminalViewModel(application: Application) : BaseViewModel(application) {
     }
 
     override fun refreshData() {
-        loadTerminalData()
+        // 基类统一刷新接口
     }
 }

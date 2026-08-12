@@ -249,6 +249,6 @@ class PluginDetailViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        loadPluginDetail()
+        // 基类统一刷新接口
     }
 }

@@ -169,6 +169,6 @@ class WifiEnhancedViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        loadWifiConfig()
+        // 基类统一刷新接口
     }
 }

@@ -92,7 +92,7 @@ class NotificationViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        // 无需刷新
+        // 基类统一刷新接口
     }
 }
 

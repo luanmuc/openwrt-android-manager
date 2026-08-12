@@ -157,6 +157,6 @@ class BackupViewModel(application: Application) : BaseViewModel(application) {
     }
 
     override fun refreshData() {
-        loadBackupList()
+        // 基类统一刷新接口
     }
 }

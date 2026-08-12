@@ -135,6 +135,6 @@ class DiagnosticEnhancedViewModel(application: Application) : BaseViewModel(appl
     }
 
     override fun refreshData() {
-        loadLastResult()
+        // 基类统一刷新接口
     }
 }

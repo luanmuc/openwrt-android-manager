@@ -82,6 +82,6 @@ class TrafficViewModel(application: Application) : BaseViewModel(application) {
     }
 
     override fun refreshData() {
-        loadTrafficData()
+        // 基类统一刷新接口
     }
 }

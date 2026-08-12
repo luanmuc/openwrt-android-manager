@@ -199,6 +199,6 @@ class WidgetConfigViewModel(application: Application) : BaseViewModel(applicatio
     }
 
     override fun refreshData() {
-        loadWidgetConfig()
+        // 基类统一刷新接口
     }
 }
