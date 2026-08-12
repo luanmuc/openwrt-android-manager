@@ -357,7 +357,7 @@ fun ToolsGrid(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 ToolItem(
-                    icon = Icons.Default.Cloud,
+                    icon = Icons.Default.Wifi,
                     title = "远程管理",
                     gradient = MiColors.GradientBlue,
                     onClick = onNavigateToRemoteManage

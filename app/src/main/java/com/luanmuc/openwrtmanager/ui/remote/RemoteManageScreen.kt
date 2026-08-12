@@ -95,7 +95,7 @@ fun RemoteManageScreen(
             RemoteSettingCard(
                 title = "启用远程管理",
                 description = "开启后可在外网通过域名访问路由器",
-                icon = Icons.Filled.Cloud,
+                icon = Icons.Filled.Wifi,
                 gradient = MiColors.GradientBlue
             ) {
                 Switch(
@@ -342,7 +342,7 @@ private fun RemoteStatusCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isRemoteMode) Icons.Filled.CloudDone else Icons.Filled.Wifi,
+                        imageVector = if (isRemoteMode) Icons.Filled.CheckCircle else Icons.Filled.Wifi,
                         contentDescription = null,
                         tint = if (isRemoteMode) MiTheme.Success else MiTheme.TextSecondary,
                         modifier = Modifier.size(24.dp)
