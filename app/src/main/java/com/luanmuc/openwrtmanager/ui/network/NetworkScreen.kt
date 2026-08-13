@@ -358,6 +358,12 @@ fun WanSettings(viewModel: NetworkViewModel) {
                     label = "网关",
                     placeholder = "192.168.1.1"
                 )
+                MiTextField(
+                    value = uiState.wanDns,
+                    onValueChange = { viewModel.updateWanDns(it) },
+                    label = "DNS 服务器",
+                    placeholder = "8.8.8.8"
+                )
             }
             
             if (uiState.wanProto == "pppoe") {
