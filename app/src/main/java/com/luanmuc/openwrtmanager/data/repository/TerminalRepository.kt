@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 class TerminalRepository private constructor(private val context: Context) {
     
     private val prefs: SharedPreferences = context.getSharedPreferences("terminal_config", Context.MODE_PRIVATE)
+    private val luciRepository: LuciRepository = LuciRepository.getInstance(context)
     
     /**
      * 获取终端配置
