@@ -216,9 +216,17 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
-            val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
-            saveDeviceNote(note.copy(isBlocked = false))
-            true
+            val success = luciRepository.unblockDevice(mac)
+            if (success) {
+                val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)
+                saveDeviceNote(note.copy(isBlocked = false))
+                addDeviceHistory(DeviceHistory(
+                    mac = mac,
+                    eventType = DeviceEventType.UNBLOCKED,
+                    timestamp = System.currentTimeMillis()
+                ))
+            }
+            success
         } catch (e: Exception) {
             false
         }

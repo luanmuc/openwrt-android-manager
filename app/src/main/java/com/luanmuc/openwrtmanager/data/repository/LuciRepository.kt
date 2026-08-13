@@ -1902,8 +1902,39 @@ class LuciRepository {
         onProgress: (Int) -> Unit
     ): Boolean {
         return try {
+            onProgress(10)
+            // 验证固件文件存在
+            if (firmwarePath.isNotEmpty()) {
+                val checkResult = callUbus(
+                    "file", "exec", mapOf(
+                        "command" to "/bin/sh",
+                        "params" to listOf("-c", "test -f $firmwarePath && echo exists || echo missing")
+                    )
+                )
+                val stdout = (checkResult as? Map<*, *>)?.get("stdout")?.toString() ?: ""
+                if (!stdout.contains("exists")) {
+                    return false
+                }
+            }
+            onProgress(30)
             // 调用sysupgrade刷写固件
-            // 这里简化处理，实际需要调用ubus或sysupgrade命令
+            val keepFlag = if (keepConfig) "" else "-n"
+            val cmd = if (firmwarePath.isNotEmpty()) {
+                "/sbin/sysupgrade $keepFlag $firmwarePath"
+            } else {
+                // 没有本地文件时，先下载再刷写（简化处理）
+                "/sbin/sysupgrade $keepFlag /tmp/firmware.bin"
+            }
+            onProgress(50)
+            callUbus(
+                "file", "exec", mapOf(
+                    "command" to "/bin/sh",
+                    "params" to listOf("-c", cmd)
+                )
+            )
+            onProgress(80)
+            // sysupgrade会自动重启，这里返回成功
+            onProgress(100)
             true
         } catch (e: Exception) {
             false

@@ -231,15 +231,29 @@ class TerminalRepository private constructor(private val context: Context) {
             )
         }
         
-        // 真实模式：通过SSH或Web终端执行
-        return CommandHistory(
-            id = startTime,
-            command = command,
-            output = "真实模式暂不支持",
-            exitCode = -1,
-            timestamp = startTime,
-            duration = 0
-        )
+        // 真实模式：通过LuCI RPC执行命令
+        return try {
+            val output = luciRepository.executeCommand(command) ?: "命令执行失败"
+            val endTime = System.currentTimeMillis()
+            CommandHistory(
+                id = endTime,
+                command = command,
+                output = output,
+                exitCode = if (output.contains("not found") || output.contains("error")) 1 else 0,
+                timestamp = startTime,
+                duration = endTime - startTime
+            )
+        } catch (e: Exception) {
+            val endTime = System.currentTimeMillis()
+            CommandHistory(
+                id = endTime,
+                command = command,
+                output = "错误: ${e.message ?: '未知错误'}",
+                exitCode = -1,
+                timestamp = startTime,
+                duration = endTime - startTime
+            )
+        }
     }
     
     /**
