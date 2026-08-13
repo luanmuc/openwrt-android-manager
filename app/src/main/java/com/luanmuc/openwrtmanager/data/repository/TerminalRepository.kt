@@ -248,7 +248,7 @@ class TerminalRepository private constructor(private val context: Context) {
             CommandHistory(
                 id = endTime,
                 command = command,
-                output = "错误: ${e.message ?: '未知错误'}",
+                output = "错误: ${e.message ?: "未知错误"}",
                 exitCode = -1,
                 timestamp = startTime,
                 duration = endTime - startTime
