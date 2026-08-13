@@ -65,6 +65,7 @@ class WifiViewModel(application: Application) : BaseViewModel(application) {
 
     init {
         initNetworkMonitor()
+        observeRouters()
     }
 
     override fun refreshData() {

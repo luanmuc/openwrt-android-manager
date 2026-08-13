@@ -46,6 +46,7 @@ class OnlineDevicesViewModel(application: Application) : BaseViewModel(applicati
 
     init {
         initNetworkMonitor()
+        observeRouters()
     }
 
     override fun refreshData() {
