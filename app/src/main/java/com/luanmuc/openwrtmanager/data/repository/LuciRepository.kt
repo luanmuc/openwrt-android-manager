@@ -445,7 +445,7 @@ class LuciRepository {
         try {
             val dfOutput = executeCommand("df -k /")
             dfOutput?.lines()?.getOrNull(1)?.let { line ->
-                val parts = line.trim().split(Regex("\s+"))
+                val parts = line.trim().split(Regex("\\s+"))
                 if (parts.size >= 4) {
                     storageTotal = (parts[1].toLongOrNull() ?: 0L) * 1024
                     storageUsed = (parts[2].toLongOrNull() ?: 0L) * 1024
@@ -493,7 +493,7 @@ class LuciRepository {
             // df格式: Filesystem 1K-blocks Used Available Use% Mounted on
             lines.drop(1).mapNotNull { line ->
                 if (line.isBlank()) return@mapNotNull null
-                val parts = line.trim().split(Regex("\s+"))
+                val parts = line.trim().split(Regex("\\s+"))
                 if (parts.size < 6) return@mapNotNull null
                 
                 val total = parts[1].toLongOrNull()?.times(1024) ?: 0L
@@ -743,7 +743,7 @@ class LuciRepository {
             // /proc/net/arp格式: IP address HW type Flags HW address Mask Device
             lines.drop(1).mapNotNull { line ->
                 if (line.isBlank()) return@mapNotNull null
-                val parts = line.trim().split(Regex("\s+"))
+                val parts = line.trim().split(Regex("\\s+"))
                 if (parts.size < 4) return@mapNotNull null
                 // 只返回已解析的ARP条目（Flags为0x2）
                 if (parts[2] != "0x2") return@mapNotNull null
@@ -795,7 +795,7 @@ class LuciRepository {
             // ps格式: PID  UID  VSZ  RSS  COMMAND
             lines.drop(1).mapNotNull { line ->
                 if (line.isBlank()) return@mapNotNull null
-                val parts = line.trim().split(Regex("\s+"), limit = 5)
+                val parts = line.trim().split(Regex("\\s+"), limit = 5)
                 if (parts.size < 4) return@mapNotNull null
                 ProcessInfo(
                     pid = parts[0].toIntOrNull() ?: 0,
@@ -1267,11 +1267,11 @@ class LuciRepository {
 
     private var lastCpuStats: LongArray? = null
     
-    private fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
+    private suspend fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
         return try {
             val statOutput = executeCommand("cat /proc/stat | head -1") ?: return 0f
             // /proc/stat格式: cpu user nice system idle iowait irq softirq
-            val parts = statOutput.trim().split(Regex("\s+"))
+            val parts = statOutput.trim().split(Regex("\\s+"))
             if (parts.size < 5) return 0f
             
             val user = parts[1].toLongOrNull() ?: 0L
