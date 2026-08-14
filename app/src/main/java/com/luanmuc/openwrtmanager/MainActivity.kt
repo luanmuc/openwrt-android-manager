@@ -94,7 +94,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object PluginDetail : Screen("plugin_detail", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object WidgetConfig : Screen("widget_config", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object RemoteManage : Screen("remote_manage", 0, Icons.Filled.Devices, Icons.Filled.Devices)
-    data object PluginDependency : Screen("plugin_dependency", 0, Icons.Filled.Build, Icons.Filled.Build)
+    data object PluginDependency : Screen("plugin_dependency", 0, Icons.Filled.Extension, Icons.Filled.Extension)
 }
 
 val bottomNavItems = listOf(

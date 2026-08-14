@@ -9,13 +9,13 @@ data class PluginDependency(
     val description: String,       // 插件说明
     val isRequired: Boolean = true, // 是否必需
     val installCommand: String = "", // 安装命令（默认opkg install）
-    val category: PluginCategory = PluginCategory.OTHER
+    val category: DependencyCategory = DependencyCategory.OTHER
 )
 
 /**
  * 插件分类
  */
-enum class PluginCategory {
+enum class DependencyCategory {
     NETWORK,      // 网络相关
     WIFI,         // WiFi相关
     SYSTEM,       // 系统相关
@@ -46,7 +46,7 @@ object PluginDependencies {
         featureName = "DDNS动态域名",
         packageName = "ddns-scripts",
         description = "DDNS动态域名更新服务，用于将动态IP映射到固定域名",
-        category = PluginCategory.NETWORK
+        category = DependencyCategory.NETWORK
     )
 
     // 设备限速功能
@@ -54,7 +54,7 @@ object PluginDependencies {
         featureName = "设备限速",
         packageName = "ip-tiny",
         description = "流量控制工具(tc命令)，用于限制设备上下行速度",
-        category = PluginCategory.NETWORK
+        category = DependencyCategory.NETWORK
     )
 
     // 挂载点管理
@@ -62,7 +62,7 @@ object PluginDependencies {
         featureName = "挂载点管理",
         packageName = "block-mount",
         description = "块设备挂载管理工具，用于管理USB存储等挂载点",
-        category = PluginCategory.STORAGE
+        category = DependencyCategory.STORAGE
     )
 
     // WiFi信息
@@ -70,7 +70,7 @@ object PluginDependencies {
         featureName = "WiFi信息",
         packageName = "rpcd-mod-iwinfo",
         description = "WiFi信息查询模块，用于获取无线设备状态和连接信息",
-        category = PluginCategory.WIFI
+        category = DependencyCategory.WIFI
     )
 
     // 系统日志
@@ -78,7 +78,7 @@ object PluginDependencies {
         featureName = "系统日志",
         packageName = "logd",
         description = "系统日志服务，用于记录和查看系统运行日志",
-        category = PluginCategory.SYSTEM
+        category = DependencyCategory.SYSTEM
     )
 
     // 诊断工具-traceroute
@@ -87,7 +87,7 @@ object PluginDependencies {
         packageName = "traceroute",
         description = "路由追踪工具，用于诊断网络路径和延迟",
         isRequired = false,
-        category = PluginCategory.DIAGNOSTIC
+        category = DependencyCategory.DIAGNOSTIC
     )
 
     // 所有必需插件列表
