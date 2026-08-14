@@ -232,25 +232,25 @@ class LuciRepository {
     /**
      * 登录认证
      */
-    // luci-rpc是否可用（用于检测插件是否安装）
-    private var luciRpcAvailable: Boolean = true
-    private var luciRpcChecked: Boolean = false
+    // opkg是否可用（用于检测包管理器）
+    private var opkgAvailable: Boolean = true
+    private var opkgChecked: Boolean = false
     
     /**
-     * 检测luci-rpc是否可用
+     * 检测opkg是否可用
      */
     suspend fun checkLuciRpcAvailable(): Boolean {
-        if (luciRpcChecked) return luciRpcAvailable
+        if (opkgChecked) return opkgAvailable
         
         try {
-            callUbus("luci-rpc", "getInstalledPackages")
-            luciRpcAvailable = true
+            val output = executeCommand("opkg --version")
+            opkgAvailable = output != null && output.isNotEmpty()
         } catch (e: Exception) {
-            luciRpcAvailable = false
+            opkgAvailable = false
         }
         
-        luciRpcChecked = true
-        return luciRpcAvailable
+        opkgChecked = true
+        return opkgAvailable
     }
     
     suspend fun login(address: String, username: String, password: String): String {
@@ -410,16 +410,20 @@ class LuciRepository {
         val sysInfo = getSystemInfo()
         val boardInfo = getBoardInfo()
 
-        val hostname = sysInfo["hostname"]?.toString()
-            ?: boardInfo["hostname"]?.toString()
+        val hostname = boardInfo["hostname"]?.toString()
+            ?: sysInfo["hostname"]?.toString()
             ?: "OpenWrt"
         val model = boardInfo["model"]?.toString()
             ?: sysInfo["model"]?.toString()
             ?: "Unknown"
-        val release = boardInfo["release"]?.toString()
-            ?: sysInfo["release"]?.toString()
-            ?: "Unknown"
-        val kernel = sysInfo["kernel"]?.toString() ?: "Unknown"
+        // release是Map，包含distribution、version、revision等字段
+        val releaseMap = boardInfo["release"] as? Map<*, *>
+        val release = if (releaseMap != null) {
+            "${releaseMap["distribution"]} ${releaseMap["version"]}"
+        } else {
+            boardInfo["release"]?.toString() ?: "Unknown"
+        }
+        val kernel = boardInfo["kernel"]?.toString() ?: "Unknown"
         val uptime = (sysInfo["uptime"] as? Number)?.toLong() ?: 0L
 
         val loadList = sysInfo["load"] as? List<*>
@@ -434,10 +438,23 @@ class LuciRepository {
         val memoryBuffered = (memory?.get("buffered") as? Number)?.toLong() ?: 0L
         val memoryUsed = memoryTotal - memoryFree - memoryCached - memoryBuffered
 
-        val root = sysInfo["root"] as? Map<*, *>
-        val storageTotal = (root?.get("total") as? Number)?.toLong() ?: 0L
-        val storageFree = (root?.get("free") as? Number)?.toLong() ?: 0L
-        val storageUsed = (root?.get("used") as? Number)?.toLong() ?: (storageTotal - storageFree)
+        // 存储信息通过df命令获取根分区
+        var storageTotal = 0L
+        var storageFree = 0L
+        var storageUsed = 0L
+        try {
+            val dfOutput = executeCommand("df -k /")
+            dfOutput?.lines()?.getOrNull(1)?.let { line ->
+                val parts = line.trim().split(Regex("\s+"))
+                if (parts.size >= 4) {
+                    storageTotal = (parts[1].toLongOrNull() ?: 0L) * 1024
+                    storageUsed = (parts[2].toLongOrNull() ?: 0L) * 1024
+                    storageFree = (parts[3].toLongOrNull() ?: 0L) * 1024
+                }
+            }
+        } catch (e: Exception) {
+            // 忽略，使用默认值0
+        }
 
         val cpuUsage = calculateCpuUsage(sysInfo)
 
@@ -468,42 +485,31 @@ class LuciRepository {
      */
     suspend fun getMountPoints(): List<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo> {
         return try {
-            val mounts = mutableListOf<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo>()
-            val sysInfo = getSystemInfo()
+            val output = executeCommand("df -k") ?: return emptyList()
+            val lines = output.lines()
+            if (lines.size <= 1) return emptyList()
             
-            // 根分区
-            val root = sysInfo["root"] as? Map<*, *>
-            val total = (root?.get("total") as? Number)?.toLong() ?: 0L
-            val free = (root?.get("free") as? Number)?.toLong() ?: 0L
-            val used = (root?.get("used") as? Number)?.toLong() ?: (total - free)
-            mounts.add(
+            val mounts = mutableListOf<com.luanmuc.openwrtmanager.ui.storage.MountPointInfo>()
+            // df格式: Filesystem 1K-blocks Used Available Use% Mounted on
+            lines.drop(1).mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                val parts = line.trim().split(Regex("\s+"))
+                if (parts.size < 6) return@mapNotNull null
+                
+                val total = parts[1].toLongOrNull()?.times(1024) ?: 0L
+                val used = parts[2].toLongOrNull()?.times(1024) ?: 0L
+                val free = parts[3].toLongOrNull()?.times(1024) ?: 0L
+                
                 com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
-                    mountPoint = "/",
-                    device = "/dev/root",
-                    filesystem = "squashfs",
+                    mountPoint = parts[5],
+                    device = parts[0],
+                    filesystem = "",
                     total = total,
                     used = used,
                     free = free,
                     usedPercent = if (total > 0) (used * 100f / total) else 0f
                 )
-            )
-            
-            // tmpfs (/tmp)
-            val memory = sysInfo["memory"] as? Map<*, *>
-            val memTotal = (memory?.get("total") as? Number)?.toLong() ?: 0L
-            if (memTotal > 0) {
-                mounts.add(
-                    com.luanmuc.openwrtmanager.ui.storage.MountPointInfo(
-                        mountPoint = "/tmp",
-                        device = "tmpfs",
-                        filesystem = "tmpfs",
-                        total = memTotal / 2,
-                        used = 0L,
-                        free = memTotal / 2,
-                        usedPercent = 0f
-                    )
-                )
-            }
+            }.let { mounts.addAll(it) }
             
             mounts
         } catch (e: Exception) {
@@ -707,18 +713,20 @@ class LuciRepository {
      */
     suspend fun getDhcpLeases(): List<DeviceInfo> {
         return try {
-            val result = callUbus("luci-rpc", "getDHCPLeases")
-            val leases = result["leases"] as? List<*>
-            leases?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("cat /tmp/dhcp.leases") ?: return emptyList()
+            output.lines().mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                // /tmp/dhcp.leases格式: expires mac ip hostname client-id
+                val parts = line.split(" ")
+                if (parts.size < 3) return@mapNotNull null
                 DeviceInfo(
-                    ip = map["ipaddr"]?.toString() ?: map["ip"]?.toString() ?: "",
-                    mac = map["macaddr"]?.toString() ?: map["mac"]?.toString() ?: "",
-                    hostname = map["hostname"]?.toString() ?: "",
-                    vendor = map["vendor"]?.toString() ?: "",
-                    connectedTime = (map["expires"] as? Number)?.toLong() ?: 0
+                    ip = parts[2],
+                    mac = parts[1],
+                    hostname = if (parts.size >= 4 && parts[3] != "*") parts[3] else "",
+                    vendor = "",
+                    connectedTime = parts[0].toLongOrNull() ?: 0
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -729,16 +737,22 @@ class LuciRepository {
      */
     suspend fun getArpTable(): List<DeviceInfo> {
         return try {
-            val result = callUbus("network", "arp")
-            val entries = result["arp"] as? List<*>
-            entries?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("cat /proc/net/arp") ?: return emptyList()
+            val lines = output.lines()
+            if (lines.size <= 1) return emptyList()
+            // /proc/net/arp格式: IP address HW type Flags HW address Mask Device
+            lines.drop(1).mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                val parts = line.trim().split(Regex("\s+"))
+                if (parts.size < 4) return@mapNotNull null
+                // 只返回已解析的ARP条目（Flags为0x2）
+                if (parts[2] != "0x2") return@mapNotNull null
                 DeviceInfo(
-                    ip = map["ip"]?.toString() ?: "",
-                    mac = map["mac"]?.toString() ?: "",
-                    interfaceName = map["device"]?.toString() ?: ""
+                    ip = parts[0],
+                    mac = parts[3],
+                    interfaceName = if (parts.size >= 6) parts[5] else ""
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -751,17 +765,18 @@ class LuciRepository {
      */
     suspend fun getSystemLog(): List<LogEntry> {
         return try {
-            val result = callUbus("log", "read")
-            val log = result["log"] as? List<*>
-            log?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("logread") ?: return emptyList()
+            output.lines().mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                // logread格式: Mon Jan 15 10:30:00 2024 daemon.info dnsmasq[1234]: message
+                val parts = line.split(" ", limit = 7)
                 LogEntry(
-                    time = map["time"]?.toString() ?: "",
-                    level = map["level"]?.toString() ?: "",
-                    facility = map["facility"]?.toString() ?: "",
-                    message = map["message"]?.toString() ?: ""
+                    time = if (parts.size >= 4) "${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]}" else line,
+                    level = if (parts.size >= 5) parts[4].substringAfterLast(".").ifEmpty { "info" } else "info",
+                    facility = if (parts.size >= 5) parts[4].substringBefore(".").ifEmpty { "daemon" } else "daemon",
+                    message = if (parts.size >= 7) parts[6] else line
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -774,21 +789,25 @@ class LuciRepository {
      */
     suspend fun getProcessList(): List<ProcessInfo> {
         return try {
-            val result = callUbus("system", "process")
-            val list = result["list"] as? List<*>
-            list?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("ps") ?: return emptyList()
+            val lines = output.lines()
+            if (lines.size <= 1) return emptyList()
+            // ps格式: PID  UID  VSZ  RSS  COMMAND
+            lines.drop(1).mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                val parts = line.trim().split(Regex("\s+"), limit = 5)
+                if (parts.size < 4) return@mapNotNull null
                 ProcessInfo(
-                    pid = (map["pid"] as? Number)?.toInt() ?: 0,
-                    name = map["name"]?.toString() ?: "",
-                    cpu = (map["cpu"] as? Number)?.toFloat() ?: 0f,
-                    memory = (map["mem"] as? Number)?.toFloat() ?: 0f,
-                    vsz = (map["vsz"] as? Number)?.toLong() ?: 0L,
-                    rss = (map["rss"] as? Number)?.toLong() ?: 0L,
-                    user = map["user"]?.toString() ?: "",
-                    command = map["command"]?.toString() ?: ""
+                    pid = parts[0].toIntOrNull() ?: 0,
+                    name = parts.last().substringAfterLast("/").ifEmpty { parts.last() },
+                    cpu = 0f,
+                    memory = 0f,
+                    vsz = parts[2].toLongOrNull() ?: 0L,
+                    rss = parts[3].toLongOrNull() ?: 0L,
+                    user = parts[1],
+                    command = parts.last()
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -799,10 +818,13 @@ class LuciRepository {
      */
     suspend fun killProcess(pid: Int): Boolean {
         return try {
-            callUbus("system", "kill", mapOf("pid" to pid, "signal" to 9))
+            // 使用system signal方法（标准ubus），参数为pid和signum
+            callUbus("system", "signal", mapOf("pid" to pid, "signum" to 9))
             true
         } catch (e: Exception) {
-            false
+            // 备用方案：使用kill命令
+            executeCommand("kill -9 $pid")
+            true
         }
     }
 
@@ -870,18 +892,20 @@ class LuciRepository {
      */
     suspend fun getInstalledPackages(): List<PackageInfo> {
         return try {
-            val result = callUbus("luci-rpc", "getInstalledPackages")
-            val packages = result["packages"] as? List<*>
-            packages?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("opkg list-installed") ?: return emptyList()
+            output.lines().mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                // opkg list-installed格式: package-name - version
+                val parts = line.split(" - ", limit = 2)
+                if (parts.size < 2) return@mapNotNull null
                 PackageInfo(
-                    name = map["name"]?.toString() ?: "",
-                    version = map["version"]?.toString() ?: "",
-                    description = map["description"]?.toString() ?: "",
-                    size = (map["size"] as? Number)?.toLong() ?: 0L,
+                    name = parts[0].trim(),
+                    version = parts[1].trim(),
+                    description = "",
+                    size = 0L,
                     installed = true
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -892,18 +916,20 @@ class LuciRepository {
      */
     suspend fun getAvailablePackages(): List<PackageInfo> {
         return try {
-            val result = callUbus("luci-rpc", "getAvailablePackages")
-            val packages = result["packages"] as? List<*>
-            packages?.mapNotNull { item ->
-                val map = item as? Map<*, *> ?: return@mapNotNull null
+            val output = executeCommand("opkg list") ?: return emptyList()
+            output.lines().mapNotNull { line ->
+                if (line.isBlank()) return@mapNotNull null
+                // opkg list格式: package-name - version - description
+                val parts = line.split(" - ", limit = 3)
+                if (parts.size < 2) return@mapNotNull null
                 PackageInfo(
-                    name = map["name"]?.toString() ?: "",
-                    version = map["version"]?.toString() ?: "",
-                    description = map["description"]?.toString() ?: "",
-                    size = (map["size"] as? Number)?.toLong() ?: 0L,
+                    name = parts[0].trim(),
+                    version = parts[1].trim(),
+                    description = if (parts.size >= 3) parts[2].trim() else "",
+                    size = 0L,
                     installed = false
                 )
-            } ?: emptyList()
+            }
         } catch (e: Exception) {
             emptyList()
         }
@@ -914,8 +940,8 @@ class LuciRepository {
      */
     suspend fun installPackage(name: String): Boolean {
         return try {
-            callUbus("luci-rpc", "installPackage", mapOf("package" to name))
-            true
+            val output = executeCommand("opkg install $name")
+            output != null && !output.contains("error") && !output.contains("failed")
         } catch (e: Exception) {
             false
         }
@@ -926,8 +952,8 @@ class LuciRepository {
      */
     suspend fun removePackage(name: String): Boolean {
         return try {
-            callUbus("luci-rpc", "removePackage", mapOf("package" to name))
-            true
+            val output = executeCommand("opkg remove $name")
+            output != null && !output.contains("error") && !output.contains("failed")
         } catch (e: Exception) {
             false
         }
@@ -938,8 +964,8 @@ class LuciRepository {
      */
     suspend fun updatePackageLists(): Boolean {
         return try {
-            callUbus("luci-rpc", "updatePackageLists")
-            true
+            val output = executeCommand("opkg update")
+            output != null && !output.contains("error") && !output.contains("failed")
         } catch (e: Exception) {
             false
         }
@@ -1239,9 +1265,37 @@ class LuciRepository {
 
     // ========== 工具方法 ==========
 
+    private var lastCpuStats: LongArray? = null
+    
     private fun calculateCpuUsage(sysInfo: Map<String, Any>): Float {
-        val cpu = sysInfo["cpu"] as? Map<*, *>
-        return (cpu?.get("usage") as? Number)?.toFloat() ?: 0f
+        return try {
+            val statOutput = executeCommand("cat /proc/stat | head -1") ?: return 0f
+            // /proc/stat格式: cpu user nice system idle iowait irq softirq
+            val parts = statOutput.trim().split(Regex("\s+"))
+            if (parts.size < 5) return 0f
+            
+            val user = parts[1].toLongOrNull() ?: 0L
+            val nice = parts[2].toLongOrNull() ?: 0L
+            val system = parts[3].toLongOrNull() ?: 0L
+            val idle = parts[4].toLongOrNull() ?: 0L
+            val iowait = if (parts.size > 5) parts[5].toLongOrNull() ?: 0L else 0L
+            
+            val total = user + nice + system + idle + iowait
+            val idleTotal = idle + iowait
+            
+            val last = lastCpuStats
+            lastCpuStats = longArrayOf(total, idleTotal)
+            
+            if (last != null && total > last[0]) {
+                val totalDiff = total - last[0]
+                val idleDiff = idleTotal - last[1]
+                ((totalDiff - idleDiff) * 100f / totalDiff).coerceIn(0f, 100f)
+            } else {
+                0f
+            }
+        } catch (e: Exception) {
+            0f
+        }
     }
 
     private fun normalizeAddress(address: String): String {
@@ -1432,8 +1486,10 @@ class LuciRepository {
         return try {
             // 尝试执行opkg命令
             val result = try {
-                callUbus("luci-rpc", "getInstalledPackages")
-                PackageManagerType.OPKG
+                val opkgOutput = executeCommand("opkg --version")
+                if (opkgOutput != null && opkgOutput.isNotEmpty()) {
+                    PackageManagerType.OPKG
+                } else null
             } catch (e: Exception) {
                 null
             }
