@@ -170,7 +170,8 @@ fun ProfileScreen(
                 onNavigateToTerminal = onNavigateToTerminal,
                 onNavigateToWidgetConfig = onNavigateToWidgetConfig,
                 onNavigateToPlugins = onNavigateToPlugins,
-                onNavigateToRemoteManage = onNavigateToRemoteManage
+                onNavigateToRemoteManage = onNavigateToRemoteManage,
+                onNavigateToPluginDependency = onNavigateToPluginDependency
             )
             
             Spacer(modifier = Modifier.height(20.dp))
@@ -215,7 +216,8 @@ fun ToolsGrid(
     onNavigateToTerminal: () -> Unit,
     onNavigateToWidgetConfig: () -> Unit,
     onNavigateToPlugins: () -> Unit,
-    onNavigateToRemoteManage: () -> Unit
+    onNavigateToRemoteManage: () -> Unit,
+    onNavigateToPluginDependency: () -> Unit
 ) {
     MiCard(
         modifier = Modifier
