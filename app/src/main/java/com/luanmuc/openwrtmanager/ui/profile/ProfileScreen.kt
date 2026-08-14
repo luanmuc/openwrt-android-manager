@@ -364,7 +364,7 @@ fun ToolsGrid(
                     onClick = onNavigateToRemoteManage
                 )
                 ToolItem(
-                    icon = Icons.Default.Build,
+                    icon = Icons.Default.Extension,
                     title = "插件检测",
                     gradient = MiColors.GradientGreen,
                     onClick = onNavigateToPluginDependency
