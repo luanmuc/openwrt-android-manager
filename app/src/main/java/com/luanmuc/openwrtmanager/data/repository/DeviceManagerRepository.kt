@@ -248,6 +248,11 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
+            // 检测tc命令是否可用
+            if (!luciRepository.isCommandAvailable("tc")) {
+                android.util.Log.w("DeviceManager", "tc命令不可用，无法限速，请安装ip-tiny或tc包")
+                return false
+            }
             // 通过tc命令实现真实限速（简化版，对整个LAN接口限速）
             val iface = "br-lan"
             val cmd = if (downloadLimit > 0) {
@@ -286,6 +291,11 @@ class DeviceManagerRepository private constructor(private val context: Context) 
         }
         
         return try {
+            // 检测tc命令是否可用
+            if (!luciRepository.isCommandAvailable("tc")) {
+                android.util.Log.w("DeviceManager", "tc命令不可用，无法取消限速")
+                return false
+            }
             // 通过tc命令取消限速
             luciRepository.executeCommand("tc qdisc del dev br-lan root 2>/dev/null")
             val note = getDeviceNote(mac) ?: DeviceNote(mac = mac)

@@ -2319,6 +2319,13 @@ class LuciRepository {
             val wanCount = portStatus.count { it.type == PortType.WAN }
             val lanCount = portStatus.count { it.type == PortType.LAN }
             
+            // 检测功能所需命令/插件
+            val hasTc = isCommandAvailable("tc")
+            val hasIwinfo = isCommandAvailable("iwinfo") || wifiDevices.isNotEmpty()
+            val hasDdnsScripts = isPackageInstalled("ddns-scripts")
+            val hasLogd = isCommandAvailable("logread")
+            val hasDnsmasq = isCommandAvailable("dnsmasq") || isPackageInstalled("dnsmasq")
+            
             DeviceCapabilities(
                 hasWifi = hasWifi,
                 hasUsb = hasUsb,
@@ -2328,7 +2335,12 @@ class LuciRepository {
                 wanPortCount = wanCount,
                 totalPortCount = portStatus.size,
                 packageManager = systemInfo.packageManager,
-                architecture = systemInfo.architecture
+                architecture = systemInfo.architecture,
+                hasTc = hasTc,
+                hasIwinfo = hasIwinfo,
+                hasDdnsScripts = hasDdnsScripts,
+                hasLogd = hasLogd,
+                hasDnsmasq = hasDnsmasq
             )
         } catch (e: Exception) {
             DeviceCapabilities()
@@ -2435,6 +2447,30 @@ class LuciRepository {
             (result as? Map<*, *>)?.get("stdout")?.toString()
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * 检测命令是否可用
+     */
+    suspend fun isCommandAvailable(command: String): Boolean {
+        return try {
+            val output = executeCommand("which $command 2>/dev/null || command -v $command 2>/dev/null")
+            !output.isNullOrBlank()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 检测功能所需插件是否安装
+     */
+    suspend fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            val output = executeCommand("opkg list-installed | grep -q '^$packageName ' && echo yes || echo no")
+            output?.trim() == "yes"
+        } catch (e: Exception) {
+            false
         }
     }
 }

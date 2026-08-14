@@ -470,5 +470,11 @@ data class DeviceCapabilities(
     val wanPortCount: Int = 0,
     val totalPortCount: Int = 0,
     val packageManager: PackageManagerType = PackageManagerType.UNKNOWN,
-    val architecture: String = ""
+    val architecture: String = "",
+    // 功能可用性检测
+    val hasTc: Boolean = false,           // 流量限速(tc命令)
+    val hasIwinfo: Boolean = false,       // WiFi信息(iwinfo)
+    val hasDdnsScripts: Boolean = false,  // DDNS(ddns-scripts)
+    val hasLogd: Boolean = false,         // 系统日志(logread)
+    val hasDnsmasq: Boolean = false       // DHCP/DNS(dnsmasq)
 )
