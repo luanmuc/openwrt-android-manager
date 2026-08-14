@@ -75,3 +75,5 @@ lint-results*.html
 
 # Android Profiling
 *.hprof
+artifact*.zip
+*.apk
