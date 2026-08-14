@@ -194,21 +194,39 @@ class WifiViewModel(application: Application) : BaseViewModel(application) {
 
                     // 加载2.4G配置
                     val iface2g = luciRepository.getWifiDeviceInfo("radio0")
+                    val wifi2gHtmode = luciRepository.getUciConfigValue("wireless", "radio0", "htmode") ?: "HT20"
+                    val wifi2gBandwidth = when {
+                        wifi2gHtmode.contains("160") -> "160"
+                        wifi2gHtmode.contains("80") -> "80"
+                        wifi2gHtmode.contains("40") -> "40"
+                        else -> "20"
+                    }
                     val wifi2g = WifiConfig(
                         enabled = iface2g.isUp,
                         ssid = iface2g.ssid,
                         channel = iface2g.channel.toString(),
-                        txpower = iface2g.txpower.toString()
+                        txpower = iface2g.txpower.toString(),
+                        bandwidth = wifi2gBandwidth,
+                        encryption = iface2g.encryption.ifEmpty { "psk2" }
                     )
 
                     // 加载5G配置
                     val wifi5g = if (has5g) {
                         val iface5g = luciRepository.getWifiDeviceInfo("radio1")
+                        val wifi5gHtmode = luciRepository.getUciConfigValue("wireless", "radio1", "htmode") ?: "VHT80"
+                        val wifi5gBandwidth = when {
+                            wifi5gHtmode.contains("160") -> "160"
+                            wifi5gHtmode.contains("80") -> "80"
+                            wifi5gHtmode.contains("40") -> "40"
+                            else -> "20"
+                        }
                         WifiConfig(
                             enabled = iface5g.isUp,
                             ssid = iface5g.ssid,
                             channel = iface5g.channel.toString(),
-                            txpower = iface5g.txpower.toString()
+                            txpower = iface5g.txpower.toString(),
+                            bandwidth = wifi5gBandwidth,
+                            encryption = iface5g.encryption.ifEmpty { "psk2" }
                         )
                     } else {
                         WifiConfig()
@@ -321,6 +339,15 @@ class WifiViewModel(application: Application) : BaseViewModel(application) {
                 // 保存WiFi配置
                 luciRepository.setUciConfig("wireless", radio, "channel", config.channel)
                 luciRepository.setUciConfig("wireless", radio, "txpower", config.txpower)
+                // 保存信道宽度（htmode）
+                val htmode = when (config.bandwidth) {
+                    "20" -> if (band == "5g") "VHT20" else "HT20"
+                    "40" -> if (band == "5g") "VHT40" else "HT40"
+                    "80" -> "VHT80"
+                    "160" -> "VHT160"
+                    else -> "HT20"
+                }
+                luciRepository.setUciConfig("wireless", radio, "htmode", htmode)
 
                 // 保存接口配置
                 val iface = if (band == "guest") "guest" else "default_radio${band.last()}"

@@ -853,6 +853,18 @@ class LuciRepository {
     }
 
     /**
+     * 获取单个UCI配置值
+     */
+    suspend fun getUciConfigValue(config: String, section: String, option: String): String? {
+        return try {
+            val values = getUciConfig(config, section)
+            values[option]
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
      * 设置UCI配置
      */
     suspend fun setUciConfig(config: String, section: String, option: String, value: String): Boolean {
