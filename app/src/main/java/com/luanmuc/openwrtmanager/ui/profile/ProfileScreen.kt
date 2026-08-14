@@ -125,6 +125,7 @@ fun ProfileScreen(
     onNavigateToWidgetConfig: () -> Unit = {},
     onNavigateToPlugins: () -> Unit = {},
     onNavigateToRemoteManage: () -> Unit = {},
+    onNavigateToPluginDependency: () -> Unit = {},
     onDebugModeToggled: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -361,6 +362,12 @@ fun ToolsGrid(
                     title = "远程管理",
                     gradient = MiColors.GradientBlue,
                     onClick = onNavigateToRemoteManage
+                )
+                ToolItem(
+                    icon = Icons.Default.Build,
+                    title = "插件检测",
+                    gradient = MiColors.GradientGreen,
+                    onClick = onNavigateToPluginDependency
                 )
             }
         }

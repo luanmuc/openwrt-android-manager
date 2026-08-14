@@ -53,6 +53,7 @@ import com.luanmuc.openwrtmanager.ui.plugins.RepoScreen
 import com.luanmuc.openwrtmanager.ui.firmware.FirmwareScreen
 import com.luanmuc.openwrtmanager.ui.firmware.FirmwareViewModel
 import com.luanmuc.openwrtmanager.ui.profile.ProfileScreen
+import com.luanmuc.openwrtmanager.ui.plugin_dependency.PluginDependencyScreen
 import com.luanmuc.openwrtmanager.ui.system.SystemScreen
 import com.luanmuc.openwrtmanager.ui.storage.StorageScreen
 import com.luanmuc.openwrtmanager.ui.remote.RemoteManageScreen
@@ -93,6 +94,7 @@ sealed class Screen(val route: String, val label: Int, val icon: ImageVector, va
     data object PluginDetail : Screen("plugin_detail", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object WidgetConfig : Screen("widget_config", 0, Icons.Filled.Devices, Icons.Filled.Devices)
     data object RemoteManage : Screen("remote_manage", 0, Icons.Filled.Devices, Icons.Filled.Devices)
+    data object PluginDependency : Screen("plugin_dependency", 0, Icons.Filled.Build, Icons.Filled.Build)
 }
 
 val bottomNavItems = listOf(
@@ -209,7 +211,8 @@ fun MainScreen() {
                     onNavigateToTerminal = { navController.navigate(Screen.Terminal.route) },
                     onNavigateToWidgetConfig = { navController.navigate(Screen.WidgetConfig.route) },
                     onNavigateToPlugins = { navController.navigate(Screen.Plugins.route) },
-                    onNavigateToRemoteManage = { navController.navigate(Screen.RemoteManage.route) }
+                    onNavigateToRemoteManage = { navController.navigate(Screen.RemoteManage.route) },
+                    onNavigateToPluginDependency = { navController.navigate(Screen.PluginDependency.route) }
                 )
             }
             composable(Screen.AddRouter.route) {
@@ -270,6 +273,11 @@ fun MainScreen() {
             }
             composable(Screen.RemoteManage.route) {
                 RemoteManageScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.PluginDependency.route) {
+                PluginDependencyScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

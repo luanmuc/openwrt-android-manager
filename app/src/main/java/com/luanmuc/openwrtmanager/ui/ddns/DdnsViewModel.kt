@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.DdnsConfig
+import com.luanmuc.openwrtmanager.data.model.PluginDependencies
+import com.luanmuc.openwrtmanager.data.model.PluginInstallStatus
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.LuciRepository
@@ -36,12 +38,88 @@ class DdnsViewModel(application: Application) : BaseViewModel(application) {
         val hasRouter: Boolean = false,
         val isFromCache: Boolean = false,
         val cacheTimestamp: Long? = null,
-        val isOfflineMode: Boolean = false
+        val isOfflineMode: Boolean = false,
+        val pluginStatus: PluginInstallStatus? = null,
+        val isInstallingPlugin: Boolean = false,
+        val installProgress: Int = 0,
+        val installMessage: String = ""
     )
 
     init {
         initNetworkMonitor()
         observeRouters()
+        checkPluginDependency()
+    }
+
+    /**
+     * 检测DDNS插件依赖
+     */
+    fun checkPluginDependency() {
+        if (DebugMode.isDebugMode) {
+            _uiState.value = _uiState.value.copy(
+                pluginStatus = PluginInstallStatus(
+                    dependency = PluginDependencies.DDNS,
+                    isInstalled = true
+                )
+            )
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val luci = LuciRepository.getInstance(getApplication())
+                val status = luci.checkPluginDependency(PluginDependencies.DDNS)
+                _uiState.value = _uiState.value.copy(pluginStatus = status)
+            } catch (e: Exception) {
+                // 忽略检测错误
+            }
+        }
+    }
+
+    /**
+     * 安装DDNS插件
+     */
+    fun installPlugin(onDone: (Boolean) -> Unit = {}) {
+        if (DebugMode.isDebugMode) {
+            _uiState.value = _uiState.value.copy(isInstallingPlugin = true, installProgress = 50, installMessage = "正在安装...")
+            viewModelScope.launch {
+                kotlinx.coroutines.delay(1500)
+                _uiState.value = _uiState.value.copy(
+                    isInstallingPlugin = false,
+                    installProgress = 100,
+                    installMessage = "安装成功",
+                    pluginStatus = PluginInstallStatus(
+                        dependency = PluginDependencies.DDNS,
+                        isInstalled = true
+                    )
+                )
+                onDone(true)
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isInstallingPlugin = true, installProgress = 0, installMessage = "")
+                val luci = LuciRepository.getInstance(getApplication())
+                val success = luci.installPluginDependency(PluginDependencies.DDNS) { progress, message ->
+                    _uiState.value = _uiState.value.copy(installProgress = progress, installMessage = message)
+                }
+                if (success) {
+                    val status = luci.checkPluginDependency(PluginDependencies.DDNS)
+                    _uiState.value = _uiState.value.copy(
+                        pluginStatus = status,
+                        success = "DDNS插件安装成功"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "插件安装失败：${_uiState.value.installMessage}")
+                }
+                onDone(success)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "安装异常：${e.message}")
+                onDone(false)
+            } finally {
+                _uiState.value = _uiState.value.copy(isInstallingPlugin = false)
+            }
+        }
     }
 
     override fun refreshData() {

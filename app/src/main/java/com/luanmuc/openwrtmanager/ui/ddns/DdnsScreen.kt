@@ -61,6 +61,7 @@ import com.luanmuc.openwrtmanager.ui.components.MiFeatureIcon
 import com.luanmuc.openwrtmanager.ui.components.MiLoadingState
 import com.luanmuc.openwrtmanager.ui.components.MiTag
 import com.luanmuc.openwrtmanager.ui.components.MiTopAppBar
+import com.luanmuc.openwrtmanager.ui.components.PluginDependencyCard
 import com.luanmuc.openwrtmanager.ui.components.OfflineBanner
 
 /**
@@ -135,6 +136,19 @@ fun DdnsScreen(
                 .fillMaxSize()
         ) {
             OfflineBanner(isOffline = !viewModel.isNetworkAvailable)
+
+            // 插件依赖提示
+            uiState.pluginStatus?.let { status ->
+                if (!status.isInstalled) {
+                    PluginDependencyCard(
+                        status = status.copy(
+                            isInstalling = uiState.isInstallingPlugin,
+                            installProgress = uiState.installProgress,
+                            installMessage = uiState.installMessage
+                        )
+                    )
+                }
+            }
 
             if (uiState.isLoading) {
                 MiLoadingState()

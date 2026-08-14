@@ -2473,6 +2473,85 @@ class LuciRepository {
             false
         }
     }
+
+    /**
+     * 检测插件依赖是否满足
+     */
+    suspend fun checkPluginDependency(dependency: PluginDependency): PluginInstallStatus {
+        val isInstalled = if (dependency.packageName == "ip-tiny") {
+            // ip-tiny提供tc命令，检测tc命令是否可用
+            isCommandAvailable("tc") || isPackageInstalled("ip-tiny") || isPackageInstalled("tc")
+        } else if (dependency.packageName == "logd") {
+            isCommandAvailable("logread") || isPackageInstalled("logd")
+        } else if (dependency.packageName == "rpcd-mod-iwinfo") {
+            isCommandAvailable("iwinfo") || isPackageInstalled("rpcd-mod-iwinfo")
+        } else {
+            isPackageInstalled(dependency.packageName)
+        }
+        return PluginInstallStatus(
+            dependency = dependency,
+            isInstalled = isInstalled
+        )
+    }
+
+    /**
+     * 检测所有插件依赖
+     */
+    suspend fun checkAllPluginDependencies(): List<PluginInstallStatus> {
+        return PluginDependencies.ALL.map { dependency ->
+            checkPluginDependency(dependency)
+        }
+    }
+
+    /**
+     * 安装插件（带进度回调）
+     */
+    suspend fun installPlugin(
+        packageName: String,
+        onProgress: ((Int, String) -> Unit)? = null
+    ): Boolean {
+        return try {
+            onProgress?.invoke(10, "正在更新软件源...")
+            val updateResult = executeCommand("opkg update 2>&1")
+            if (updateResult == null) {
+                onProgress?.invoke(0, "软件源更新失败")
+                return false
+            }
+            
+            onProgress?.invoke(50, "正在安装 $packageName ...")
+            val installResult = executeCommand("opkg install $packageName 2>&1")
+            if (installResult == null) {
+                onProgress?.invoke(0, "安装失败：无输出")
+                return false
+            }
+            
+            // 检查是否安装成功
+            val success = installResult.contains("Installing") || 
+                          installResult.contains("upgrading") ||
+                          installResult.contains("already installed") ||
+                          isPackageInstalled(packageName)
+            
+            if (success) {
+                onProgress?.invoke(100, "安装成功")
+            } else {
+                onProgress?.invoke(0, "安装失败：${installResult.take(100)}")
+            }
+            success
+        } catch (e: Exception) {
+            onProgress?.invoke(0, "安装异常：${e.message}")
+            false
+        }
+    }
+
+    /**
+     * 安装插件依赖
+     */
+    suspend fun installPluginDependency(
+        dependency: PluginDependency,
+        onProgress: ((Int, String) -> Unit)? = null
+    ): Boolean {
+        return installPlugin(dependency.packageName, onProgress)
+    }
 }
 
 
