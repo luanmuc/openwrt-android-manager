@@ -77,3 +77,4 @@ lint-results*.html
 *.hprof
 artifact*.zip
 *.apk
+build_log.txt
