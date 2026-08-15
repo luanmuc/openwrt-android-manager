@@ -100,7 +100,7 @@ fun PluginDependencyCard(
                         onClick = {
                             onInstall?.invoke()
                         },
-                        enabled = !isInstalling,
+                        enabled = !status.isInstalling,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFF8F00)
                         )
