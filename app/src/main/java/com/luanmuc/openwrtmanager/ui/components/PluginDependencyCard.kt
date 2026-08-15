@@ -24,21 +24,10 @@ import com.luanmuc.openwrtmanager.util.DebugMode
 @Composable
 fun PluginDependencyCard(
     status: PluginInstallStatus,
-    onInstall: (suspend (progress: (Int, String) -> Unit) -> Boolean)? = null,
-    onInstalled: (() -> Unit)? = null,
+    onInstall: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var installState by remember { mutableStateOf(status) }
-    var isInstalling by remember { mutableStateOf(false) }
-    var progress by remember { mutableStateOf(0) }
-    var message by remember { mutableStateOf("") }
-    var showError by remember { mutableStateOf(false) }
-
-    LaunchedEffect(status) {
-        installState = status
-    }
-
-    if (installState.isInstalled) return
+    if (status.isInstalled) return
 
     Card(
         modifier = modifier
@@ -64,13 +53,13 @@ fun PluginDependencyCard(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "需要安装插件：${installState.dependency.featureName}",
+                        text = "需要安装插件：${status.dependency.featureName}",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF5D4037)
                     )
                     Text(
-                        text = installState.dependency.packageName,
+                        text = status.dependency.packageName,
                         fontSize = 12.sp,
                         color = Color(0xFF8D6E63)
                     )
@@ -80,7 +69,7 @@ fun PluginDependencyCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = installState.dependency.description,
+                text = status.dependency.description,
                 fontSize = 13.sp,
                 color = Color(0xFF6D4C41),
                 lineHeight = 18.sp
@@ -88,16 +77,16 @@ fun PluginDependencyCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (isInstalling) {
+            if (status.isInstalling) {
                 Column {
                     LinearProgressIndicator(
-                        progress = { progress / 100f },
+                        progress = { status.installProgress / 100f },
                         modifier = Modifier.fillMaxWidth(),
                         color = Color(0xFFFF8F00)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = message.ifEmpty { "正在安装..." },
+                        text = status.installMessage.ifEmpty { "正在安装..." },
                         fontSize = 12.sp,
                         color = Color(0xFF8D6E63)
                     )
@@ -109,10 +98,7 @@ fun PluginDependencyCard(
                 ) {
                     Button(
                         onClick = {
-                            isInstalling = true
-                            progress = 0
-                            message = ""
-                            showError = false
+                            onInstall?.invoke()
                         },
                         enabled = !isInstalling,
                         colors = ButtonDefaults.buttonColors(
@@ -130,14 +116,7 @@ fun PluginDependencyCard(
                 }
             }
 
-            if (showError && message.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = message,
-                    fontSize = 12.sp,
-                    color = Color(0xFFD32F2F)
-                )
-            }
+
         }
     }
 }

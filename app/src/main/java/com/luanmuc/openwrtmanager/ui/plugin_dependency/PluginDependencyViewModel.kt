@@ -18,7 +18,9 @@ class PluginDependencyViewModel(application: Application) : BaseViewModel(applic
         val pluginStatuses: List<PluginInstallStatus> = emptyList(),
         val isLoading: Boolean = false,
         val error: String? = null,
-        val installingIndex: Int = -1
+        val installingIndex: Int = -1,
+        val installProgress: Int = 0,
+        val installMessage: String = ""
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -75,14 +77,18 @@ class PluginDependencyViewModel(application: Application) : BaseViewModel(applic
         if (status.isInstalled) return
 
         if (DebugMode.isDebugMode) {
-            _uiState.value = _uiState.value.copy(installingIndex = index)
+            _uiState.value = _uiState.value.copy(installingIndex = index, installProgress = 10, installMessage = "正在更新软件源...")
             viewModelScope.launch {
-                kotlinx.coroutines.delay(2000)
+                kotlinx.coroutines.delay(800)
+                _uiState.value = _uiState.value.copy(installProgress = 50, installMessage = "正在安装...")
+                kotlinx.coroutines.delay(1200)
                 val newStatuses = _uiState.value.pluginStatuses.toMutableList()
                 newStatuses[index] = status.copy(isInstalled = true)
                 _uiState.value = _uiState.value.copy(
                     pluginStatuses = newStatuses,
-                    installingIndex = -1
+                    installingIndex = -1,
+                    installProgress = 100,
+                    installMessage = "安装成功"
                 )
             }
             return
@@ -90,9 +96,11 @@ class PluginDependencyViewModel(application: Application) : BaseViewModel(applic
 
         viewModelScope.launch {
             try {
-                _uiState.value = _uiState.value.copy(installingIndex = index)
+                _uiState.value = _uiState.value.copy(installingIndex = index, installProgress = 0, installMessage = "")
                 val luci = LuciRepository.getInstance(getApplication())
-                val success = luci.installPluginDependency(status.dependency) { _, _ -> }
+                val success = luci.installPluginDependency(status.dependency) { progress, message ->
+                    _uiState.value = _uiState.value.copy(installProgress = progress, installMessage = message)
+                }
                 if (success) {
                     val newStatus = luci.checkPluginDependency(status.dependency)
                     val newStatuses = _uiState.value.pluginStatuses.toMutableList()
@@ -100,7 +108,7 @@ class PluginDependencyViewModel(application: Application) : BaseViewModel(applic
                     _uiState.value = _uiState.value.copy(pluginStatuses = newStatuses)
                 }
             } catch (e: Exception) {
-                // 忽略
+                _uiState.value = _uiState.value.copy(installMessage = "安装异常：${e.message}")
             } finally {
                 _uiState.value = _uiState.value.copy(installingIndex = -1)
             }

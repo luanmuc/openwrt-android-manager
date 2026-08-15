@@ -49,8 +49,18 @@ fun PluginDependencyScreen(
                 )
             } else {
                 PluginDependencyContent(
-                    pluginStatuses = uiState.pluginStatuses,
-                    onInstall = { status, onProgress ->
+                    pluginStatuses = uiState.pluginStatuses.mapIndexed { index, status ->
+                        if (index == uiState.installingIndex) {
+                            status.copy(
+                                isInstalling = true,
+                                installProgress = uiState.installProgress,
+                                installMessage = uiState.installMessage
+                            )
+                        } else {
+                            status
+                        }
+                    },
+                    onInstall = { status, _ ->
                         val index = uiState.pluginStatuses.indexOf(status)
                         if (index >= 0) {
                             viewModel.installPlugin(index)

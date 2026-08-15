@@ -1412,7 +1412,7 @@ class LuciRepository {
             val model = boardInfo["model"]?.toString()
                 ?: sysInfo["model"]?.toString()
                 ?: "Unknown"
-            val kernel = sysInfo["kernel"]?.toString() ?: "Unknown"
+            val kernel = boardInfo["kernel"]?.toString() ?: "Unknown"
             val boardName = boardInfo["board_name"]?.toString() ?: ""
 
             // 解析release信息

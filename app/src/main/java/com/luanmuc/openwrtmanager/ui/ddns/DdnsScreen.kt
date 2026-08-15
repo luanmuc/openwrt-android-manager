@@ -145,7 +145,14 @@ fun DdnsScreen(
                             isInstalling = uiState.isInstallingPlugin,
                             installProgress = uiState.installProgress,
                             installMessage = uiState.installMessage
-                        )
+                        ),
+                        onInstall = {
+                            viewModel.installPlugin { success ->
+                                if (success) {
+                                    viewModel.checkPluginDependency()
+                                }
+                            }
+                        }
                     )
                 }
             }
