@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import com.luanmuc.openwrtmanager.data.model.Router
 import com.luanmuc.openwrtmanager.data.repository.CacheRepository
 import com.luanmuc.openwrtmanager.data.repository.RouterRepository
+import com.luanmuc.openwrtmanager.data.repository.LuciRepository
 import com.luanmuc.openwrtmanager.util.DebugMode
 
 /**
@@ -66,7 +67,19 @@ class DevicesViewModel(application: Application) : BaseViewModel(application) {
                 DebugMode.enableDemoMode()
                 repository.setActiveRouter(routerId)
             } else {
+                DebugMode.disableDemoMode()
                 repository.setActiveRouter(routerId)
+                // 切换到真实路由器时，更新LuciRepository地址并重新登录
+                try {
+                    val router = repository.getRouterById(routerId)
+                    if (router != null) {
+                        val luci = LuciRepository.getInstance(getApplication())
+                        luci.logout()
+                        luci.login(router.address, router.username, router.encryptedPassword)
+                    }
+                } catch (e: Exception) {
+                    // 登录失败不影响切换，后续操作会自动重试
+                }
             }
         }
     }
