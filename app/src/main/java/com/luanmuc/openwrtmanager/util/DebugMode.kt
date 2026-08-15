@@ -52,6 +52,13 @@ object DebugMode {
     }
 
     /**
+     * 关闭演示模式（切换到真实路由器时调用）
+     */
+    fun disableDemoMode() {
+        isDebugMode = false
+    }
+
+    /**
      * 点击版本号，连续点击5次切换调试模式
      * @return true表示触发了切换
      */

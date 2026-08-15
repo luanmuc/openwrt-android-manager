@@ -67,7 +67,7 @@ class DevicesViewModel(application: Application) : BaseViewModel(application) {
                 DebugMode.enableDemoMode()
                 repository.setActiveRouter(routerId)
             } else {
-                DebugMode.isDebugMode = false
+                DebugMode.disableDemoMode()
                 repository.setActiveRouter(routerId)
                 // 切换到真实路由器时，更新LuciRepository地址并重新登录
                 try {
